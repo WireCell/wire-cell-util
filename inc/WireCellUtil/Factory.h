@@ -1,3 +1,42 @@
+/**
+ * The factory pattern implemented here allows for an instance of a
+ * concrete class to be created by specifying a factory name which is
+ * associated with the concrete class type and an instance name which
+ * is used to associated with one instance.
+ *
+ * This decouples code that wants to use a instance from directly
+ * compiling against the code that implements the instance.  It also
+ * allows for a centralized configuration mechanism.
+ *
+ * This factory pattern is used for producing concrete instances of
+ * many of the "larger" interface classes in WireCellIface.  As such,
+ * this particular implementation assumes a two tiered hierarchy where
+ * concrete instances are accessed through particular base classes
+ * (eg, the Interface).  This means there is a single factory registry
+ * instance for each base class which matters.  For each con concrete
+ * subclass one must arrange to register a subclass factory.
+ * 
+ * A "simple" factory is one which creates instances with their
+ * default constructor.  If this is adequate for your class you can
+ * place the following in the implementation file of your class at top
+ * level:
+ *
+ *    #include "WireCellUtil/Factory.h"
+ *    static auto gsfactory = WireCell::factory_simple_registry<MyClass, Interface>("MyFactoryName");
+ *
+ * Where `MyClass` is the concrete subclass of the base `Interface`
+ * class.
+ *
+ * If your class requires a non-default constructor you will have to
+ * write your own explicit class.  It is recommended to take a look at
+ * WireCell::SimpleFactory below as an example and implement
+ * `create()` to do what ever is needed.
+ *
+ * If you need to pass in configuration information then do not invent
+ * some way to do this yourself but instead also have your class
+ * inherit from WireCell::IConfigurable
+ */
+
 #ifndef WIRECELLUTIL_FACTORY
 #define WIRECELLUTIL_FACTORY
 
@@ -9,7 +48,8 @@
 namespace WireCell {
 
     
-    /** A base class for a caching factory returning an instance of type T by name.
+    /** A base class for a caching factory returning an instance of
+     * type T by name.
      *
      * Actual creation is delegated to subclasses.
      */
@@ -87,6 +127,8 @@ namespace WireCell {
 	return fact->get(instance_name);	
     }
 
+    /** Helper function to perform a registration of a simple factory
+     * that creates instances with their default constructor. */
     template<class T, class B>
     typename FactoryRegistry<B>::Factory* factory_simple_registry(const std::string& factory_name) {
 	typedef FactoryRegistry<B> FR;
