@@ -1,12 +1,23 @@
 #include "WireCellUtil/Point.h"
 #include "WireCellUtil/Testing.h"
 
+#include <iomanip> 
 #include <iostream>
 using namespace std;
 using namespace WireCell;
 
 int main()
 {
+    {
+	Point pp1(1, -500, -495);
+	Point pp2(1, 500, -495);
+	PointSet results;
+	results.insert(pp1);
+	results.insert(pp2);
+	Assert(2==results.size(), "failed to insert");
+    }
+
+
     Point p1(1,2,3);
     Assert (p1.x == 1 && p1.y == 2 && p1.z == 3);
 
@@ -25,4 +36,20 @@ int main()
     Assert (ps.x == 2);
 	
     Assert (p1.norm().magnitude() == 1.0);
+
+    double eps = (1-1e-11);
+    Point peps = p1*eps;
+    cerr << "Epsilon=" << std::setprecision(12) << eps
+	 << " peps=" << peps << endl;
+    PointSet pset;
+    pset.insert(p1);
+    pset.insert(p2);
+    pset.insert(p3);
+    pset.insert(ps);
+    pset.insert(peps);
+    for (auto pit = pset.begin(); pit != pset.end(); ++pit) {
+	cerr << *pit << endl;
+    }
+    Assert(pset.size() == 2, "tolerance set broken");
+
 }
