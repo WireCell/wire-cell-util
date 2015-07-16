@@ -4,6 +4,7 @@
 #include "WireCellUtil/D3Vector.h"
 
 #include <set>
+#include <memory>		// auto_ptr
 
 namespace WireCell {
 

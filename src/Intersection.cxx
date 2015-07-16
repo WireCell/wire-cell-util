@@ -13,6 +13,8 @@ int WireCell::hit_square(int axis0, const Ray& bounds,
     const Point& bmin = bounds.first;
     const Point& bmax = bounds.second;
 
+    double hit1[3] = {0}, hit2[3] = {0};
+
     int hitmask = 0;
     if (0 == dir[axis0]) {
 	return hitmask;
@@ -31,9 +33,9 @@ int WireCell::hit_square(int axis0, const Ray& bounds,
 	if (bmin[axis1] <= one && one <= bmax[axis1] &&
 	    bmin[axis2] <= two && two <= bmax[axis2]) { 
 	    hitmask |= 1;
-	    hits.first[axis0] = intercept;
-	    hits.first[axis1] = one;
-	    hits.first[axis2] = two;
+	    hit1[axis0] = intercept;
+	    hit1[axis1] = one;
+	    hit1[axis2] = two;
 	}
     }
 
@@ -47,12 +49,13 @@ int WireCell::hit_square(int axis0, const Ray& bounds,
 	if (bmin[axis1] <= one && one <= bmax[axis1] && 
 	    bmin[axis2] <= two && two <= bmax[axis2]) {
 	    hitmask |= 2;
-	    hits.second[axis0] = intercept;
-	    hits.second[axis1] = one;
-	    hits.second[axis2] = two;
+	    hit2[axis0] = intercept;
+	    hit2[axis1] = one;
+	    hit2[axis2] = two;
 	}
     }
 		
+    hits = Ray(Point(hit1), Point(hit2));
     return hitmask;
 }
 		

@@ -19,7 +19,7 @@ int main()
 
 
     Point p1(1,2,3);
-    Assert (p1.x == 1 && p1.y == 2 && p1.z == 3);
+    Assert (p1.x() == 1 && p1.y() == 2 && p1.z() == 3);
 
     Point p2 = p1;
 
@@ -32,8 +32,8 @@ int main()
     Assert(Point(pf) == p1);
     Assert(pf == PointF(p1));
 
-    Point ps = p1.sum(p2);
-    Assert (ps.x == 2);
+    Point ps = p1 + p2;
+    Assert (ps.x() == 2);
 	
     Assert (p1.norm().magnitude() == 1.0);
 
@@ -51,5 +51,17 @@ int main()
 	cerr << *pit << endl;
     }
     Assert(pset.size() == 2, "tolerance set broken");
+
+    Point pdiff = p1;
+    pdiff.set(3,2,1);
+    Assert (p1 != pdiff, "Copy on write failed.");
+
+    Point foo;
+    /// temporarily make this a really big loop to test no memory leakage
+    for (int ind =0; ind<1000; ++ind) {
+	foo = p1;
+	foo = p2;
+	foo = p3;
+    }
 
 }

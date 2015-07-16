@@ -24,50 +24,66 @@ namespace WireCell {
 	template< class U >
 	friend std::ostream & operator<<( std::ostream & , const D3Vector<U> & ) ;   
  
-    public :
-	T x , y , z, bogus ;  
+	typedef std::vector<T> D3VectorStore;
+	D3VectorStore m_v;
 
-	D3Vector( T a=0, T b=0, T c=0) : x(a), y(b), z(c) { }
-	// copy constructor
-	D3Vector( const D3Vector& o) : x(o.x), y(o.y), z(o.z) { }
-	// assignment
+    public :
+
+
+	/// Construct from elements.
+	D3Vector( const T& a=0, const T& b=0, const T& c=0) : m_v(3) { this->set(a,b,c); }
+
+	// Copy constructor.
+	D3Vector( const D3Vector& o) : m_v(3) { this->set(o.x(), o.y(), o.z()); }
+
+	D3Vector( const T d[3] ) : m_v(3) { this->set(d[0], d[1], d[2]); }
+	
+	// Assignment.
 	D3Vector& operator=(const D3Vector& o) {
-	    x = o.x; y = o.y, z = o.z;
+	    this->set(o.x(), o.y(), o.z()); 
 	    return *this;
 	}
-	// compare
-	
-	// convert
+
+	/// Set vector from elements;
+	void set(const T& a=0, const T& b=0, const T& c=0) {
+	    m_v[0] = a;
+	    m_v[1] = b;
+	    m_v[2] = c;
+	}
+	T x(const T& val) { return m_v[0] = val; }
+	T y(const T& val) { return m_v[1] = val; }
+	T z(const T& val) { return m_v[2] = val; }
+
+
+	/// Convert from other typed vector.
 	template< class TT >
-	D3Vector( const D3Vector<TT>& o) : x(o.x), y(o.y), z(o.z) { }
+	D3Vector( const D3Vector<TT>& o) : m_v(3) { this->set(o.x(), o.y(), o.z()); }
  
+	/// Access elements by name.
+	T x() const { return m_v[0]; }
+	T y() const { return m_v[1]; }
+	T z() const { return m_v[2]; }
+
+	/// Access elements by copy.
 	T operator[](std::size_t index) const {
-	    if (index == 0) return x;
-	    if (index == 1) return y;
-	    if (index == 2) return z;
-	    return bogus;
-	}
-	T& operator[](std::size_t index) {
-	    if (index == 0) return x;
-	    if (index == 1) return y;
-	    if (index == 2) return z;
-	    return bogus;
-	}
-	    
-	/// Return the vector sum of this vector and the other.
-	D3Vector<T> sum( const D3Vector & rhs ) const {
-	    return D3Vector(x+rhs.x, y+rhs.y, z+rhs.z);
+	    return m_v.at(index);
 	}
 
+	/// Access elements by reference.
+	T& operator[](std::size_t index) {
+	    m_v.at(index);	// call just to throw possible out of bounds exception
+	    return m_v[index];
+	}
+	    
 	/// Return the dot product of this vector and the other.
 	T dot ( const D3Vector & rhs ) const {
-	    T scalar = x * rhs.x + y * rhs.y + z * rhs.z ;
+	    T scalar = x() * rhs.x() + y() * rhs.y() + z() * rhs.z() ;
 	    return scalar;
 	}
  
 	/// Return the magnitude of this vector.
 	T magnitude() const {
-	    return std::sqrt(x*x+y*y+z*z);
+	    return std::sqrt(x()*x()+y()*y()+z()*z());
 	}
 
 	/// Return a normalized vector in the direction of this vector.
@@ -76,14 +92,14 @@ namespace WireCell {
 	    if (m <= 0) {
 		return D3Vector();
 	    }
-	    return D3Vector(x/m, y/m, z/m);
+	    return D3Vector(x()/m, y()/m, z()/m);
 	}	    
 
 	/// Return the cross product of this vector and the other.
 	D3Vector cross ( const D3Vector & rhs ) const {
-	    T a = y * rhs.z - z * rhs.y ;
-	    T b = z * rhs.x - x * rhs.z ;
-	    T c = x * rhs.y - y * rhs.x ;
+	    T a = y() * rhs.z() - z() * rhs.y() ;
+	    T b = z() * rhs.x() - x() * rhs.z() ;
+	    T c = x() * rhs.y() - y() * rhs.x() ;
 	    D3Vector product( a , b , c ) ;
 	    return product ;
 	}
@@ -98,9 +114,9 @@ namespace WireCell {
 	}
  
 	bool operator< (const D3Vector& rhs) const {
-	    if (z < rhs.z) return true;
-	    if (y < rhs.y) return true;
-	    if (x < rhs.x) return true;
+	    if (z() < rhs.z()) return true;
+	    if (y() < rhs.y()) return true;
+	    if (x() < rhs.x()) return true;
 	    return false;
 	}
 
@@ -109,32 +125,33 @@ namespace WireCell {
  
     template< class T >
     std::ostream & operator<< ( std::ostream & os , const D3Vector<T> & vec ) {
-	os << "("  << vec.x << " " << vec.y << " " << vec.z << ")" ;
+	os << "("  << vec.x() << " " << vec.y() << " " << vec.z() << ")" ;
 	return os ;
     }
 
     template< class T >
     D3Vector<T> operator-(const D3Vector<T> a, const D3Vector<T> b) {
-	return D3Vector<T>(a.x-b.x, a.y-b.y, a.z-b.z);
+	return D3Vector<T>(a.x()-b.x(), a.y()-b.y(), a.z()-b.z());
     }
 
     template< class T >
     D3Vector<T> operator+(const D3Vector<T> a, const D3Vector<T> b) {
-	return D3Vector<T>(a.x+b.x, a.y+b.y, a.z+b.z);
+	return D3Vector<T>(a.x()+b.x(), a.y()+b.y(), a.z()+b.z());
     }
 
     template< class T >
     D3Vector<T> operator*(const D3Vector<T> a, T s) {
-	return D3Vector<T>(a.x*s, a.y*s, a.z*s);
+	return D3Vector<T>(a.x()*s, a.y()*s, a.z()*s);
     }
     
     template< class T >
     bool operator==(const D3Vector<T>& a,const D3Vector<T>& b){
-      if (a.x==b.x&& a.y==b.y && a.z==b.z){
-	return true;
-      }else{
-	return false;
-      }
+	return a.x() == b.x() && a.y() == b.y() && a.z() == b.z();
+    }
+
+    template< class T >
+    bool operator!=(const D3Vector<T>& a,const D3Vector<T>& b){
+	return ! (a == b);
     }
     
     template< class T >
