@@ -13,18 +13,24 @@ namespace WireCell {
     class IndexedSet {
     public:
 	// the passed objects in order of first seen
-	std::map<TYPE, int> index;
-	std::vector<TYPE> collection;
+
+	typedef std::map<TYPE, int> index_type;
+	typedef std::vector<TYPE> collection_type;
+	typedef typename collection_type::size_type size_type;	
+
+	index_type index;
+	collection_type collection;
+	size_type size() { return collection.size(); }
 
 	int operator()(const TYPE& obj) {
 	    auto mit = index.find(obj);
 	    if (mit != index.end()) {
 		return mit->second;
 	    }
-	    int ind = collection.size();
-	    index[obj] = ind;
+	    int index_number = collection.size();
+	    index[obj] = index_number;
 	    collection.push_back(obj);
-	    return ind;
+	    return index_number;
 	}
     };
 

@@ -9,6 +9,7 @@
 namespace WireCell {
 
     /// A 3D Cartesian point in double precision.
+
     typedef D3Vector<double> Point;
 
     /// An alias for Point.
