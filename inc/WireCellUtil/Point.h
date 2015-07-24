@@ -15,7 +15,7 @@ namespace WireCell {
     /// An alias for Point.
     typedef Point Vector;
 
-    /// A line segment with a begin and end point.
+    /// A line segment running from a first (tail) to a second (head) point.
     typedef std::pair<Point, Point> Ray;
 
     /// PointVector - a collection of Points
@@ -47,6 +47,28 @@ namespace WireCell {
     /** Return true if point is contained by the bounding box along
      * the given axis (x=0, y=1, z=2) of the bounding box. */
     bool point_contained(const Point& point, const Ray& bounds, int axis);
+
+    /** Return the angle from axis vector to vector. This is just
+     * acos(dot).*/
+    double point_angle(const Vector& axis, const Vector& vector);
+
+    /** Return a ray representing the points of closest approach
+     * between the two lines colinear with the two rays. */
+    Ray ray_pitch(const Ray& ray1, const Ray& ray2);
+
+    /** Return the distance from the tail to the head of the ray. */
+    double ray_length(const Ray& ray);
+
+    /** Return a vector going from ray's tail to ray's head. */
+    Vector ray_vector(const Ray& ray);
+
+    /** Return a unit vector pointing in the direction from the tail
+     * to the head of the ray. */
+    Vector ray_unit(const Ray& ray);
+
+    /** Return the distance from the tail of the ray to the point
+     * projected onto the ray's direction. */
+    double ray_dist(const Ray& ray, const Point& point);
 
 }
 std::ostream& operator<<(std::ostream& os, const WireCell::Ray& ray);
