@@ -70,6 +70,18 @@ namespace WireCell {
      * projected onto the ray's direction. */
     double ray_dist(const Ray& ray, const Point& point);
 
+    struct BoundingBox {
+	Ray bounds;
+	BoundingBox(const Point& initial);
+	BoundingBox(const Ray& initial = Ray());
+	void operator()(const Point& p);
+	void operator()(const Ray& r);
+	template<typename RayOrPointIterator>
+	void operator()(const RayOrPointIterator& begin, const RayOrPointIterator& end) {
+	    for (auto it = begin; it != end; ++it) { (*this)(*it); }
+	}
+    };
+
 }
 std::ostream& operator<<(std::ostream& os, const WireCell::Ray& ray);
 
