@@ -64,4 +64,10 @@ int main()
 	foo = p3;
     }
 
+    const Ray r1(Point(3.75, -323.316, -500), Point(3.75, 254.034, 500));
+    const Ray r2(Point(2.5,  -254.034,  500), Point(2.5,  323.316, -500));
+    const Ray c12 = ray_pitch(r1, r2);
+    cerr << c12 << endl;
+
+
 }

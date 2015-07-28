@@ -116,3 +116,12 @@ void WireCell::BoundingBox::operator()(const Point& p)
 	}
     }
 }
+
+bool WireCell::BoundingBox::inside(const Point& point)
+{
+    for (int ind=0; ind<3; ++ind) {
+	if (point[ind] < bounds.first[ind]) return false;
+	if (point[ind] > bounds.second[ind]) return false;
+    }
+    return true;
+}
