@@ -43,7 +43,7 @@ namespace WireCell {
 
 	Iterator& operator=(const Iterator& rhs) {
 	    delete base_itr;
-	    base_itr = rhs.p->clone();
+	    base_itr = rhs.base_itr->clone();
 	    return *this;
 	}
 	

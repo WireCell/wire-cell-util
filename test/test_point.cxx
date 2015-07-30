@@ -1,4 +1,5 @@
 #include "WireCellUtil/Point.h"
+#include "WireCellUtil/BoundingBox.h"
 #include "WireCellUtil/Testing.h"
 
 #include <iomanip> 
@@ -69,5 +70,7 @@ int main()
     const Ray c12 = ray_pitch(r1, r2);
     cerr << c12 << endl;
 
-
+    BoundingBox bb(pset.begin(), pset.end());
+    bb.inside(Point());
+    
 }

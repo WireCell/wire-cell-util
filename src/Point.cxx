@@ -98,30 +98,3 @@ double WireCell::ray_dist(const WireCell::Ray& ray, const WireCell::Point& point
 }
 
 
-WireCell::BoundingBox::BoundingBox(const Point& initial) : bounds(initial, initial) {}
-WireCell::BoundingBox::BoundingBox(const Ray& initial) : bounds(initial) {}
-void WireCell::BoundingBox::operator()(const Ray& r)
-{
-    (*this)(r.first);
-    (*this)(r.second);
-}
-void WireCell::BoundingBox::operator()(const Point& p)
-{
-    for (int ind=0; ind<3; ++ind) {
-	if (p[ind] < bounds.first[ind]) {
-	    bounds.first[ind] = p[ind];
-	}
-	if (p[ind] > bounds.second[ind]) {
-	    bounds.second[ind] = p[ind];
-	}
-    }
-}
-
-bool WireCell::BoundingBox::inside(const Point& point)
-{
-    for (int ind=0; ind<3; ++ind) {
-	if (point[ind] < bounds.first[ind]) return false;
-	if (point[ind] > bounds.second[ind]) return false;
-    }
-    return true;
-}
