@@ -10,10 +10,13 @@ using namespace WireCell;
 template<typename Container>
 struct EveryOther {
     typedef typename Container::value_type value_type;
+    typedef typename Container::iterator iterator;
+    typedef typename Container::const_iterator const_iterator;
     
-    typename Container::const_iterator end, it, other;
+    const_iterator it, other, end;
 
-    EveryOther(const Container& seq) : end(seq.end()), it(seq.begin()), other(seq.begin()) {
+    EveryOther(const_iterator begin, const_iterator end)
+	: it(begin), other(begin), end(end) {
 	if (other != end) ++other;
 	if (other != end) ++other;
 	cerr << "Creating EveryOther starting at " << *it << " and " << *other << endl;
@@ -44,9 +47,20 @@ struct EveryOther {
 
 #include <vector>
 
+
+typedef std::vector<int> IntVector;
+typedef EveryOther<IntVector> EOIV;
+typedef GeneratorIter<EOIV, int> eo_iterator;
+typedef std::pair<eo_iterator, eo_iterator> eo_range;
+
+eo_range make_every_other(IntVector::iterator begin, IntVector::iterator end)
+{
+    return eo_range(eo_iterator(EOIV(begin, end)),
+		    eo_iterator(EOIV(end, end)));
+}
+
 int main()
 {
-    typedef std::vector<int> IntVector;
     IntVector vi;
     vi.push_back(0);
     vi.push_back(1);
@@ -57,12 +71,10 @@ int main()
     vi.push_back(6);
     
 
-    typedef EveryOther<IntVector> EOIV;
-    EOIV eo(vi);
-    GeneratorIter<EOIV, int> gi(eo);
-    for (int ind=0; ind<10; ++ind) {
-	if (!gi) { break; }
-	cout <<"In loop: #" << ind << " value:" << *gi << endl;
-	++gi;
+    auto its = make_every_other(vi.begin(), vi.end());
+
+    for (auto it = its.first; it!= its.second; ++it) {
+	cout << *it << endl;
     }
+    return 0;
 }
