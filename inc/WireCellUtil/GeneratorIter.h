@@ -60,6 +60,7 @@ namespace WireCell {
 	Value last_val;
     };
 
+
 }
 
 #endif

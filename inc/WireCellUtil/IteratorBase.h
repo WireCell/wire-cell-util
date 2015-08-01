@@ -17,10 +17,11 @@ namespace WireCell {
 
 	virtual ~IteratorBase() {}
 	
-	virtual bool operator!=(const IteratorBase& rhs) = 0;
+	virtual bool operator==(const IteratorBase& rhs) const = 0;
+	virtual bool operator!=(const IteratorBase& rhs) const = 0;
 	virtual IteratorBase& operator=(const IteratorBase& rhs) = 0;
 	virtual IteratorBase& operator++() = 0;
-	virtual value_type operator* () = 0;
+	virtual value_type operator* () const = 0;
 
 	virtual IteratorBase* clone() const = 0;
     };
@@ -74,10 +75,13 @@ namespace WireCell {
 	IteratorAdapter(adapted_iterator it) : m_it(it) {}
 	virtual ~IteratorAdapter() {}
 
-	const IteratorAdapter& dc(const base_iterator& other) {
+	const IteratorAdapter& dc(const base_iterator& other) const {
 	    return *dynamic_cast<const IteratorAdapter*>(&other); // segfault on type mismatch
 	}
-	bool operator!=(const base_iterator& rhs) {
+	bool operator==(const base_iterator& rhs) const {
+	    return m_it == dc(rhs).m_it;
+	}
+	bool operator!=(const base_iterator& rhs) const {
 	    return m_it != dc(rhs).m_it;
 	}
 	base_iterator& operator=(const base_iterator& rhs) {
@@ -88,7 +92,7 @@ namespace WireCell {
 	    ++m_it;
 	    return *this;
 	}
-	value_type operator*() {
+	value_type operator*() const {
 	    return *m_it;
 	}
 

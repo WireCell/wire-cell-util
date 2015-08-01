@@ -43,6 +43,7 @@ struct EveryOther {
 	if (this == &rhs) return true;
 	return it == rhs.it;
     }
+
 };
 
 #include <vector>

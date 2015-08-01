@@ -28,7 +28,10 @@ namespace WireCell {
 	    base_itr = 0;
 	}
 
-	bool operator!=(const Iterator& rhs) {
+	bool operator==(const Iterator& rhs) const {
+	    return *base_itr == *rhs.base_itr;   
+	}
+	bool operator!=(const Iterator& rhs) const {
 	    return *base_itr != *rhs.base_itr;   
 	}
 
@@ -37,7 +40,7 @@ namespace WireCell {
 	    return *this;
 	}
 
-	ValueType operator*() {
+	ValueType operator*() const {
 	    return *(*base_itr);
 	}
 
