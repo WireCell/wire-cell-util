@@ -5,7 +5,8 @@
 
 int main(int argc, char** argv)
 {
-    WireCell::Assert(argc == 1, "In general, tests should not be called with arguments.");
+    AssertMsg(argc == 1, "In general, tests should not be called with arguments.");
+    Assert(argc == 1);
 
     return 0;
 }

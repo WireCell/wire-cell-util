@@ -25,7 +25,7 @@ WIRECELL_NAMEDFACTORY_ASSOCIATE(SomeConcrete, ISomeInterface);
 int main()
 {
     auto ins = WireCell::Factory::lookup<ISomeInterface>("SomeConcrete");
-    Assert(ins, "Failed to lookup 'SomeConcrete' with interface 'ISomeInterface'");
+    AssertMsg(ins, "Failed to lookup 'SomeConcrete' with interface 'ISomeInterface'");
     cerr << "Got SomeConcrete @ " << ins << endl;
     cerr << "Got bogus @ " << std::shared_ptr<ISomeInterface>() << endl;
     ins->chirp();

@@ -19,7 +19,7 @@ int main()
     Foo* foo1 = &OnlyFoo::Instance();
     Foo* foo2 = &OnlyFoo::Instance();
 
-    WireCell::Assert(foo1 == foo2);
+    Assert(foo1 == foo2);
 
     OnlyFoo::Instance().chirp();
     cout << "Second time:" << endl;

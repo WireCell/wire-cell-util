@@ -102,8 +102,8 @@ int main()
     store.push_back(new MyClass(2,6.9));
 
     MyClass* first = *(store.begin());
-    Assert(first, "No first");
-    Assert(first->get_i() == 0 && first->get_f() == 0.0, "first ain't first");
+    AssertMsg(first, "No first");
+    AssertMsg(first->get_i() == 0 && first->get_f() == 0.0, "first ain't first");
 
     // This would be an element of the base class's interface which
     // the custom class implements.  It returns generic iterators on
@@ -124,28 +124,28 @@ int main()
 
 
     vector< const IMyClass* > res(r.first, r.second);
-    Assert(res.size(), "range constructor failed.");
+    AssertMsg(res.size(), "range constructor failed.");
     res.clear();
 
     copy(r.first, r.second, back_inserter(res));
-    Assert(res.size(), "copy failed.");
+    AssertMsg(res.size(), "copy failed.");
     res.clear();
 
 
     copy_if(boost::begin(r), boost::end(r), back_inserter(res), get1);
     cerr << "Got: " << res.size() << endl;
-    Assert(1 == res.size(), "Failed to get1");
-    Assert(res[0]->get_f() == 42., "Got wrong1");
+    AssertMsg(1 == res.size(), "Failed to get1");
+    AssertMsg(res[0]->get_f() == 42., "Got wrong1");
     res.clear();
 
     copy_if(boost::begin(r), boost::end(r), back_inserter(res), get10);
-    Assert(0 == res.size(), "Got get10 but should not.");
+    AssertMsg(0 == res.size(), "Got get10 but should not.");
     res.clear();
 	
     copy_if(boost::begin(r), boost::end(r), back_inserter(res), just_right);
-    Assert(1 == res.size(), "Failed to get just_right");
+    AssertMsg(1 == res.size(), "Failed to get just_right");
     cerr << "Got: " << res[0]->get_i() << " " << res[0]->get_f() << endl;
-    Assert(res[0]->get_i() == 2 && fabs(res[0]->get_f() - 6.9) < 1e-6, "Got just_wrong value");
+    AssertMsg(res[0]->get_i() == 2 && fabs(res[0]->get_f() - 6.9) < 1e-6, "Got just_wrong value");
     res.clear();
 
     return 0;

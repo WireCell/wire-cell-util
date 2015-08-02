@@ -17,7 +17,7 @@ int main(int argc, char** argv)
     cout << tk("awake") << endl;
 
     TimeKeeper::deltat dt = tk.last_duration();
-    Assert(dt.seconds() == 1, "Bad sleep.");
+    AssertMsg(dt.seconds() == 1, "Bad sleep.");
 
     cout << "TimeKeeper summary: " << endl;
     cout << tk.summary() << endl;

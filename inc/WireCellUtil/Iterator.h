@@ -24,15 +24,21 @@ namespace WireCell {
 	    base_itr = base_other.clone();
 	}
 	~Iterator() {
-	    delete base_itr;
+	    if (base_itr) {
+		delete base_itr;
+	    }
 	    base_itr = 0;
 	}
 
 	bool operator==(const Iterator& rhs) const {
+	    if (base_itr == rhs.base_itr) return true;
 	    return *base_itr == *rhs.base_itr;   
 	}
 	bool operator!=(const Iterator& rhs) const {
-	    return *base_itr != *rhs.base_itr;   
+	    if (base_itr && rhs.base_itr) {
+		return *base_itr != *rhs.base_itr;
+	    }
+	    return base_itr != rhs.base_itr;
 	}
 
 	Iterator& operator++() {
@@ -45,7 +51,9 @@ namespace WireCell {
 	}
 
 	Iterator& operator=(const Iterator& rhs) {
-	    delete base_itr;
+	    if (base_itr) {
+		delete base_itr;
+	    }
 	    base_itr = rhs.base_itr->clone();
 	    return *this;
 	}

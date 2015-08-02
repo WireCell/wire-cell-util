@@ -15,7 +15,7 @@ int main()
 	PointSet results;
 	results.insert(pp1);
 	results.insert(pp2);
-	Assert(2==results.size(), "failed to insert");
+	AssertMsg(2==results.size(), "failed to insert");
     }
 
 
@@ -51,11 +51,11 @@ int main()
     for (auto pit = pset.begin(); pit != pset.end(); ++pit) {
 	cerr << *pit << endl;
     }
-    Assert(pset.size() == 2, "tolerance set broken");
+    AssertMsg(pset.size() == 2, "tolerance set broken");
 
     Point pdiff = p1;
     pdiff.set(3,2,1);
-    Assert (p1 != pdiff, "Copy on write failed.");
+    AssertMsg (p1 != pdiff, "Copy on write failed.");
 
     Point foo;
     /// temporarily make this a really big loop to test no memory leakage

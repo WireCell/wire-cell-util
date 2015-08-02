@@ -8,14 +8,14 @@ using namespace WireCell;
 int main()
 {
     IndexedSet<int> isi;
-    Assert (isi(42) == 0, "Failed to index");
-    Assert (isi(69) == 1, "Failed to index");
-    Assert (isi(42) == 0, "Failed to index");
-    Assert (isi(0) == 2, "Failed to index");
-    Assert (isi(0) == 2, "Failed to index");
-    Assert (isi(69) == 1, "Failed to index");
+    AssertMsg (isi(42) == 0, "Failed to index");
+    AssertMsg (isi(69) == 1, "Failed to index");
+    AssertMsg (isi(42) == 0, "Failed to index");
+    AssertMsg (isi(0) == 2, "Failed to index");
+    AssertMsg (isi(0) == 2, "Failed to index");
+    AssertMsg (isi(69) == 1, "Failed to index");
 
-    Assert(isi.collection.size() == 3, "Wrong number of stuff in the collection");
+    AssertMsg(isi.collection.size() == 3, "Wrong number of stuff in the collection");
 
     return 0;
 }

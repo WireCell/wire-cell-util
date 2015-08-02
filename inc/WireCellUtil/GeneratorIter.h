@@ -6,6 +6,16 @@
 
 namespace WireCell {
 
+    // template <typename Callable, typename Value>
+    // struct NullGenerator : public Callable {
+    // 	NullGenerator() {}
+    // 	~NullGenerator() {}
+    // 	Value operator()() { return 0; }
+    // 	operator bool() const { return false;}
+    // 	bool operator==(const NullGenerator& rhs) const { return true; }
+    // 	bool operator==(const Callable& rhs) const { return true; }
+    // };
+
     /** A generator iterator using a Callable.
      *
      * Requirements on Callable
@@ -24,7 +34,9 @@ namespace WireCell {
 	boost::forward_traversal_tag
 	>
     {
-	GeneratorIter(const Callable& func) : func(func), last_val(0), count(0) {
+	GeneratorIter(const Callable& func)
+	    : func(func), last_val(0), count(0)
+	{
 	    advance();
 	}
 	void advance() {

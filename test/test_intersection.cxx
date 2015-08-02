@@ -46,7 +46,7 @@ int main()
 	    cout << "box: hitmask=" << hitmask << " ray=" << ray
 		 << " hits=" << hits << endl;
 	    if (point_contained(p1, bounds) && point_contained(p2, bounds)) {
-		Assert(hitmask == 3, "Inside box, but not enough hits");
+		AssertMsg(hitmask == 3, "Inside box, but not enough hits");
 	    }
 	}
     }
