@@ -10,14 +10,15 @@ namespace WireCell {
 	virtual ~IFactory();
 
 	/// Create an instance of what we know how to create.
-	virtual InterfacePtr create() = 0;
+	virtual Interface::pointer create() = 0;
 
     };
-    WIRECELL_DEFINE_INTERFACE(IFactory);
 
     class INamedFactory : public IFactory {
     public:
 	
+	typedef std::shared_ptr<INamedFactory> pointer;
+
 	virtual ~INamedFactory();
 
 	/// Set name of class this factory can make
@@ -26,10 +27,9 @@ namespace WireCell {
 	virtual const std::string& classname() = 0;
 
 	/// Create an instance by name.
-	virtual InterfacePtr create(const std::string& name) = 0;
+	virtual Interface::pointer create(const std::string& name) = 0;
 
     };
-    WIRECELL_DEFINE_INTERFACE(INamedFactory);
 
 }
 

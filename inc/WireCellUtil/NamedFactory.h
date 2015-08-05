@@ -16,15 +16,15 @@ namespace WireCell {
     public:
 	/// Remember the underlying type.
 	typedef Type type;
-
+	
 	/// The exposed pointer type.
 	typedef std::shared_ptr<Type> pointer_type;
 
 	NamedFactory() : m_classname("") {}
-
+	
 	/// Return an instance associated with the given name.
-	InterfacePtr create() { return create(""); }
-	InterfacePtr create(const std::string& name) {
+	Interface::pointer create() { return create(""); }
+	Interface::pointer create(const std::string& name) {
 	    auto it = m_objects.find(name);
 	    if (it == m_objects.end()) {
 		pointer_type p(new Type);
@@ -73,7 +73,7 @@ namespace WireCell {
 		return interface_ptr();
 	    }
 	    factory_ptr fac = it->second;
-	    WireCell::InterfacePtr iptr = fac->create(instname);
+	    WireCell::Interface::pointer iptr = fac->create(instname);
 	    if (!iptr) {
 		//std::cerr << "Failed to find interface for '" << classname << "'::'" << instname << "'" << std::endl;
 		return interface_ptr();
@@ -92,12 +92,12 @@ namespace WireCell {
     namespace Factory {
 
 	template<class IType>
-	bool associate(const std::string& classname, WireCell::INamedFactoryPtr factory) {
+	bool associate(const std::string& classname, WireCell::INamedFactory::pointer factory) {
 	    return WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance().associate(classname, factory);
 	}
 
 	template<class IType>
-	WireCell::INamedFactoryPtr lookup_factory(const std::string& classname) {
+	WireCell::INamedFactory::pointer lookup_factory(const std::string& classname) {
 	    return WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance().lookup(classname);
 	}
 
@@ -111,14 +111,13 @@ namespace WireCell {
 
 #define WIRECELL_NAMEDFACTORY(CLASS)					\
     typedef WireCell::NamedFactory< CLASS > CLASS##Factory;		\
-    typedef std::shared_ptr< CLASS##Factory > CLASS##FactoryPtr;	\
     int force_link_##CLASS = 0;						\
-    CLASS##FactoryPtr register_##CLASS##_Factory() {			\
-	CLASS##FactoryPtr p(new CLASS##Factory);			\
+    CLASS##Factory::pointer register_##CLASS##_Factory() {		\
+	CLASS##Factory::pointer p(new CLASS##Factory);			\
 	p->set_classname(#CLASS);					\
 	return p;							\
     }									\
-static CLASS##FactoryPtr gs_##CLASS##_factory = register_##CLASS##_Factory()
+    static CLASS##Factory::pointer gs_##CLASS##_factory = register_##CLASS##_Factory()
 
 #define WIRECELL_NAMEDFACTORY_ASSOCIATE(CLASS, INTERFACE)		\
     static bool gs_##CLASS##_##INTERFACE##_assocation_ok =		\
