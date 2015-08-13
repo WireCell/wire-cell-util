@@ -5,6 +5,7 @@
 #include "WireCellUtil/TimeKeeper.h"
 
 #include <unistd.h> // fixme: maybe a more modern sleep() is preferable?
+#include <iostream>
 
 using namespace WireCell;
 using namespace std;
