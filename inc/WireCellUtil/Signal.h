@@ -22,7 +22,7 @@ namespace WireCell {
 
 	/// Subclass must call in constructor
 	Signal() : m_signal(new signal) {
-	    std::cerr << (void*)m_signal.get() << std::endl;
+	    //std::cerr << (void*)m_signal.get() << std::endl;
 	}
 	virtual ~Signal() {}
 
