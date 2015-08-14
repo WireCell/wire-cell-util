@@ -17,10 +17,16 @@ namespace WireCell {
     public:
 	typedef WireCell::IteratorBase<ValueType> BaseIteratorType;
 
-	Iterator(const Iterator& other) {
-	    base_itr = other.base_itr->clone();
+	// Produce an empty/invalid iterator.
+	Iterator() : base_itr(0) { }
+	    
+
+	Iterator(const Iterator& other) : base_itr(0) {
+	    if (other.base_itr) {
+		base_itr = other.base_itr->clone();
+	    }
 	}
-	Iterator(const BaseIteratorType& base_other) {
+	Iterator(const BaseIteratorType& base_other) : base_itr(0) {
 	    base_itr = base_other.clone();
 	}
 	~Iterator() {
@@ -32,6 +38,7 @@ namespace WireCell {
 
 	bool operator==(const Iterator& rhs) const {
 	    if (base_itr == rhs.base_itr) return true;
+	    if (!base_itr || !rhs.base_itr) return false;
 	    return *base_itr == *rhs.base_itr;   
 	}
 	bool operator!=(const Iterator& rhs) const {
