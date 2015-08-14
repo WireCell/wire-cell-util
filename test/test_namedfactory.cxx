@@ -4,7 +4,7 @@
 #include <iostream>
 using namespace std;
 
-class ISomeInterface : public virtual WireCell::Interface {
+class ISomeInterface : public virtual WireCell::TypedInterface<ISomeInterface> {
 public:
     ISomeInterface() { cout << "SomeInterface() at " << (void*)this << endl; }
     virtual ~ISomeInterface() { cout << "~SomeInterface()" << endl; }

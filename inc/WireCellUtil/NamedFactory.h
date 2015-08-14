@@ -8,7 +8,7 @@
 #include <iostream>//debug
 
 namespace WireCell {
-
+    
     /** A templated factory of objects of type Type that associates a
      * name to an object, returning a preexisting one if it exists. */
     template <class Type>
@@ -19,7 +19,7 @@ namespace WireCell {
 	
 	/// The exposed pointer type.
 	typedef std::shared_ptr<Type> pointer_type;
-
+	
 	NamedFactory() : m_classname("") {}
 	
 	/// Return an instance associated with the given name.

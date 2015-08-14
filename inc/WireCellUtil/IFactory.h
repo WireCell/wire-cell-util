@@ -5,7 +5,7 @@
 
 namespace WireCell {
 
-    class IFactory : public Interface {
+    class IFactory : public TypedInterface<IFactory> {
     public:
 	virtual ~IFactory();
 
