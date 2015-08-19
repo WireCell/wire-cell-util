@@ -32,6 +32,12 @@ namespace WireCell {
 	    collection.push_back(obj);
 	    return index_number;
 	}
+
+	bool has(const TYPE& obj) {
+	    auto mit = index.find(obj);
+	    return mit != index.end();
+	}
+	    
     };
 
 }
