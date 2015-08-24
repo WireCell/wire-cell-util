@@ -35,8 +35,13 @@ namespace WireCell {
 	/// popy is not yet implemented.
 	// std::vector<double> popy();
 
+	// return buffer depth
+	int size() { return m_xbindeque.size(); }
+
 	double xmin() { return m_xmin; }
 	double ymin() { return m_ymin; }
+	double xbinsize() { return m_xbinsize; }
+	double ybinsize() { return m_ybinsize; }
 
     };
 
