@@ -9,7 +9,12 @@ namespace WireCell {
 
     /** A class with a signal which accepts a slot that produces an
      * instance of the Data type in a shared_ptr.  The Data type is
-     * expected to inherit from IData.
+     * expected to inherit from IData.  The actual
+     * boost::signals2::signal is held in a shared pointer so that any
+     * subclass can be copyable but be aware that the signal is
+     * shared.
+     *
+     * Subclass calls protected fire() to get next data object.
      */
     template <class Data>
     class Signal {
