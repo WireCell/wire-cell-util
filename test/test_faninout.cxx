@@ -1,5 +1,5 @@
 #include "WireCellUtil/Testing.h"
-#include "WireCellUtil/Fanout.h"
+#include "WireCellUtil/Faninout.h"
 
 #include <iostream>
 #include <vector>
@@ -39,22 +39,6 @@ void test_plug_and_play()
 
 }
 
-template<typename Collection>
-struct CollectionCombiner {
-    typedef Collection result_type;
-    typedef typename Collection::value_type value_type;
-
-    template<typename InputIterator>
-    result_type operator()(InputIterator first, InputIterator last) const {
-	result_type ret;
-	while (first != last) {
-	    ret.push_back(*first);
-	    ++first;
-	}
-	return ret;
-    }
-};
-
 
 int test_fanin()
 {
@@ -63,7 +47,7 @@ int test_fanin()
     // Fan-in concept is inherent in boost::signals2, but does require
     // some "combiner" to enact whatever fan-in policy is desired.
     // This one synchronizes input into a collection.
-    boost::signals2::signal< int (), CollectionCombiner< std::vector<int> > > sig;
+    boost::signals2::signal< int (), Fanin< std::vector<int> > > sig;
     sig.connect(c1);
     sig.connect(c2);
     sig.connect(c3);

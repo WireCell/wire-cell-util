@@ -1,5 +1,5 @@
-#ifndef WIRECELL_FANOUT
-#define WIRECELL_FANOUT
+#ifndef WIRECELL_FANINOUT
+#define WIRECELL_FANINOUT
 
 #include <boost/signals2.hpp>
 #include <deque>
@@ -52,6 +52,28 @@ namespace WireCell {
 	signal m_signal;
 	queue_map m_fan;
     };
+
+    // Fan-in concept is inherent in boost::signals2, but does require
+    // some "combiner" to enact whatever fan-in policy is desired.
+    // This most obvious one is one which synchronizes all input into
+    // a simple collection.
+    template<typename Collection>
+    struct Fanin {
+	typedef Collection result_type;
+	typedef typename Collection::value_type value_type;
+
+	template<typename InputIterator>
+	result_type operator()(InputIterator first, InputIterator last) const {
+	    result_type ret;
+	    while (first != last) {
+		ret.push_back(*first);
+		++first;
+	    }
+	    return ret;
+	}
+    };
+
+    
 }
 
 
