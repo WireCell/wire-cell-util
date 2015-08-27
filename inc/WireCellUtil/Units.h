@@ -263,6 +263,10 @@ namespace units {
   static const double perThousand = 0.001;
   static const double perMillion  = 0.000001;
 
+
+  // some constants of nature.
+  static const double clight = 2.99792458e8*units::meter/units::second;
+
 }  // namespace units
 
 #endif /* HEP_SYSTEM_OF_UNITS_H */

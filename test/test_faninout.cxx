@@ -1,8 +1,13 @@
 #include "WireCellUtil/Testing.h"
 #include "WireCellUtil/Faninout.h"
 
+#include <boost/signals2.hpp>
+#include <boost/optional.hpp>
+
 #include <iostream>
 #include <vector>
+
+using namespace std;
 
 struct Counter {
     int count;
@@ -12,6 +17,37 @@ struct Counter {
     }
 };
 
+struct Echoer {
+    int operator()(int x) {
+	return x;
+    }
+};
+
+/// moved to templated version in Faninout.h
+// struct Addresser {
+//     int addr;
+//     typedef boost::signals2::signal<int (int)> signal;
+//     typedef signal::slot_type slot_type;
+//     signal sig;    
+//     Addresser(int address) : addr(address) {}
+//     int operator()() {
+// 	int val = *sig(addr);
+// 	cerr << "Address "<<addr<<" returns " << val << endl;
+// 	return val;
+//     }
+// };
+
+
+struct Consumer {
+    typedef boost::signals2::signal<int ()> signal;
+    typedef signal::slot_type slot_type;
+    signal sig;
+    int operator()() {
+	int val = *sig();
+	cerr << "Consumed: " << val << endl;
+	return val;
+    }
+};
 
 using namespace std;
 using namespace WireCell;
@@ -37,6 +73,48 @@ void test_plug_and_play()
 	Assert(want == got);
     }
 
+}
+
+void test_ref()
+{
+    Echoer echo;
+
+    Addresser<int> addr0(0), addr1(1);
+    addr0.connect(echo);
+    addr1.connect(echo);
+
+    Consumer consumer0, consumer1;
+    consumer0.sig.connect(boost::ref(addr0));
+    consumer1.sig.connect(boost::ref(addr1));
+
+    cerr << consumer0() << endl;
+    cerr << consumer1() << endl;
+}
+
+void test_fanout_addressing()
+{
+    Counter counter;
+    Fanout<int> fanout;
+    fanout.address(0);
+    fanout.address(1);
+    fanout.connect(counter);
+
+    
+    Addresser<int> addr0(0), addr1(1);
+    addr0.connect(boost::ref(fanout));
+    addr1.connect(boost::ref(fanout));
+
+    Consumer consumer0, consumer1;
+    consumer0.sig.connect(boost::ref(addr0));
+    consumer1.sig.connect(boost::ref(addr1));
+
+    cerr << consumer1() << endl;
+    cerr << consumer0() << endl;
+    cerr << consumer0() << endl;
+    cerr << consumer0() << endl;
+    cerr << consumer1() << endl;
+    cerr << consumer0() << endl;
+    
 }
 
 
@@ -66,6 +144,8 @@ int test_fanin()
 int main()
 {
     test_plug_and_play();
+    test_ref();
+    test_fanout_addressing();
     test_fanin();
     return 0;
 }

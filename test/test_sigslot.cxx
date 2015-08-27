@@ -1,4 +1,4 @@
-#include "WireCellUtil/Signal.h"
+#include <boost/signals2.hpp>
 
 #include <iostream>
 #include <memory>
@@ -58,6 +58,9 @@ struct MyData {
     MyData(int n=0) : x(n) {}
     int next() { return ++x; }
     int get() { return x; }
+
+    typedef boost::signals2::signal<pointer ()> source_signal;
+    typedef typename source_signal::slot_type source_slot;
 };
 
 struct SlotA {
@@ -69,11 +72,13 @@ struct SlotA {
     }
 };
 
-struct SigA : public WireCell::Signal<MyData> {
-    SigA() : WireCell::Signal<MyData>() { }
+struct SigA {
+    SigA() {}
 
-    MyData::pointer operator()() { return fire(); }
+    MyData::pointer operator()() { return *m_input(); }
 
+    void connect(const MyData::source_slot& s) { m_input.connect(s); }
+    MyData::source_signal m_input;
 };
 
 void test_isignal()
@@ -81,7 +86,7 @@ void test_isignal()
     SlotA slota;
     SigA siga, sigaa;
     siga.connect(slota);
-    sigaa.connect(siga);
+    sigaa.connect(boost::ref(siga));
     cout << sigaa()->get() << endl;;
     cout << sigaa()->get() << endl;;
     cout << sigaa()->get() << endl;;

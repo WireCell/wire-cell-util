@@ -14,13 +14,13 @@ namespace WireCell {
     class Fanout {
     public:
 	// The fanout is held as a map from address to queue
-	typedef Data value_type;
+	typedef Data result_type;
 	typedef Address address_type;
-	typedef std::deque<value_type> data_queue;
+	typedef std::deque<result_type> data_queue;
 	typedef std::map< int, data_queue > queue_map;
 
 	// Our signal for providers of input data
-	typedef boost::signals2::signal<value_type ()> signal;
+	typedef boost::signals2::signal<result_type ()> signal;
 	// The slot type our signal accepts
 	typedef typename signal::slot_type slot;
 
@@ -35,15 +35,15 @@ namespace WireCell {
 	/// Return a data from the given address.  If the address has not
 	/// yet been registered it will be but any previously returned
 	/// data will not be seen.
-	value_type operator()(const address_type& addr) {
+	result_type operator()(const address_type& addr) {
 	    data_queue& dq = m_fan[addr];
 	    if (!dq.size()) {
-		value_type dat = *m_signal();
+		result_type dat = *m_signal();
 		for (auto it = m_fan.begin(); it != m_fan.end(); ++it) {
 		    it->second.push_back(dat);
 		}
 	    }
-	    value_type dat = dq.front();
+	    result_type dat = dq.front();
 	    dq.pop_front();
 	    return dat;	
 	}
@@ -53,14 +53,47 @@ namespace WireCell {
 	queue_map m_fan;
     };
 
+    /** If you have a slot to connect to a Fanout which doesn't
+     * inherently care about the address to which it is attached, use
+     * the AddressedShunt as a go-between.
+     */
+    template<typename Data, typename Address = int>
+    class Addresser {
+    public:
+	typedef Data value_type;
+	typedef Address address_type;
+
+	// Our signal for providers of input data
+	typedef boost::signals2::signal<value_type (const address_type& addr)> signal;
+	// The slot type our signal accepts
+	typedef typename signal::slot_type slot;
+
+	Addresser(const address_type& addr) : m_addr(addr) {}
+
+	// Connect a slot to our signal.
+	void connect(const slot& s) { m_signal.connect(s); }
+
+	// the shunt
+	value_type operator()() {
+	    return *m_signal(m_addr);
+	}
+
+    private:
+	Address m_addr;
+	signal m_signal;
+    };
+
+
+
     // Fan-in concept is inherent in boost::signals2, but does require
     // some "combiner" to enact whatever fan-in policy is desired.
     // This most obvious one is one which synchronizes all input into
     // a simple collection.
     template<typename Collection>
     struct Fanin {
+	// result_type required for boost::signals2 combiners
 	typedef Collection result_type;
-	typedef typename Collection::value_type value_type;
+	//typedef typename Collection::value_type value_type;
 
 	template<typename InputIterator>
 	result_type operator()(InputIterator first, InputIterator last) const {
