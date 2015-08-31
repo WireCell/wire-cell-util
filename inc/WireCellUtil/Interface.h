@@ -5,6 +5,11 @@
 
 namespace WireCell {
 
+    /** An interface defines some facet of functionality which is
+     * accessed by the type "pointer".
+     *
+     * See also WireCell::IComponent.
+     */
     class Interface {
     public:
 	// Interfaces are accessed by non-const shared pointers.
@@ -13,16 +18,7 @@ namespace WireCell {
 	virtual ~Interface();
     };
 
-    // crtp
-    template<class Type>
-    class TypedInterface : virtual public Interface{
-    public:
-	// provide a pointer typed to the interface type.  Subclass
-	// should likely NOT override this.
-	typedef std::shared_ptr<Type> pointer;
 
-	virtual ~TypedInterface() {};
-    };
 }
 
 #endif

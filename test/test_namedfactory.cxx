@@ -4,14 +4,14 @@
 #include <iostream>
 using namespace std;
 
-class ISomeInterface : public virtual WireCell::TypedInterface<ISomeInterface> {
+class ISomeComponent : public virtual WireCell::IComponent<ISomeComponent> {
 public:
-    ISomeInterface() { cout << "SomeInterface() at " << (void*)this << endl; }
-    virtual ~ISomeInterface() { cout << "~SomeInterface()" << endl; }
+    ISomeComponent() { cout << "SomeComponent() at " << (void*)this << endl; }
+    virtual ~ISomeComponent() { cout << "~SomeComponent()" << endl; }
     virtual void chirp() = 0;
 };
 
-class SomeConcrete : public virtual ISomeInterface {
+class SomeConcrete : public virtual ISomeComponent {
 public:
     SomeConcrete() { cout << "SomeConcrete() at " << (void*)this << endl; }
     virtual ~SomeConcrete() { cout << "~SomeConcrete()" << endl; }
@@ -19,15 +19,15 @@ public:
 };
 
 WIRECELL_NAMEDFACTORY(SomeConcrete);
-WIRECELL_NAMEDFACTORY_ASSOCIATE(SomeConcrete, ISomeInterface);
+WIRECELL_NAMEDFACTORY_ASSOCIATE(SomeConcrete, ISomeComponent);
 
 
 int main()
 {
-    auto ins = WireCell::Factory::lookup<ISomeInterface>("SomeConcrete");
-    AssertMsg(ins, "Failed to lookup 'SomeConcrete' with interface 'ISomeInterface'");
+    auto ins = WireCell::Factory::lookup<ISomeComponent>("SomeConcrete");
+    AssertMsg(ins, "Failed to lookup 'SomeConcrete' with interface 'ISomeComponent'");
     cerr << "Got SomeConcrete @ " << ins << endl;
-    cerr << "Got bogus @ " << std::shared_ptr<ISomeInterface>() << endl;
+    cerr << "Got bogus @ " << std::shared_ptr<ISomeComponent>() << endl;
     ins->chirp();
 }
 

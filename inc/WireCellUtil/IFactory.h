@@ -1,11 +1,11 @@
 #ifndef WIRECELL_IFACTORY
 #define WIRECELL_IFACTORY
 
-#include "WireCellUtil/Interface.h"
+#include "WireCellUtil/IComponent.h"
 
 namespace WireCell {
 
-    class IFactory : public TypedInterface<IFactory> {
+    class IFactory : public IComponent<IFactory> {
     public:
 	virtual ~IFactory();
 
