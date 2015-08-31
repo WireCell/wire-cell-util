@@ -22,6 +22,13 @@ namespace WireCell {
 	collection_type collection;
 	size_type size() { return collection.size(); }
 
+	int operator()(const TYPE& obj) const {
+	    auto mit = index.find(obj);
+	    if (mit != index.end()) {
+		return mit->second;
+	    }
+	    return -1;
+	}
 	int operator()(const TYPE& obj) {
 	    auto mit = index.find(obj);
 	    if (mit != index.end()) {
