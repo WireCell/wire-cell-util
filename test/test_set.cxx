@@ -2,10 +2,13 @@
 
 #include <vector>
 #include <set>
+#include <deque>
 
 #include <iterator>		// std::back_inserter
 #include <algorithm>		// std::set_difference
 #include <iostream>
+#include <memory>
+#include <random>
 
 
 
@@ -46,4 +49,23 @@ int main()
     Assert(die2.size() == 0);
     Assert(result2.size() == 10);
 
+    {
+	std::random_device rd;
+	std::default_random_engine re(rd());
+	std::uniform_real_distribution<> dist(0, 1000);
+
+	typedef std::shared_ptr<int> Pint;
+	deque<Pint> queue;
+	const int nitems = 1000;
+	for (int ind=0; ind<nitems; ++ind) {
+	    queue.push_back(Pint(new int(dist(re))));
+	}
+	for (int ind=0; ind<nitems; ++ind) {
+	    Pint front = queue.front();
+	    queue.pop_front();
+	    cerr << ind << ": popped:" << *front
+		 << " now with: " << queue.size() << " items"
+		 << endl;
+	}
+    }
 }
