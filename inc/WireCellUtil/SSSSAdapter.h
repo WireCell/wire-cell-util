@@ -16,9 +16,8 @@ namespace WireCell {
 
 	OutputType operator()() {
 	    InputType input = m_proc();
-	    // fixme check returns....
 	    m_proc.sink(input);
-	    m_proc.process();
+
 	    OutputType ot;
 	    m_proc.source(ot);
 	    return ot;

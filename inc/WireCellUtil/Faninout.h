@@ -85,10 +85,22 @@ namespace WireCell {
 
 
 
-    // Fan-in concept is inherent in boost::signals2, but does require
-    // some "combiner" to enact whatever fan-in policy is desired.
-    // This most obvious one is one which synchronizes all input into
-    // a simple collection.
+    /** Fan-in concept is inherent in boost::signals2, but does
+     * require some "combiner" to enact whatever fan-in policy is
+     * desired.  This most obvious one is one which synchronizes all
+     * input into a simple collection.  A signal like this will return
+     * a vector of its inputs.
+     *
+     *    // a generator returning one higher count each time called
+     *    Counter c1(10),c2(20),c3(30);
+     *
+     *    boost::signals2::signal< int (), Fanin< std::vector<int> > > sig;
+     *    sig.connect(c1);
+     *    sig.connect(c2);
+     *    sig.connect(c3);
+     *
+     *    sig(); // --> vector(10,20,30)
+     */
     template<typename Collection>
     struct Fanin {
 	// result_type required for boost::signals2 combiners
