@@ -120,6 +120,11 @@ namespace WireCell {
 	    return false;
 	}
 
+	D3Vector& operator+=( const D3Vector& other) {
+	    this->set(x()+other.x(), y()+other.y(), z()+other.z());
+	    return *this;
+	}
+
 
     } ;
  
@@ -143,7 +148,7 @@ namespace WireCell {
     D3Vector<T> operator*(const D3Vector<T> a, T s) {
 	return D3Vector<T>(a.x()*s, a.y()*s, a.z()*s);
     }
-    
+
     template< class T >
     bool operator==(const D3Vector<T>& a,const D3Vector<T>& b){
 	return a.x() == b.x() && a.y() == b.y() && a.z() == b.z();
