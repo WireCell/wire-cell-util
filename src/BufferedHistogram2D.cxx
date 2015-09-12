@@ -11,6 +11,23 @@ BufferedHistogram2D::BufferedHistogram2D(double xbinsize, double ybinsize,
 {
 }
 
+double BufferedHistogram2D::xmax() const
+{
+    return xmin() + m_xbinsize * m_xbindeque.size();
+}
+double BufferedHistogram2D::ymax() const
+{
+    return ymin() + m_ybinsize * ysize();
+}
+int BufferedHistogram2D::ysize() const
+{
+    int imax = 0;
+    for (auto v: m_xbindeque) {
+	imax = std::max((int)v.size(), imax);
+    }
+    return imax;
+}
+
 
 bool BufferedHistogram2D::fill(double x, double y, double v)
 {

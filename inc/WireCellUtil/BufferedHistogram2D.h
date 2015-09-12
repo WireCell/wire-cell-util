@@ -36,12 +36,17 @@ namespace WireCell {
 	// std::vector<double> popy();
 
 	// return buffer depth
-	int size() { return m_xbindeque.size(); }
+	int size() const { return m_xbindeque.size(); }
+	int xsize() const { return size(); }
+	// return the maximum size in Y
+	int ysize() const;
 
-	double xmin() { return m_xmin; }
-	double ymin() { return m_ymin; }
-	double xbinsize() { return m_xbinsize; }
-	double ybinsize() { return m_ybinsize; }
+	double xmin() const { return m_xmin; }
+	double ymin() const { return m_ymin; }
+	double xmax() const;
+	double ymax() const;
+	double xbinsize() const { return m_xbinsize; }
+	double ybinsize() const { return m_ybinsize; }
 
     };
 
