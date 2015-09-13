@@ -14,17 +14,16 @@ int main()
 
     cout << 1 << a1 << " * " << b1 << " = " << a1*b1 << endl;
     cout << 2 << a1 << " / " << b1 << " = " << a1/b1 << endl;
-    cout << 3.0 << a1 << " + " << b1 << " = " << a1+b1 << endl;
+    cout << 3 << a1 << " + " << b1 << " = " << a1+b1 << endl;
     cout << 4 << a1 << " - " << b1 << " = " << a1-b1 << endl;
     cout << 4 << "-" << a1 << " = " << -a1 << endl;
 
-    Assert(a1 < 10);
-    Assert(a1 > 4);
-    Assert(a1 == 5);
+    Assert(a1 < 10.0);
+    Assert(a1 > 4.0);
     Assert(a1 == 5.0);
     Assert(a1 == a2);
     Assert(a1 != b1);
-    Assert(a1 != 3);
+    Assert(a1 != 3.0);
 
     Assert(b1 < a1);
     Assert(a1 > b1);

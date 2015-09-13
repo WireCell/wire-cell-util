@@ -31,5 +31,15 @@ int main()
 	}
 	cerr << endl;
     }
+
+    array_type ar2(boost::extents[l_size][t_size]);
+    ar2 = ar;
+    Assert(l_size == ar2.shape()[0]);
+    Assert(t_size == ar2.shape()[1]);
+    
+    array_type ar3 = ar;
+    Assert(l_size == ar3.shape()[0]);
+    Assert(t_size == ar3.shape()[1]);
+
     return 0;
 }

@@ -13,23 +13,21 @@ namespace WireCell {
      *
      *  Beware this assumes all quantities are uncorrelated!
      */
-    template<typename Value>
-    class QuantityT {
+    class Quantity {
     public:
-	typedef QuantityT<Value>	this_type;
-	typedef Value			value_type;
-
-	QuantityT(const value_type& mean = value_type(), const value_type& sigma = value_type())
+	Quantity()
+	{	}
+	Quantity(const double& mean, const double& sigma = 0.0)
 	    : m_mean(mean), m_sigma(sigma)
 	{	}
-	QuantityT(const QuantityT& other)
+	Quantity(const Quantity& other)
 	    : m_mean(other.m_mean), m_sigma(other.m_sigma)
 	{	}
 
 
-	~QuantityT() {}
+	~Quantity() {}
 
-        this_type& operator=(const this_type& other)
+        Quantity& operator=(const Quantity& other)
         {
             if (this == &other) return *this;
             m_mean = other.m_mean;
@@ -37,32 +35,32 @@ namespace WireCell {
             return *this;
         }
 
-        operator value_type() const { return m_mean; }
+        operator double() const { return m_mean; }
         
-        value_type mean() const { return m_mean; }
-        value_type sigma() const { return m_sigma; }
+        double mean() const { return m_mean; }
+        double sigma() const { return m_sigma; }
 
 
-        this_type& operator+=(const value_type& exact)
+        Quantity& operator+=(const double& exact)
         {
             m_mean += exact;
             return *this;
         }
         
-        this_type& operator-=(const value_type& exact)
+        Quantity& operator-=(const double& exact)
         { 
             m_mean -= exact; 
             return *this; 
         }
         
-        this_type& operator*=(const value_type& exact)
+        Quantity& operator*=(const double& exact)
         { 
             m_mean *= exact; 
             m_sigma *= exact; 
             return *this; 
         }
         
-        this_type& operator/=(const value_type& exact)            
+        Quantity& operator/=(const double& exact)            
         { 
             m_mean /= exact; 
             m_sigma /= exact; 
@@ -70,10 +68,10 @@ namespace WireCell {
         }
         
 
-        this_type& operator*=(const this_type& other) {
+        Quantity& operator*=(const Quantity& other) {
 	    // relative uncertainties
-	    const value_type mrs = m_sigma/m_mean;
-	    const value_type ors = other.m_sigma/other.m_mean;
+	    const double mrs = m_sigma/m_mean;
+	    const double ors = other.m_sigma/other.m_mean;
 
 	    m_mean *= other.m_mean;
 	    m_sigma = m_mean * std::hypot(mrs, ors);
@@ -81,10 +79,10 @@ namespace WireCell {
 	    return *this;
 	}
 
-        this_type& operator/=(const this_type& other) {
+        Quantity& operator/=(const Quantity& other) {
 	    // relative uncertainties
-	    const value_type mrs = m_sigma/m_mean;
-	    const value_type ors = other.m_sigma/other.m_mean;
+	    const double mrs = m_sigma/m_mean;
+	    const double ors = other.m_sigma/other.m_mean;
 
 	    m_mean /= other.m_mean;
 	    m_sigma = m_mean * std::hypot(mrs, ors);
@@ -92,37 +90,35 @@ namespace WireCell {
 	    return *this;
 	}
 
-        this_type& operator-=(const this_type& other) {
+        Quantity& operator-=(const Quantity& other) {
 	    m_mean -= other.m_mean;
 	    m_sigma = std::hypot(m_sigma, other.m_sigma);
 	    return *this;
 	}
-        this_type& operator+=(const this_type& other) {
+        Quantity& operator+=(const Quantity& other) {
 	    m_mean += other.m_mean;
 	    m_sigma = std::hypot(m_sigma, other.m_sigma);
 	    return *this;
 	}
 
 
-	bool operator<(const this_type& other) const {
+	bool operator<(const Quantity& other) const {
 	    return m_mean < other.m_mean;
 	}
-	bool operator>(const this_type& other) const {
+	bool operator>(const Quantity& other) const {
 	    return m_mean > other.m_mean;
 	}
-	bool operator==(const this_type& other) const {
+	bool operator==(const Quantity& other) const {
 	    return m_mean == other.m_mean;
 	}
-	bool operator!=(const this_type& other) const {
+	bool operator!=(const Quantity& other) const {
 	    return m_mean != other.m_mean;
 	}
 
     private:
 
-	value_type m_mean, m_sigma;
+	double m_mean, m_sigma;
     };
-
-    typedef QuantityT<double> Quantity;
 
 } //namespace WireCell
 
@@ -169,37 +165,29 @@ inline WireCell::Quantity operator-(const WireCell::Quantity& lhs,
 // some comparisons with other, scalar types
 
 // fixme: *should* this be true:  should exact values be considered equal?
-template<typename T>
-WireCell::Quantity operator==(const WireCell::Quantity& lhs, const T& scalar)
+inline bool operator==(const WireCell::Quantity& lhs, const double& scalar)
 { return lhs.mean() == scalar; }
 
-template<typename T>
-WireCell::Quantity operator!=(const WireCell::Quantity& lhs, const T& scalar)
+inline bool operator!=(const WireCell::Quantity& lhs, const double& scalar)
 { return lhs.mean() != scalar; }
 
-template<typename T>
-WireCell::Quantity operator<(const WireCell::Quantity& lhs, const T& scalar)
+inline bool operator<(const WireCell::Quantity& lhs, const double& scalar)
 { return lhs.mean() < scalar; }
 
-template<typename T>
-WireCell::Quantity operator>(const WireCell::Quantity& lhs, const T& scalar)
+inline bool operator>(const WireCell::Quantity& lhs, const double& scalar)
 { return lhs.mean() > scalar; }
 
 
-template<typename T>
-WireCell::Quantity operator==(const T& scalar, const WireCell::Quantity& rhs)
+inline bool operator==(const double& scalar, const WireCell::Quantity& rhs)
 { return scalar == rhs.mean(); }
 
-template<typename T>
-WireCell::Quantity operator!=(const T& scalar, const WireCell::Quantity& rhs)
+inline bool operator!=(const double& scalar, const WireCell::Quantity& rhs)
 { return scalar != rhs.mean(); }
 
-template<typename T>
-WireCell::Quantity operator<(const T& scalar, const WireCell::Quantity& rhs)
+inline bool operator<(const double& scalar, const WireCell::Quantity& rhs)
 { return scalar < rhs.mean(); }
 
-template<typename T>
-WireCell::Quantity operator>(const T& scalar, const WireCell::Quantity& rhs)
+inline bool operator>(const double& scalar, const WireCell::Quantity& rhs)
 { return scalar > rhs.mean(); }
 
 
