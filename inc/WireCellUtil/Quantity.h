@@ -16,9 +16,16 @@ namespace WireCell {
     class Quantity {
     public:
 	Quantity()
+	    : m_mean(0.0), m_sigma(0.0)
 	{	}
-	Quantity(const double& mean, const double& sigma = 0.0)
+	Quantity(const double& mean, const double& sigma)
 	    : m_mean(mean), m_sigma(sigma)
+	{	}
+	Quantity(const double& mean)
+	    : m_mean(mean), m_sigma(0.0)
+	{	}
+	Quantity(const int& imean) 
+	    : m_mean((double)imean), m_sigma(0.0)
 	{	}
 	Quantity(const Quantity& other)
 	    : m_mean(other.m_mean), m_sigma(other.m_sigma)
@@ -120,7 +127,6 @@ namespace WireCell {
 	double m_mean, m_sigma;
     };
 
-} //namespace WireCell
 
 inline std::ostream & operator<<(std::ostream &os, const WireCell::Quantity& q)
 {
@@ -190,5 +196,6 @@ inline bool operator<(const double& scalar, const WireCell::Quantity& rhs)
 inline bool operator>(const double& scalar, const WireCell::Quantity& rhs)
 { return scalar > rhs.mean(); }
 
+} //namespace WireCell
 
 #endif
