@@ -21,6 +21,10 @@ namespace WireCell {
     /// PointVector - a collection of Points
     typedef std::vector<Point> PointVector;
 
+    /// A scalar + vector, eg charge at a point.
+    typedef std::pair<double, Vector> ScalarPoint;
+    typedef std::vector<ScalarPoint> ScalarField;
+
     /// PointValue - an association of a point and a value
     typedef std::pair<Point, float> PointValue;
 
