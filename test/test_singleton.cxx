@@ -24,4 +24,8 @@ int main()
     OnlyFoo::Instance().chirp();
     cout << "Second time:" << endl;
     OnlyFoo::Instance().chirp();
+
+    Foo* foo3 = &WireCell::Singleton<Foo>::Instance();
+    Assert(foo3 == foo1);
+
 }

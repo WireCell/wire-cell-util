@@ -18,12 +18,17 @@ public:
     virtual void chirp() { cout << "SomeConcrete::chirp() at " << (void*)this << endl; }
 };
 
-WIRECELL_NAMEDFACTORY(SomeConcrete);
-WIRECELL_NAMEDFACTORY_ASSOCIATE(SomeConcrete, ISomeComponent);
+WIRECELL_NAMEDFACTORY(SomeConcrete)
+{
+    WIRECELL_NAMEDFACTORY_INTERFACE(SomeConcrete, ISomeComponent);
+}
 
 
 int main()
 {
+    // for this test we cheat since the factory isn't in a shared library.
+    get_SomeConcrete_factory();
+
     auto ins = WireCell::Factory::lookup<ISomeComponent>("SomeConcrete");
     AssertMsg(ins, "Failed to lookup 'SomeConcrete' with interface 'ISomeComponent'");
     cerr << "Got SomeConcrete @ " << ins << endl;
