@@ -1,23 +1,18 @@
 #ifndef WIRECELL_PLUGINMANAGER
 #define WIRECELL_PLUGINMANAGER
 
-#include <dlfcn.h>
 #include <map>
 
 namespace WireCell {
 
     class Plugin {
     public:
-	Plugin(void* lib) : m_lib(lib) {}
-	~Plugin() { dlclose(m_lib); }
+	Plugin(void* lib);
+	~Plugin();
 
-	void* raw(const char* symbol_name) {
-	    return dlsym(m_lib, symbol_name);
-	}
+	void* raw(const char* symbol_name);
 	
-	bool contains(const char* symbol_name) {
-	    return nullptr != raw(symbol_name);
-	}
+	bool contains(const char* symbol_name);
 
 	template<typename T>
 	bool symbol(const char* symbol_name, T& ret) {
@@ -32,7 +27,10 @@ namespace WireCell {
 
     /** This is meant to be used from a WireCell::Singleton. */
     class PluginManager{
+	PluginManager();
+	~PluginManager();
     public:
+	static PluginManager& instance();
 
 	/// Add a plugin.  If libname is not given, try to derive it.
 	Plugin* add(const char* plugin_name, const char* libname = nullptr);

@@ -51,11 +51,11 @@ namespace WireCell {
     public:
 	typedef IType interface_type;
 	typedef std::shared_ptr<IType> interface_ptr;
-	typedef std::shared_ptr<WireCell::INamedFactory> factory_ptr;
+	typedef WireCell::INamedFactory* factory_ptr;
 
 	/// Register an existing factory by the "class" name of the instance it can create.
 	bool associate(const std::string& classname, factory_ptr factory) {
-	    std::cerr << this << " associate " << classname << " with " << factory.get() << std::endl;
+	    std::cerr << this << " associate " << classname << " with " << factory << std::endl;
 
 	    m_lookup[classname] = factory;
 	    return true;
@@ -69,26 +69,33 @@ namespace WireCell {
 	    }
 
 	    // cache miss, try plugin
-	    std::string factory_maker = "get_";
-	    factory_maker += classname;
-	    factory_maker += "_factory";
-	    
-	    auto pm = WireCell::Singleton< PluginManager >::Instance();
-	    auto plug = pm.find(factory_maker.c_str());
-	    if (plug) {
-		typedef void (*maker_function)();
-		maker_function mf;
-		if (plug->symbol(factory_maker.c_str(), mf)) {
-		    mf(); //  this should call associate() as a side effect!
-		    auto hailmary = m_lookup.find(classname);
-		    if (hailmary != m_lookup.end()) {
-			return hailmary->second;
-		    }
-		}
+
+	    WireCell::PluginManager& pm = WireCell::PluginManager::instance();
+
+	    std::string factory_maker = "make_" + classname + "_factory";
+	    auto plugin = pm.find(factory_maker.c_str());
+	    if (!plugin) {
+		std::cerr << "NFR: " << this << " Failed to find plugin for " << factory_maker << std::endl;
+		return nullptr;
 	    }
 
-	    std::cerr << "NFR: " << this << " Failed to lookup factory for '" << classname << "'" << std::endl;
-	    return nullptr;
+	    typedef void* (*maker_function)();
+	    maker_function mf;
+	    if (!plugin->symbol(factory_maker.c_str(), mf)) {
+		std::cerr << "NFR: " << this << " Factory get factory maker: " << factory_maker << std::endl;
+		return nullptr;
+	    }
+	    std::cerr << "\nCalling factory maker" << std::endl;
+	    void* fac_void_ptr = mf();
+
+	    if (!fac_void_ptr) {
+		std::cerr << "NFR: " << this << " Factory maker: " << factory_maker << " returned nullptr " << std::endl;
+		return nullptr;
+	    }
+
+	    factory_ptr fptr = reinterpret_cast<factory_ptr>(fac_void_ptr);
+	    m_lookup[classname] = fptr;
+	    return fptr;
 	}
 
 	interface_ptr instance(const std::string& classname, const std::string& instname = "") {
@@ -113,7 +120,7 @@ namespace WireCell {
     namespace Factory {
 
 	template<class IType>
-	bool associate(const std::string& classname, WireCell::INamedFactory::pointer factory) {
+	bool associate(const std::string& classname, WireCell::INamedFactory* factory) {
 	    NamedFactoryRegistry<IType>&
 		inst = WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance();
 	    std::cerr << "NFR: " << &inst << " associate(" << classname << ", " << factory << ")" << std::endl;
@@ -121,7 +128,7 @@ namespace WireCell {
 	}
 
 	template<class IType>
-	WireCell::INamedFactory::pointer lookup_factory(const std::string& classname) {
+	WireCell::INamedFactory* lookup_factory(const std::string& classname) {
 	    NamedFactoryRegistry<IType>&
 		inst = WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance();
 	    std::cerr << "NFR: " << &inst << " lookup_factory(" << classname << ")" << std::endl;
@@ -141,54 +148,28 @@ namespace WireCell {
 
 
 
+    
 
-// #define WIRECELL_NAMEDFACTORY_CLASS(CLASS)				\
-//     void associate_##CLASS##_factory(WireCell::NamedFactory< CLASS >::pointer factory)
+#define WIRECELL_NAMEDFACTORY_BEGIN(CLASS)				\
+    extern "C" { static void* gs_##CLASS##_factory; }			\
+    extern "C" { void* make_##CLASS##_factory() {			\
+    if (! gs_##CLASS##_factory) {					\
+	gs_##CLASS##_factory = new WireCell::NamedFactory< CLASS >;	\
+	std::cerr << "Made factory for " << #CLASS << std::endl;	\
+    }									\
+    WireCell::NamedFactory< CLASS >* factory			\
+       = reinterpret_cast< WireCell::NamedFactory< CLASS >* >(gs_##CLASS##_factory); \
     
 #define WIRECELL_NAMEDFACTORY_INTERFACE(CLASS, INTERFACE)		\
-    {									\
-	if (!gs_##CLASS##_factory) {					\
-	    gs_##CLASS##_factory = WireCell::NamedFactory< CLASS >::pointer(new WireCell::NamedFactory< CLASS >); \
-	}								\
-        std::cerr << "associate " << #CLASS << " with " << #INTERFACE << std::endl; \
-	WireCell::Factory::associate<INTERFACE>(#CLASS, gs_##CLASS##_factory); \
-    }
+    std::cerr << "associate " << #CLASS << " with " << #INTERFACE << std::endl; \
+    WireCell::Factory::associate<INTERFACE>(#CLASS, factory);
 
 
-
-#define WIRECELL_NAMEDFACTORY(CLASS)					\
-    static  WireCell::NamedFactory< CLASS >::pointer gs_##CLASS##_factory; \
-    extern "C" void get_##CLASS##_factory()
-
-// { \
-//          factory(new  WireCell::NamedFactory< CLASS >);	\
-// 	associate_##CLASS##_factory(factory);				\
-//     }
+#define WIRECELL_NAMEDFACTORY_END(CLASS)	\
+    return gs_##CLASS##_factory;		\
+    }}
 
 
-
-
-
-
-
-
-// #define WIRECELL_NAMEDFACTORY(CLASS)					\
-//     typedef WireCell::NamedFactory< CLASS > CLASS##Factory;		\
-//     int force_link_##CLASS = -1;					\
-//     extern "C" { int see_##CLASS##_force_link() { return force_link_##CLASS;}} \
-//     CLASS##Factory::pointer register_##CLASS##_Factory() {		\
-// 	CLASS##Factory::pointer p(new CLASS##Factory);			\
-// 	p->set_classname(#CLASS);					\
-// 	return p;							\
-//     }									\
-//     static CLASS##Factory::pointer gs_##CLASS##_factory = register_##CLASS##_Factory()
-
-// #define WIRECELL_NAMEDFACTORY_ASSOCIATE(CLASS, INTERFACE)		\
-//     static bool gs_##CLASS##_##INTERFACE##_assocation_ok =		\
-// 	WireCell::Factory::associate<INTERFACE>(#CLASS, gs_##CLASS##_factory)
-
-// #define WIRECELL_NAMEDFACTORY_USE(CLASS)	\
-//     { extern int force_link_##CLASS;  force_link_##CLASS = 1;}
-    
+//WireCell::NamedFactory< CLASS >* gs_##CLASS##_factory;
 
 #endif

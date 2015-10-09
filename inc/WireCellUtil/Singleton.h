@@ -8,19 +8,16 @@ namespace WireCell {
     {
     public:
 	static T& Instance() {
-	    if (!instance) instance = new T;
-	    return *instance;
+	    static T instance;
+	    return instance;
 	}
 
     private:
-	Singleton();
-	~Singleton();
-	Singleton(Singleton const&);
-	Singleton& operator=(Singleton const&);
-	static T* instance;
+	Singleton(){}
+	~Singleton(){}
+	Singleton(Singleton const&){}
+	Singleton& operator=(Singleton const&){}
     };
-
-    template <class T> T* Singleton<T>::instance = 0;
 }
 
 #endif
