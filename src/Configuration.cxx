@@ -57,3 +57,40 @@ std::string  WireCell::configuration_dumps(const Configuration& cfg,
     ss << cfg;
     return ss.str();
 }
+
+
+WireCell::Configuration WireCell::branch(WireCell::Configuration cfg,
+					 const std::string& dotpath)
+{
+    std::vector<std::string> path;
+    boost::algorithm::split(path, dotpath, boost::algorithm::is_any_of("."));
+    for (auto name : path) {
+	cfg = cfg[name];
+    }
+    return cfg;
+}
+
+// http://stackoverflow.com/a/23860017
+WireCell::Configuration WireCell::update(WireCell::Configuration& a,
+					 WireCell::Configuration& b)
+{
+    if (a.isNull()) {
+	a = b;
+	return b;
+    }
+    if (!a.isObject() || !b.isObject()) {
+	cerr << "a and b not object" << endl;
+	return a;
+    }
+    
+    for (const auto& key : b.getMemberNames()) {
+	if (a[key].isObject()) {
+	    update(a[key], b[key]);
+	}
+	else {
+	    a[key] = b[key];
+	}
+    }
+    return a;
+}
+

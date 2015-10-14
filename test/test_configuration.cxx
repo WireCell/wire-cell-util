@@ -14,11 +14,22 @@ int main()
 "my_float": 6.9,
 "my_string": "hello",
 "my_struct": { "x": 1, "y": 2, "z": 3 },
-"my_array_dict" : [ {"a":1, "b":2}, {"a":10, "b":20}]
+"my_array" : [ "one", "two", "three" ],
+"my_array_dict" : [ {"a":1, "b":2}, {"a":10, "b":20}],
+"data1" : { "data2": { "a":1, "b":2, "c":3 } }
+}
+)";
+    string extra_json = R"(
+{
+"my_int" : 2,
+"data1" : { "data2": { "d":4 } },
+"data3": { "data4" : 4 }
 }
 )";
 
+
     Configuration cfg = configuration_loads(json);
+    Configuration extra_cfg = configuration_loads(extra_json);
 
     Assert(get(cfg,"my_int",0) == 1);
     Assert(get(cfg,"my_float",0.0) == 6.9);
@@ -38,4 +49,18 @@ int main()
 
     Assert(get<int>(cfg,"my_struct.x") == 1);
 
+    auto nums = get< vector<string> >(cfg, "my_array");
+    for (auto anum : nums) {
+	cerr << anum << endl;
+    }
+
+    Configuration a = branch(cfg, "data1.data2.a");
+    Assert(convert<int>(a) == 1);
+
+    Configuration other;
+    update(other, cfg);
+    update(other, extra_cfg);
+    cerr << "other:\n" << other << endl;
+
+    return 0;
 }

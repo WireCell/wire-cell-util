@@ -51,15 +51,24 @@ namespace WireCell {
     std::string convert<std::string>(const Configuration& cfg, const std::string& def) {
 	return cfg.asString();
     }
+    template<>
+    std::vector<std::string> convert< std::vector<std::string> >(const Configuration& cfg, const std::vector<std::string>& def) {
+	std::vector<std::string> ret;
+	for (auto v : cfg) {
+	    ret.push_back(convert<std::string>(v));
+	}
+	return ret;
+    }
+
+    /// Follow a dot.separated.path and return the branch there.
+    Configuration branch(Configuration cfg, const std::string& dotpath);
+
+    /// Merge b into a, return a
+    Configuration update(Configuration& a, Configuration& b);
 
     template<typename T>
     T get(Configuration cfg, const std::string& dotpath, const T& def = T()) {
-	std::vector<std::string> path;
-	boost::algorithm::split(path, dotpath, boost::algorithm::is_any_of("."));
-	for (auto name : path) {
-	    cfg = cfg[name];
-	}
-	return convert(cfg, def);
+	return convert(branch(cfg, dotpath), def);
     }
 
     template<typename T>
