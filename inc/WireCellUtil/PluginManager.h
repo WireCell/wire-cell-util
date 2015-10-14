@@ -2,6 +2,7 @@
 #define WIRECELL_PLUGINMANAGER
 
 #include <map>
+#include <string>
 
 namespace WireCell {
 
@@ -10,12 +11,12 @@ namespace WireCell {
 	Plugin(void* lib);
 	~Plugin();
 
-	void* raw(const char* symbol_name);
+	void* raw(const std::string& symbol_name);
 	
-	bool contains(const char* symbol_name);
+	bool contains(const std::string& symbol_name);
 
 	template<typename T>
-	bool symbol(const char* symbol_name, T& ret) {
+	bool symbol(const std::string& symbol_name, T& ret) {
 	    void* thing = raw(symbol_name);
 	    if (!thing) { return false; } 
 	    ret = reinterpret_cast<T>(thing);
@@ -33,11 +34,11 @@ namespace WireCell {
 	static PluginManager& instance();
 
 	/// Add a plugin.  If libname is not given, try to derive it.
-	Plugin* add(const char* plugin_name, const char* libname = nullptr);
+	Plugin* add(const std::string& plugin_name, const std::string& libname = "");
 
-	Plugin* get(const char* plugin_name);
+	Plugin* get(const std::string& plugin_name);
 
-	Plugin* find(const char* symbol_name);
+	Plugin* find(const std::string& symbol_name);
     private:
 	std::map<std::string, Plugin*> m_plugins;
     };

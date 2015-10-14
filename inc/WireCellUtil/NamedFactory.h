@@ -55,8 +55,6 @@ namespace WireCell {
 
 	/// Register an existing factory by the "class" name of the instance it can create.
 	bool associate(const std::string& classname, factory_ptr factory) {
-	    std::cerr << this << " associate " << classname << " with " << factory << std::endl;
-
 	    m_lookup[classname] = factory;
 	    return true;
 	}
@@ -75,21 +73,18 @@ namespace WireCell {
 	    std::string factory_maker = "make_" + classname + "_factory";
 	    auto plugin = pm.find(factory_maker.c_str());
 	    if (!plugin) {
-		std::cerr << "NFR: " << this << " Failed to find plugin for " << factory_maker << std::endl;
 		return nullptr;
 	    }
 
 	    typedef void* (*maker_function)();
 	    maker_function mf;
 	    if (!plugin->symbol(factory_maker.c_str(), mf)) {
-		std::cerr << "NFR: " << this << " Factory get factory maker: " << factory_maker << std::endl;
 		return nullptr;
 	    }
-	    std::cerr << "\nCalling factory maker" << std::endl;
+
 	    void* fac_void_ptr = mf();
 
 	    if (!fac_void_ptr) {
-		std::cerr << "NFR: " << this << " Factory maker: " << factory_maker << " returned nullptr " << std::endl;
 		return nullptr;
 	    }
 
@@ -103,11 +98,9 @@ namespace WireCell {
 	    if (!fac) { return nullptr; }
 	    WireCell::Interface::pointer iptr = fac->create(instname);
 	    if (!iptr) {
-		std::cerr << "NFR: " << this << " Failed to find interface for '" << classname << "'::'" << instname << "'" << std::endl;
 		return nullptr;
 	    }
 	    interface_ptr uptype = std::dynamic_pointer_cast<interface_type>(iptr);
-	    //std::cerr << "Found interface for '" << classname << "'::'" << instname << "' @ " << uptype << std::endl;
 	    return uptype;
 	}
 
@@ -123,7 +116,6 @@ namespace WireCell {
 	bool associate(const std::string& classname, WireCell::INamedFactory* factory) {
 	    NamedFactoryRegistry<IType>&
 		inst = WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance();
-	    std::cerr << "NFR: " << &inst << " associate(" << classname << ", " << factory << ")" << std::endl;
 	    return inst.associate(classname, factory);
 	}
 
@@ -131,7 +123,6 @@ namespace WireCell {
 	WireCell::INamedFactory* lookup_factory(const std::string& classname) {
 	    NamedFactoryRegistry<IType>&
 		inst = WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance();
-	    std::cerr << "NFR: " << &inst << " lookup_factory(" << classname << ")" << std::endl;
 	    return inst.lookup_factory(classname);
 	}
 
@@ -139,7 +130,6 @@ namespace WireCell {
 	std::shared_ptr<IType> lookup(const std::string& classname, const std::string& instname="") {
 	    NamedFactoryRegistry<IType>&
 		inst = WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance();
-	    std::cerr << "NFR: " << &inst << " lookup(" << classname << ", " << instname << ")" << std::endl;
 	    return inst.instance(classname, instname);
 	}
     }
@@ -155,13 +145,11 @@ namespace WireCell {
     extern "C" { void* make_##CLASS##_factory() {			\
     if (! gs_##CLASS##_factory) {					\
 	gs_##CLASS##_factory = new WireCell::NamedFactory< CLASS >;	\
-	std::cerr << "Made factory for " << #CLASS << std::endl;	\
     }									\
     WireCell::NamedFactory< CLASS >* factory			\
        = reinterpret_cast< WireCell::NamedFactory< CLASS >* >(gs_##CLASS##_factory); \
     
 #define WIRECELL_NAMEDFACTORY_INTERFACE(CLASS, INTERFACE)		\
-    std::cerr << "associate " << #CLASS << " with " << #INTERFACE << std::endl; \
     WireCell::Factory::associate<INTERFACE>(#CLASS, factory);
 
 

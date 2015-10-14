@@ -1,2 +1,2 @@
 # This should not depend on any other WireCell package!
-bld.smplpkg('WireCellUtil', use='BOOST DYNAMO')
+bld.smplpkg('WireCellUtil', use='BOOST DYNAMO JSONCPP', test_use='DYNAMO')
