@@ -1,16 +1,23 @@
-/** try to figure out how to mix OOP and GP.
+/** 
+ * The idea is that there are objects of a base interface IComponent
+ * which may also implement some other interface, here IPort.  The
+ * objects are initially known through IComponent and a templated
+ * function, transfer(), must be called on these objects but through a
+ * middle sublcass which contains some needed type info, here Port<T>.
+ * 
+ * The solution is to create a context (CallTransfer and
+ * CallTransferT<> structs) which knows the type T and then register a
+ * number of instances of this context using the type_info::name() of
+ * the instantiated T.
  *
- * We have two objects known by base class Port that must be passed to
- * a templated function transfer() as downcast to types that carry the
- * argument type.
- *
- * To allow this to work the call to transfer() must be done in a
- * context that can do this down cast.  This context must located
- * dynamically based on type_info.  So, we preregister a bunch of
- * these contexts in a std::map by their type_info name.  
+ * Then, the base interface IPort has a pure abstract method to return
+ * the type_info::name() supplied by the subclass.  This is used to
+ * look up the corresponding context which takes the base IPort
+ * objects and dynamic_cast's them to the needed subclass.
  */
 
 #include "WireCellUtil/Testing.h"
+#include "WireCellUtil/Interface.h"
 #include <iostream>
 #include <typeinfo>
 #include <map>
@@ -18,15 +25,16 @@
 
 using namespace std;
 
-struct Port {
-    virtual ~Port() {};
+
+struct IPort {
+    virtual ~IPort() {};
     virtual std::string port_type_name() const = 0;
 }; 
 
 template<typename T>
-struct PortT : public Port {
+struct Port : public IPort {
     typedef T port_type;
-    virtual ~PortT() {}
+    virtual ~Port() {}
     virtual std::string port_type_name() const {
 	return typeid(port_type).name();
     }
@@ -35,7 +43,7 @@ struct PortT : public Port {
     virtual T make() const { T t; return t; }
 };
 
-struct SubI : public PortT<int> {
+struct SubI : public Port<int> {
     virtual ~SubI() {}
     virtual bool get(port_type& out) const {
 	out = 42;
@@ -43,7 +51,7 @@ struct SubI : public PortT<int> {
 	return true;
     }
 };
-struct SubF : public PortT<float> {
+struct SubF : public Port<float> {
     virtual ~SubF() {}
     virtual bool get(port_type& out) const {
 	out = 6.9;
@@ -52,7 +60,7 @@ struct SubF : public PortT<float> {
     }
 };
 
-struct SubFIn : public PortT<float> {
+struct SubFIn : public Port<float> {
     virtual ~SubFIn() {}
     virtual bool put(const port_type& in) {
 	cerr << "SubFIn::put(" << in << ")" << endl;
@@ -65,7 +73,7 @@ struct SubFIn : public PortT<float> {
 
 };
 
-struct SubFOut : public PortT<float> {
+struct SubFOut : public Port<float> {
     virtual ~SubFOut() {}
     virtual bool put(const port_type& in) {
 	cerr << "SubFOut::put(" << in << ") can not accept data" << endl;
@@ -106,7 +114,7 @@ bool transfer(const A& a, B& b)
 
 struct CallTransfer {
     virtual ~CallTransfer() {}
-    virtual bool call(const Port& a, Port& b) = 0;
+    virtual bool call(const IPort& a, IPort& b) = 0;
 };
 
 template<typename T>
@@ -116,9 +124,9 @@ struct CallTransferT : public CallTransfer{
     std::string port_type_name() const {
 	return typeid(port_type).name();
     }
-    bool call(const Port& a, Port& b) {
-	const PortT<port_type>* pa = dynamic_cast<const PortT<port_type>*>(&a);
-	PortT<port_type>* pb = dynamic_cast<PortT<port_type>*>(&b);
+    bool call(const IPort& a, IPort& b) {
+	const Port<port_type>* pa = dynamic_cast<const Port<port_type>*>(&a);
+	Port<port_type>* pb = dynamic_cast<Port<port_type>*>(&b);
 	return transfer(*pa, *pb);
     }
 };
@@ -133,19 +141,21 @@ void register_caller()
     callers[ct->port_type_name()] = ct;
 }
 
-CallTransfer* get_caller(Port& port)
+CallTransfer* get_caller(const IPort& comp)
 {
-    return callers[port.port_type_name()];
+    const IPort* port = dynamic_cast<const IPort*>(&comp);
+    if (!port) { return nullptr; }
+    return callers[port->port_type_name()];
 }
 
 
 int main()
 {
 
-    Port* si = new SubI;
-    Port* sf = new SubF;
-    Port* sfi = new SubFIn;
-    Port* sfo = new SubFOut;
+    IPort* si = new SubI;
+    IPort* sf = new SubF;
+    IPort* sfi = new SubFIn;
+    IPort* sfo = new SubFOut;
 
     cout << "typeid(si) = " << typeid(si).name() << endl;
     cout << "typeid(*si) = " << typeid(*si).name() << endl;
@@ -167,8 +177,8 @@ int main()
     cout << "sfi->type_name() = " << sfi->port_type_name() << endl;
 
     // given just Port*, how to know what to dynamic_cast to???
-    PortT<float>* bfi = dynamic_cast<PortT<float>*>(sfi);
-    PortT<float>* bfo = dynamic_cast<PortT<float>*>(sfo);
+    Port<float>* bfi = dynamic_cast<Port<float>*>(sfi);
+    Port<float>* bfo = dynamic_cast<Port<float>*>(sfo);
     Assert(bfi);
     Assert(bfo);
     Assert(transfer(*bfo, *bfi));
@@ -176,9 +186,15 @@ int main()
     // okay, like this:
     register_caller<int>();
     register_caller<float>();
-    CallTransfer* ct = get_caller(*sfi);
+
+    IPort* ci = new SubFIn;
+    IPort* co = new SubFOut;
+
+
+
+    CallTransfer* ct = get_caller(*ci);
     Assert(ct);
-    Assert(ct->call(*sfo, *sfi));
+    Assert(ct->call(*co, *ci));
 
     return 0;
 }
