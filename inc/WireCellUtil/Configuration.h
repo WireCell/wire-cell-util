@@ -9,7 +9,23 @@
 
 namespace WireCell {
 
-    /// Use Boost property trees as the WireCell::Configuration store.
+    /** The data type for configuration.
+     *
+     * Configuration is a recursive in that one Configuration object
+     * may contain others.
+     *
+     * The Configuration object given to a component must be the top
+     * of a component-specific schema.
+     *
+     * Configuration objects are associated to a component using the
+     * component's class name and an optional instance name.
+     * Configurations of multiple components may be aggregated through
+     * a two level dictionary.  Top level keys are component class
+     * names.  Keys of these dictionaries are instance names.  The
+     * empty string is interpreted as an unspecified (or default)
+     * instance.
+     */
+
     typedef Json::Value Configuration;
 
     /// Load a configuration from the named file.  If format it given,
@@ -31,6 +47,7 @@ namespace WireCell {
 				    const std::string& format="json");
 
     
+    /// Convert a configuration value to a particular type.
     template<typename T>
     T convert(const Configuration& cfg, const T& def = T()) {
 	return def;
@@ -66,11 +83,13 @@ namespace WireCell {
     /// Merge b into a, return a
     Configuration update(Configuration& a, Configuration& b);
 
+    /// Get value in configuration at the dotted path from or return default.
     template<typename T>
     T get(Configuration cfg, const std::string& dotpath, const T& def = T()) {
 	return convert(branch(cfg, dotpath), def);
     }
 
+    /// Put value in configuration at the dotted path.
     template<typename T>
     void put(Configuration& cfg, const std::string& dotpath, const T& val) {
 	Configuration* ptr = &cfg;
@@ -82,65 +101,6 @@ namespace WireCell {
 	*ptr = val;
     }
 
-    /** Recursively traverse a configuration starting at a child node.
-     *
-     * See also WireCell::configuration_visit()
-     *
-     * \param cfg is the configuration.
-     * \param childPath is the path to the child.
-     * \param child is the child.
-     * \param method is a callable taking (cfg,childPath,child).
-     *
-     * Adapted from:
-     * http://stackoverflow.com/a/8175833
-     */
-    // template<typename Callable>
-    // void configuration_visit_recursive(const Configuration &cfg,
-    // 				       const Configuration::path_type &childPath,
-    // 				       const Configuration &child,
-    // 				       Callable &method)
-    // {
-    // 	method(cfg, childPath, child);
-    // 	for (Configuration::const_iterator it = child.begin(); it != child.end(); ++it) {
-    // 	    Configuration::path_type curPath = childPath / Configuration::path_type(it->first);
-    // 	    configuration_visit_recursive(cfg, curPath, it->second, method);
-    // 	}
-    // }
-
-    /** Visit all nodes in a configuration tree.
-     *
-     * \param cfg is the configuration.
-     * \param method is a callable taking (cfg,childPath,child).
-     */
-    // template<typename Callable>
-    // void configuration_visit(const Configuration &cfg, Callable &method)
-    // {
-    // 	configuration_visit_recursive(cfg, "", cfg, method);
-    // }
-    
-    /** Helper to merge one configuration into another.
-     *
-     *     ConfigurationMerge merger(mycfg);
-     *     merger(some_config);
-     *     merger(some_other_config);
-     *     use_config(mycfg);
-     *
-     * Warning: all child paths must be unique.
-     */
-    // struct ConfigurationMerge {
-    // 	Configuration& cfg;
-    // 	ConfigurationMerge(Configuration& config) : cfg(config) {};
-
-    // 	Configuration& operator()(const Configuration &other) {
-    // 	    configuration_visit(other, *this);
-    // 	}
-
-    // 	void operator()(const Configuration &other,
-    // 			const Configuration::path_type &childPath,
-    // 			const Configuration &child) {
-    // 	    cfg.put(childPath, child.data());
-    // 	}
-    // };
 
 
 } // namespace WireCell
