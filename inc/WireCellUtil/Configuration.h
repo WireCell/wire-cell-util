@@ -53,22 +53,27 @@ namespace WireCell {
 	return def;
     }
     template<>
+    inline
     int convert<int>(const Configuration& cfg, const int& def) {
 	return cfg.asInt();
     }
     template<>
+    inline
     float convert<float>(const Configuration& cfg, const float& def) {
-	return cfg.asInt();
+	return cfg.asDouble();
     }
     template<>
+    inline
     double convert<double>(const Configuration& cfg, const double& def) {
 	return cfg.asDouble();
     }
     template<> 
+    inline
     std::string convert<std::string>(const Configuration& cfg, const std::string& def) {
 	return cfg.asString();
     }
     template<>
+    inline
     std::vector<std::string> convert< std::vector<std::string> >(const Configuration& cfg, const std::vector<std::string>& def) {
 	std::vector<std::string> ret;
 	for (auto v : cfg) {
