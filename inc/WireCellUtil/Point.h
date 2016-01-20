@@ -2,6 +2,7 @@
 #define WIRECELLUTIL_POINT_H
 
 #include "WireCellUtil/D3Vector.h"
+#include "WireCellUtil/Configuration.h"
 
 #include <set>
 #include <memory>		// auto_ptr
@@ -41,7 +42,6 @@ namespace WireCell {
     /// memory is constrained and double precision is not required.
     typedef D3Vector<float> PointF;
 
-
     
     /** Return true if point is contained in a rectangular solid
      * described by the ray bounds running between diagonally opposed
@@ -74,9 +74,33 @@ namespace WireCell {
      * projected onto the ray's direction. */
     double ray_dist(const Ray& ray, const Point& point);
 
+
+    template<>
+    inline			// fixme: ignores default
+    WireCell::Point convert< WireCell::Point >(const Configuration& cfg, const WireCell::Point& def) {
+	return Point(convert<double>(cfg[0]), convert<double>(cfg[1]), convert<double>(cfg[2]));
+    }
+    template<>
+    inline			// fixme: ignores default
+    WireCell::Ray convert< WireCell::Ray >(const Configuration& cfg, const WireCell::Ray& def) {
+	return Ray(convert<WireCell::Point>(cfg[0]), convert<WireCell::Point>(cfg[1]));
+    }
+
 }
 std::ostream& operator<<(std::ostream& os, const WireCell::Ray& ray);
 
+inline
+WireCell::Ray operator/(WireCell::Ray ray, const double& scale) {
+    return WireCell::Ray(ray.first/scale, ray.second/scale);
+}
+// inline
+// WireCell::Ray operator*(WireCell::Ray ray, const double& scale) {
+//     return WireCell::Ray(ray.first*scale, ray.second*scale);
+// }
+// inline
+// WireCell::Ray operator*(double scale, const WireCell::Ray& ray) {
+//     return WireCell::Ray(ray.first*scale, ray.second*scale);
+// }
 
 
 #endif

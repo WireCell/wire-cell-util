@@ -150,6 +150,11 @@ namespace WireCell {
     }
 
     template< class T >
+    D3Vector<T> operator/(const D3Vector<T> a, T s) {
+	return D3Vector<T>(a.x()/s, a.y()/s, a.z()/s);
+    }
+
+    template< class T >
     bool operator==(const D3Vector<T>& a,const D3Vector<T>& b){
 	return a.x() == b.x() && a.y() == b.y() && a.z() == b.z();
     }

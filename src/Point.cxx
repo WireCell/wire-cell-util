@@ -97,4 +97,3 @@ double WireCell::ray_dist(const WireCell::Ray& ray, const WireCell::Point& point
     return ray_unit(ray).dot(point - ray.first);
 }
 
-

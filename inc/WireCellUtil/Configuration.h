@@ -1,6 +1,7 @@
 #ifndef WIRECELL_CONFIGURATION
 #define WIRECELL_CONFIGURATION
 
+
 #include <json/json.h>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -73,7 +74,7 @@ namespace WireCell {
 	return cfg.asString();
     }
     template<>
-    inline
+    inline			// fixme: ignores default
     std::vector<std::string> convert< std::vector<std::string> >(const Configuration& cfg, const std::vector<std::string>& def) {
 	std::vector<std::string> ret;
 	for (auto v : cfg) {
