@@ -6,9 +6,21 @@
 #include "WireCellUtil/PluginManager.h"
 #include <unordered_map>
 
-#include <iostream>//debug
+#include <iostream>
+#include <exception>
+#include <string>
 
 namespace WireCell {
+
+    struct FactoryException : public std::exception 
+    {
+        std::string m_message;
+        FactoryException(const std::string& msg = "NamedFactory lookup error") : m_message(msg) {}
+        const char* what() const throw () {
+            return m_message.c_str();
+        }
+    };
+
     /** A templated factory of objects of type Type that associates a
      * name to an object, returning a preexisting one if it exists. */
     template <class Type>
@@ -73,18 +85,21 @@ namespace WireCell {
 	    std::string factory_maker = "make_" + classname + "_factory";
 	    auto plugin = pm.find(factory_maker.c_str());
 	    if (!plugin) {
+		std::cerr << "No plugin for " << classname << std::endl;
 		return nullptr;
 	    }
 
 	    typedef void* (*maker_function)();
 	    maker_function mf;
 	    if (!plugin->symbol(factory_maker.c_str(), mf)) {
+		std::cerr << "No factory maker symbol for " << classname << std::endl;
 		return nullptr;
 	    }
 
 	    void* fac_void_ptr = mf();
 
 	    if (!fac_void_ptr) {
+		std::cerr << "No factory for " << classname << std::endl;
 		return nullptr;
 	    }
 
@@ -95,12 +110,19 @@ namespace WireCell {
 
 	interface_ptr instance(const std::string& classname, const std::string& instname = "") {
 	    factory_ptr fac = lookup_factory(classname);
-	    if (!fac) { return nullptr; }
+	    if (!fac) {
+		std::cerr << "No factory for class " << classname << std::endl;
+		return nullptr;
+	    }
 	    WireCell::Interface::pointer iptr = fac->create(instname);
 	    if (!iptr) {
+		std::cerr << "Failed to create instance "<< instname <<" of class " << classname << std::endl;
 		return nullptr;
 	    }
 	    interface_ptr uptype = std::dynamic_pointer_cast<interface_type>(iptr);
+	    if (!uptype) {
+		std::cerr << "Failed to upcast instance "<< instname <<" of class " << classname << std::endl;
+	    }
 	    return uptype;
 	}
 
@@ -116,21 +138,27 @@ namespace WireCell {
 	bool associate(const std::string& classname, WireCell::INamedFactory* factory) {
 	    NamedFactoryRegistry<IType>&
 		inst = WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance();
-	    return inst.associate(classname, factory);
+            bool ok = inst.associate(classname, factory);
+            if (!ok) { throw FactoryException("Failed to associate class " + classname); }
+            return ok;
 	}
 
 	template<class IType>
 	WireCell::INamedFactory* lookup_factory(const std::string& classname) {
 	    NamedFactoryRegistry<IType>&
 		inst = WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance();
-	    return inst.lookup_factory(classname);
+	    WireCell::INamedFactory* ret = inst.lookup_factory(classname);
+            if (!ret) { throw FactoryException("Failed to lookup factory for " + classname); }
+	    return ret;
 	}
 
 	template<class IType>
 	std::shared_ptr<IType> lookup(const std::string& classname, const std::string& instname="") {
 	    NamedFactoryRegistry<IType>&
 		inst = WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance();
-	    return inst.instance(classname, instname);
+	    std::shared_ptr<IType> ret = inst.instance(classname, instname);
+            if (!ret) { throw FactoryException("Failed to lookup instance for " + classname + " " + instname); }
+	    return ret;
 	}
     }
 
