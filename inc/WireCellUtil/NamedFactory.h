@@ -4,6 +4,7 @@
 #include "WireCellUtil/IFactory.h"
 #include "WireCellUtil/Singleton.h"
 #include "WireCellUtil/PluginManager.h"
+#include "WireCellUtil/Type.h"
 #include <unordered_map>
 
 #include <iostream>
@@ -121,7 +122,8 @@ namespace WireCell {
 	    }
 	    interface_ptr uptype = std::dynamic_pointer_cast<interface_type>(iptr);
 	    if (!uptype) {
-		std::cerr << "Failed to upcast instance "<< instname <<" of class " << classname << std::endl;
+		std::cerr << "Failed to cast "<< instname <<" of class " << classname
+			  << " to " << type(uptype) << std::endl;
 	    }
 	    return uptype;
 	}
