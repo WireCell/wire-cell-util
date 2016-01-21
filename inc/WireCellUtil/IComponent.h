@@ -24,7 +24,7 @@ namespace WireCell {
      * with IComponents.
      */
     template<class Type>     // crtp
-    class IComponent : virtual public Interface{
+    class IComponent : virtual public Interface {
     public:
 
 	/// Access subclass facet by pointer.

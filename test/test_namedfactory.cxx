@@ -18,9 +18,7 @@ public:
     virtual void chirp() { cout << "SomeConcrete::chirp() at " << (void*)this << endl; }
 };
 
-WIRECELL_NAMEDFACTORY_BEGIN(SomeConcrete)
-WIRECELL_NAMEDFACTORY_INTERFACE(SomeConcrete, ISomeComponent);
-WIRECELL_NAMEDFACTORY_END(SomeConcrete)
+WIRECELL_FACTORY(SomeConcrete, SomeConcrete, ISomeComponent);
 
 
 int main()
