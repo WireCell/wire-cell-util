@@ -86,8 +86,11 @@ namespace WireCell {
     /// Follow a dot.separated.path and return the branch there.
     Configuration branch(Configuration cfg, const std::string& dotpath);
 
-    /// Merge b into a, return a
+    /// Merge dictionary b into a, return a
     Configuration update(Configuration& a, Configuration& b);
+
+    /// Return an array which is composed of the array b appended to the array a.
+    Configuration append(Configuration& a, Configuration& b);
 
     /// Get value in configuration at the dotted path from or return default.
     template<typename T>
@@ -106,7 +109,6 @@ namespace WireCell {
 	}
 	*ptr = val;
     }
-
 
 
 } // namespace WireCell

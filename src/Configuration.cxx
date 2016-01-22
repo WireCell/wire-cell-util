@@ -94,3 +94,15 @@ WireCell::Configuration WireCell::update(WireCell::Configuration& a,
     return a;
 }
 
+/// Append array b onto end of a and return a.
+WireCell::Configuration WireCell::append(Configuration& a, Configuration& b)
+{
+    Configuration ret = configuration_loads("[]");
+    for (auto x : a) {
+	ret.append(x);
+    }
+    for (auto x : b) {
+	ret.append(x);
+    }
+    return ret;
+}
