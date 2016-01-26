@@ -75,6 +75,11 @@ namespace WireCell {
 
 	/// Look up an existing factory by the name of the "class" it can create.
 	factory_ptr lookup_factory(const std::string& classname) {
+	    if (classname == "") {
+		std::cerr << "No class name given for type " << demangle(typeid(IType).name()) << std::endl;
+		return nullptr;
+	    }
+
 	    auto it = m_lookup.find(classname);
 	    if (it != m_lookup.end()) {
 		return it->second;
@@ -101,7 +106,7 @@ namespace WireCell {
 	    void* fac_void_ptr = mf();
 
 	    if (!fac_void_ptr) {
-		std::cerr << "No factory for " << classname << std::endl;
+		std::cerr << "No factory for \"" << classname << "\"\n";
 		return nullptr;
 	    }
 
@@ -113,7 +118,7 @@ namespace WireCell {
 	interface_ptr instance(const std::string& classname, const std::string& instname = "") {
 	    factory_ptr fac = lookup_factory(classname);
 	    if (!fac) {
-		std::cerr << "No factory for class " << classname << std::endl;
+		std::cerr << "No factory for class \"" << classname << "\"\n";
 		return nullptr;
 	    }
 	    WireCell::Interface::pointer iptr = fac->create(instname);
