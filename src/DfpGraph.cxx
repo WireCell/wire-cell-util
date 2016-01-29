@@ -1,6 +1,5 @@
 #include "WireCellUtil/DfpGraph.h"
 
-
 using namespace WireCell;
     
 DfpGraph::Vertex DfpGraph::get_add_vertex(const VertexProperty& tn)
@@ -14,16 +13,16 @@ DfpGraph::Vertex DfpGraph::get_add_vertex(const VertexProperty& tn)
     return v;
 }
 	
-DfpGraph::Edge DfpGraph::connect(const std::string& tail, const std::string& head,
-				 int tailport, int headport)
+DfpGraph::Edge DfpGraph::connect(const std::string& tail_type, const std::string& tail_name, int tail_port,
+				 const std::string& head_type, const std::string& head_name, int head_port)
 {
-    VertexProperty tvp(tail);
-    VertexProperty hvp(head);
+    VertexProperty tvp(tail_type, tail_name);
+    VertexProperty hvp(head_type, head_name);
 
     auto tv = get_add_vertex(tvp);
     auto hv = get_add_vertex(hvp);
 
-    EdgeProperty ep(tailport, headport);
+    EdgeProperty ep(tail_port, head_port);
     Edge e; bool b;
     std::tie(e, b) = boost::add_edge(tv, hv, ep, graph);
     return e;
@@ -50,5 +49,16 @@ std::vector<DfpGraph::Connection> DfpGraph::connections()
 	}
     }
     return ret;
+}
+
+void DfpGraph::configure(const Configuration& cfg)
+{
+    for (auto conn : cfg) {
+	auto tail = conn["tail"];
+	auto head = conn["head"];
+
+	connect(get<std::string>(tail, "type"), get<std::string>(tail, "name"), get<int>(tail, "port"), 
+		get<std::string>(head, "type"), get<std::string>(head, "name"), get<int>(head, "port"));
+    }
 }
 

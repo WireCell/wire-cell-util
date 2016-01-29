@@ -1,6 +1,7 @@
 #ifndef WIRECELLUTIL_DFPGRAPH
 #define WIRECELLUTIL_DFPGRAPH
 
+#include "WireCellUtil/Configuration.h"
 #include "WireCellUtil/String.h"
 #include <boost/graph/adjacency_list.hpp>
 
@@ -51,10 +52,22 @@ namespace WireCell {
 	Graph graph;
 	VertexPropertyMap vertex_property_map;
 
+
 	Vertex get_add_vertex(const VertexProperty& tn);
 	
-	Edge connect(const std::string& tail, const std::string& head,
-		     int tailport=0, int headport=0);
+	/// Configure with list of connection dictionaries like:
+	///
+	/// {
+	///     "tail": {"type":"TailType","name":"tailname", "port":0},
+	///     "head": {"type":"HeadType","name":"headname", "port":42}
+	/// },
+	///
+	/// Only "type" key is required.
+	void configure(const Configuration& cfg);
+
+	/// Explicitly connect one edge
+	Edge connect(const std::string& tail_type, const std::string& tail_name, int tail_port,
+		     const std::string& head_type, const std::string& head_name, int head_port);
 
 	std::vector<Connection> connections();
     };
