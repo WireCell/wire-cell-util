@@ -19,7 +19,7 @@
 #include <typeinfo>
 #include <type_traits> 
 #include <utility>
-
+#include <memory>
 
 // much inspiration from:
 // https://www.preney.ca/paul/archives/486
@@ -69,6 +69,10 @@ namespace WireCell {
 	template< template <typename...> class Container >
 	struct Wrapped {
 	    typedef std::tuple<Container<Types>...> type;
+	};
+	template< template <typename...> class Container >
+	struct WrappedConst {
+	    typedef std::tuple<Container<const Types>...> type;
 	};
 
 	typedef typename Wrapped<std::deque>::type queued_tuple_type;

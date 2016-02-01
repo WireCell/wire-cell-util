@@ -5,12 +5,6 @@
 
 using namespace WireCell;
 
-
-
-
-
-
-
 int main()
 {
 

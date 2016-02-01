@@ -66,10 +66,12 @@ namespace WireCell {
 	typedef IType interface_type;
 	typedef std::shared_ptr<IType> interface_ptr;
 	typedef WireCell::INamedFactory* factory_ptr;
+	typedef std::unordered_map<std::string, factory_ptr> factory_lookup;
 
 	/// Register an existing factory by the "class" name of the instance it can create.
 	bool associate(const std::string& classname, factory_ptr factory) {
 	    m_lookup[classname] = factory;
+	    //std::cerr << "Associate \"" << classname << "\" with " << WireCell::type(factory) << std::endl;
 	    return true;
 	}
 
@@ -134,8 +136,19 @@ namespace WireCell {
 	    return uptype;
 	}
 
-    public:
-	typedef std::unordered_map<std::string, factory_ptr> factory_lookup;
+	/// Return a collection of class names known to this factory
+	/// registry.  Note: linked/plugged shared libraries do not
+	/// automatically register their factories.
+	std::vector<std::string> known_classes() {
+	    std::vector<std::string> ret;
+	    for (auto it : m_lookup) {
+		ret.push_back(it.first);
+	    }
+	    return ret;
+	}
+
+
+    private:
 	factory_lookup m_lookup;
     };    
 
@@ -145,8 +158,8 @@ namespace WireCell {
 	template<class IType>
 	bool associate(const std::string& classname, WireCell::INamedFactory* factory) {
 	    NamedFactoryRegistry<IType>&
-		inst = WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance();
-            bool ok = inst.associate(classname, factory);
+		nfr = WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance();
+            bool ok = nfr.associate(classname, factory);
             if (!ok) { throw FactoryException("Failed to associate class " + classname); }
             return ok;
 	}
@@ -154,8 +167,8 @@ namespace WireCell {
 	template<class IType>
 	WireCell::INamedFactory* lookup_factory(const std::string& classname) {
 	    NamedFactoryRegistry<IType>&
-		inst = WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance();
-	    WireCell::INamedFactory* ret = inst.lookup_factory(classname);
+		nfr = WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance();
+	    WireCell::INamedFactory* ret = nfr.lookup_factory(classname);
             if (!ret) { throw FactoryException("Failed to lookup factory for " + classname); }
 	    return ret;
 	}
@@ -163,10 +176,18 @@ namespace WireCell {
 	template<class IType>
 	std::shared_ptr<IType> lookup(const std::string& classname, const std::string& instname="") {
 	    NamedFactoryRegistry<IType>&
-		inst = WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance();
-	    std::shared_ptr<IType> ret = inst.instance(classname, instname);
+		nfr = WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance();
+	    std::shared_ptr<IType> ret = nfr.instance(classname, instname);
             if (!ret) { throw FactoryException("Failed to lookup instance for " + classname + " " + instname); }
 	    return ret;
+	}
+
+	/// Return a vector of all known classes of given interface.
+	template<class IType>
+	std::vector<std::string> known_classes() {
+	    NamedFactoryRegistry<IType>&
+		nfr = WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance();
+	    return nfr.known_classes();
 	}
     }
 
