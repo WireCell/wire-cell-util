@@ -16,6 +16,8 @@ DfpGraph::Vertex DfpGraph::get_add_vertex(const VertexProperty& tn)
 DfpGraph::Edge DfpGraph::connect(const std::string& tail_type, const std::string& tail_name, int tail_port,
 				 const std::string& head_type, const std::string& head_name, int head_port)
 {
+//    std::cerr << "DfpGraph::connect: " << tail_type << ":" << tail_name << " ( " << tail_port << " -> " << head_port << " ) " << head_type << ":" << head_name << "\n";
+
     VertexProperty tvp(tail_type, tail_name);
     VertexProperty hvp(head_type, head_name);
 
