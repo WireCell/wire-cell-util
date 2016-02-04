@@ -12,11 +12,11 @@ namespace WireCell {
      *
      *   ExecMon em("starting");
      *   ...
-     *   cout << em("starting long calculation....") << endl;
+     *   cerr << em("starting long calculation....") << endl;
      *   do_long_calculation();
-     *   cout << em("...done") << endl;;
+     *   cerr << em("...done") << endl;;
      *   ...
-     *   cout << em.summary() << endl;
+     *   cerr << em.summary() << endl;
      */
     class ExecMon {
     public:

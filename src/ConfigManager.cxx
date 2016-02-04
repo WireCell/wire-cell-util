@@ -16,7 +16,6 @@ ConfigManager::~ConfigManager()
 
 void ConfigManager::load(const std::string& filename)
 {
-    cerr << "Loading config: " << filename << endl;
     Configuration more = configuration_load(filename);
     m_top = append(m_top, more);
 }

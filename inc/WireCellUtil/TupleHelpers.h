@@ -139,12 +139,12 @@ namespace WireCell {
 	 *     typedef typename tuple_helper<IFDCS>::Wrapped<std::deque>::type IFDCS_queues;
 	 *     IFDCS_queues qs;
 	 *     auto any_q = as_any_queue(qs);
-	 *     cout << "First element from each queue:\n";
-	 *     cout << any_cast<int>(any_q[0][0]) << endl;
-	 *     cout << any_cast<float>(any_q[1][0]) << endl;
-	 *     cout << any_cast<double>(any_q[2][0]) << endl;
-	 *     cout << any_cast<char>(any_q[3][0]) << endl;
-	 *     cout << any_cast<std::string>(any_q[4][0]) << endl;
+	 *     cerr << "First element from each queue:\n";
+	 *     cerr << any_cast<int>(any_q[0][0]) << endl;
+	 *     cerr << any_cast<float>(any_q[1][0]) << endl;
+	 *     cerr << any_cast<double>(any_q[2][0]) << endl;
+	 *     cerr << any_cast<char>(any_q[3][0]) << endl;
+	 *     cerr << any_cast<std::string>(any_q[4][0]) << endl;
 	 */
 	std::vector< any_queue_type > as_any_queue(const queued_tuple_type& toq) {
 	    return as_any_queue_impl(toq, std::make_index_sequence<std::tuple_size<tuple_type>::value>{});
