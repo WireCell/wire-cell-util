@@ -14,11 +14,11 @@ namespace instantiations {
 
 }
 
-std::ostream& operator<<(std::ostream& os, const WireCell::Ray& ray)
-{
-    os << "["  << ray.first << " --> " << ray.second << "]";
-    return os;
-}
+// std::ostream& operator<<(std::ostream& os, const WireCell::Ray& ray)
+// {
+//     os << "["  << ray.first << " --> " << ray.second << "]";
+//     return os;
+// }
 
 
 bool WireCell::ComparePoints::operator()(const WireCell::Point& lhs,

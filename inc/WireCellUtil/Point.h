@@ -78,16 +78,23 @@ namespace WireCell {
     template<>
     inline			// fixme: ignores default
     WireCell::Point convert< WireCell::Point >(const Configuration& cfg, const WireCell::Point& def) {
-	return Point(convert<double>(cfg[0]), convert<double>(cfg[1]), convert<double>(cfg[2]));
+	return Point(get<double>(cfg,"x"), get<double>(cfg,"y"), get<double>(cfg,"z"));
     }
     template<>
     inline			// fixme: ignores default
     WireCell::Ray convert< WireCell::Ray >(const Configuration& cfg, const WireCell::Ray& def) {
-	return Ray(convert<WireCell::Point>(cfg[0]), convert<WireCell::Point>(cfg[1]));
+	return Ray(get<WireCell::Point>(cfg,"tail"), get<WireCell::Point>(cfg,"head"));
     }
 
+}//namespace WireCell
+
+//std::ostream& operator<<(std::ostream& os, const WireCell::Ray& ray);
+inline
+std::ostream& operator<<(std::ostream& os, const WireCell::Ray& ray)
+{
+    os << "["  << ray.first << " --> " << ray.second << "]";
+    return os;
 }
-std::ostream& operator<<(std::ostream& os, const WireCell::Ray& ray);
 
 inline
 WireCell::Ray operator/(WireCell::Ray ray, const double& scale) {

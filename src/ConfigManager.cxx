@@ -100,10 +100,10 @@ Configuration ConfigManager::pop(int ind)
     int siz = size();
     for (int i=0; i<siz; ++i) {
 	if (i == ind) {
-	    ret = m_top[ind];
+	    ret = m_top[i];
 	}
 	else {
-	    reduced.append(m_top[ind]);
+	    reduced.append(m_top[i]);
 	}
     }
     m_top = reduced;

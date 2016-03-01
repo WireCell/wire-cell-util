@@ -1,7 +1,6 @@
 #ifndef WIRECELL_CONFIGURATION
 #define WIRECELL_CONFIGURATION
 
-
 #include <json/json.h>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -82,6 +81,8 @@ namespace WireCell {
 	}
 	return ret;
     }
+    // for Point and Ray converters, see Point.h
+
 
     /// Follow a dot.separated.path and return the branch there.
     Configuration branch(Configuration cfg, const std::string& dotpath);
@@ -91,6 +92,17 @@ namespace WireCell {
 
     /// Return an array which is composed of the array b appended to the array a.
     Configuration append(Configuration& a, Configuration& b);
+
+    /// Return dictionary in given list if it value at dotpath matches
+    template<typename T>
+    Configuration find(Configuration& lst, const std::string& dotpath, const T& val) {
+	for (auto ent : lst) {
+	    auto maybe = branch(ent, dotpath);
+	    if (maybe.isNull()) { continue; }
+	    if (convert<T>(maybe) == val) { return maybe; }
+	}
+	return Configuration();
+    }
 
     /// Get value in configuration at the dotted path from or return default.
     template<typename T>
