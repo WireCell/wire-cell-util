@@ -2,8 +2,7 @@
 
 using namespace WireCell;
 
-
-std::pair<double,double> Waveform::mean_rms(signal_t& wf)
+std::pair<double,double> WireCell::Waveform::mean_rms(signal_t& wf)
 {
     int n = wf.size();
     if (n==0) {
@@ -18,13 +17,13 @@ std::pair<double,double> Waveform::mean_rms(signal_t& wf)
 }
 
 
-Waveform::fourier_t Waveform::fft(signal_t& wave)
+Waveform::fourier_t WireCell::Waveform::fft(signal_t& wave)
 {
     Eigen::FFT<float> trans;
     Eigen::VectorXcf ret = trans.fwd(wave.matrix());
     return ret.array();
 }
 
-Waveform::signal_t Waveform::ifft(fourier_t& spec)
+Waveform::signal_t WireCell::Waveform::ifft(fourier_t& spec)
 {
 }

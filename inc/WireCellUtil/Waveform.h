@@ -35,7 +35,7 @@ namespace WireCell {
 
 
 	// Return the mean and (population) RMS over a waveform signal.
-	std::pair<double,double> mean_rms(signal_t&sig);
+	std::pair<double,double> mean_rms(signal_t& wave);
 
     }
 }

@@ -72,20 +72,6 @@ void test_arithmetic()
     //cerr << f << endl;
 }
 
-void test_std_valarray()
-{
-    std::vector<float> v{1.0,1.0,2.0,3.0,4.0,4.0,4.0,3.0};
-
-    typedef std::valarray<float> vaf;
-    vaf a(v.data(), v.size());
-    vaf b;
-    b = a*2.0;
-    b -= 1.0;
-    
-    vaf c;
-    c = b/(a*a);
-    //cerr << c << endl;
-}
 
 int main(int argc, char* argv[])
 {
@@ -93,6 +79,6 @@ int main(int argc, char* argv[])
     test_mean_rms();
     test_fft();
     test_arithmetic();
-    test_std_valarray();
+
     return 0;
 }
