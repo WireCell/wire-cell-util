@@ -32,7 +32,7 @@ void test_transform()
 void test_mean_rms()
 {
     vector<float> v{1.0,1.0,2.0,3.0,4.0,4.0,4.0,3.0};
-    Waveform::signal_t s = Eigen::Map<Waveform::signal_t>(v.data(), v.size());
+    Waveform::timeseq_t s = Eigen::Map<Waveform::timeseq_t>(v.data(), v.size());
     auto us = WireCell::Waveform::mean_rms(s);
     cerr << us.first << " +/- " << us.second << endl;
 }
@@ -54,21 +54,20 @@ void test_fft()
     }
     cerr << s.size() << " " << f.size() << endl;
 }
-Waveform::signal_t make_signal(std::vector<Waveform::value_t> vec) {
-    return Eigen::Map<Waveform::signal_t>(vec.data(), vec.size());
-}
 
 void test_arithmetic()
 {
     std::vector<float> v{1.0,1.0,2.0,3.0,4.0,4.0,4.0,3.0};
+    Waveform::timeseq_t a = Waveform::std2eig(v);
+    std::vector<float> v2 = Waveform::eig2std(a);
+    Assert(v == v2);
 
-    Waveform::signal_t a = make_signal(v);
-    Waveform::signal_t b = 2*a - 1;
+    Waveform::timeseq_t b = 2*a - 1;
     //cerr << b << endl;
-    Waveform::signal_t c = b/(a*a);
+    Waveform::timeseq_t c = b/(a*a);
     //cerr << c << endl;
 
-    Waveform::fourier_t f = Waveform::fft(c);
+    Waveform::freqseq_t f = Waveform::fft(c);
     //cerr << f << endl;
 }
 
