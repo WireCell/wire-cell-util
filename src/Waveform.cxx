@@ -2,7 +2,7 @@
 
 using namespace WireCell;
 
-std::pair<double,double> WireCell::Waveform::mean_rms(timeseq_t& wf)
+std::pair<double,double> WireCell::Waveform::mean_rms(realseq_t& wf)
 {
     int n = wf.size();
     if (n==0) {
@@ -17,14 +17,54 @@ std::pair<double,double> WireCell::Waveform::mean_rms(timeseq_t& wf)
 }
 
 
-Waveform::freqseq_t WireCell::Waveform::fft(timeseq_t& wave)
+Waveform::compseq_t WireCell::Waveform::dft(realseq_t& wave)
 {
     Eigen::FFT<float> trans;
     Eigen::VectorXcf ret = trans.fwd(wave.matrix());
     return ret.array();
 }
 
-Waveform::timeseq_t WireCell::Waveform::ifft(freqseq_t& spec)
+Waveform::realseq_t WireCell::Waveform::idft(compseq_t& spec)
 {
-    // fixme: how about you write something here?
+    Eigen::FFT<float> trans;
+    Eigen::VectorXf ret;
+    trans.inv(ret, spec.matrix());
+    return ret.array();
 }
+
+
+Waveform::realseq_t WireCell::Waveform::real(const Waveform::compseq_t& seq)
+{
+    return seq.real();
+}
+
+Waveform::realseq_t WireCell::Waveform::imag(const Waveform::compseq_t& seq)
+{
+    return seq.imag();
+}
+
+Waveform::realseq_t WireCell::Waveform::magnitude(const Waveform::compseq_t& seq)
+{
+    return seq.abs();
+}
+
+
+static  Waveform::real_t myarg(const Waveform::complex_t& x)
+{
+    return std::arg(x);
+}
+Waveform::realseq_t WireCell::Waveform::phase(const Waveform::compseq_t& seq)
+{
+    // Apparently arg() isn't implemented. 
+
+    return seq.unaryExpr(ptr_fun(myarg));
+}
+
+Waveform::real_t WireCell::Waveform::median(Waveform::realseq_t& wave)
+{
+    std::vector<float> v = Waveform::eig2std(wave);
+    std::sort(v.begin(), v.end());
+    return v[v.size()/2];
+}
+
+
