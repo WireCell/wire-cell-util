@@ -1,38 +1,50 @@
 #ifndef WIRECELL_WAVEFORM
 #define WIRECELL_WAVEFORM
 
-#include <iostream>		// for testing
 #include <cstdint>
 #include <vector>
-#include <Eigen/Core>		 // for Array
-#include <unsupported/Eigen/FFT> // see type FFT below
+#include <complex>
+#include <numeric>
+#include <algorithm>
+
+/*
+ * Note, we do not expose any Eigen3 classes.
+ */
 
 namespace WireCell {
 
+
     namespace Waveform {
 
-	/// Type used for raw ADC values
-	typedef uint16_t adc_t;
-
-	/// A sequence of ADC is what the FADC produces
-	typedef Eigen::Array<adc_t, Eigen::Dynamic, 1> fadc_t;
-
-	/// Fundamental real value type.
+	/// The type for the signal in each bin.
 	typedef float real_t;
 
-	/// Complex used for example for discrete Fourier tranforms
+	/// The type for the spectrum in each bin.
 	typedef std::complex<float> complex_t;
+
+	template<typename Val>
+	using Sequence = std::vector<Val>;
+
+	// A real-valued sequence, eg for discrete signal values.
+	typedef Sequence<real_t> realseq_t;
+
+	/// A complex-valued sequence, eg for discrete spectrum powers.
+	typedef Sequence<complex_t> compseq_t;
+
+	/// A half-open range of bins (from first bin to one past last bin)
+	typedef std::pair<int,int> BinRange;
+
+	/// A range of time
+	typedef std::pair<double,double> Period;
+
+	/// A range of frequency
+	typedef std::pair<double,double> Band;
 
 	/// A sequence is an ordered array of values (real or
 	/// complex).  By itself it is not associated with a domain.
 	template<typename Val>
-	using Sequence = Eigen::Array<Val, Eigen::Dynamic, 1>;
+	using Sequence = std::vector<Val>;
 
-	// A real-valued sequence.
-	typedef Sequence<real_t> realseq_t;
-
-	/// A complex-valued sequence.
-	typedef Sequence<complex_t> compseq_t;
 
 	/// A domain of a sequence is bounded by the time or frequency
 	/// at the start of its first element and that at the end of
@@ -47,19 +59,9 @@ namespace WireCell {
 	    return (domain.second-domain.first)/count;
 	}
 
-	/// Convert a std::vector to a Sequence
-	template<typename Val>			      // not const correct?
-	Sequence<Val> std2eig(/*const*/ std::vector<Val>& vec) {
-	    typedef Sequence<Val> cont_t;
-	    return Eigen::Map<cont_t>(vec.data(), vec.size());
-	}
-
-	/// Convert a Sequence to a std::vector
-	template<typename Val>
-	std::vector<Val> eig2std(/*const*/ Sequence<Val>& vec) {
-	    return std::vector<Val>(vec.data(), vec.data() + vec.size());
-	}
-
+	/// Return the begin/end sample numbers inside the a subdomain of a domain with nsamples total.
+	std::pair<int,int> sub_sample(const Domain& domain, int nsamples, const Domain& subdomain);
+	    
 
 	/// Return the real part of the sequence
 	realseq_t real(const compseq_t& seq);
@@ -70,42 +72,71 @@ namespace WireCell {
 	/// Return the phase or arg part of the sequence
 	realseq_t phase(const compseq_t& seq);
 
-	/// Set a subdomain of a sequence with the given value.
-	/// Samples that are modified will be fully greater than or
-	/// equal the start of the subdomain and have no part greater
-	/// than the end of the subdomain.
+
+	/// Increase (shift) sequence values by scalar
 	template<typename Val>
-	void mask(Sequence<Val>& seq, 
-		  const Domain& domain, const Domain& subdomain,
-		  const Val& value = Val())
-	{
-	    int siz = seq.size();
-	    const double bin = sample_width(domain, siz);
-	    const int beg = std::max(  0, int(     ceil((subdomain.first - domain.first) / bin)));
-	    const int end = std::min(siz, int(siz- ceil((domain.second - subdomain.second) / bin)));
-	    std::cerr << "Masking " << beg <<  " " << end << std::endl;
-	    for (int ind=beg; ind<end; ++ind) {
-		seq(ind) = value;
-	    }
+	void increase(Sequence<Val>& seq, Val scalar) {
+	    std::transform(seq.begin(), seq.end(), seq.begin(), 
+			   [scalar](Val x) { return x+scalar; });
+	}
+	void increase(Sequence<float>& seq, double scalar) {
+	    increase(seq, (float)scalar);
+	}
+
+	/// Increase (shift) sequence values by values in another sequence
+	template<typename Val>
+	void increase(Sequence<Val>& seq, const Sequence<Val>& other) {
+	    std::transform(seq.begin(), seq.end(), other.begin(), seq.begin(),
+			   std::plus<Val>());
+	}
+
+	/// Scale (multiply) sequence values by scalar
+	template<typename Val>
+	void scale(Sequence<Val>& seq, Val scalar) {
+	    std::transform(seq.begin(), seq.end(), seq.begin(), 
+			   [scalar](Val x) { return x*scalar; });
+	}
+	void scale(Sequence<float>& seq, double scalar) {
+	    scale(seq, (float)scalar);
+	}
+
+	/// Scale (multiply) sequence values by values in another sequence
+	template<typename Val>
+	void scale(Sequence<Val>& seq, const Sequence<Val>& other) {
+	    std::transform(seq.begin(), seq.end(), other.begin(), seq.begin(),
+			   std::multiplies<Val>());
 	}
 
 
-	// Implementation: http://eigen.tuxfamily.org/index.php?title=EigenFFT
+
+
+	/// Return sum of all entries in sequence.
+	template<typename Val>
+	Val sum(const Sequence<Val>& seq) {
+	    return std::accumulate(seq.begin(), seq.end(), Val());
+	}
+
+	/// Return sum of square of all entries in sequence.
+	template<typename Val>
+	Val sum2(const Sequence<Val>& seq) {
+	    return std::accumulate(seq.begin(), seq.end(), Val(),
+				   [](const Val& bucket, Val x) {
+				       return bucket + x*x;
+				   });
+	}
+	
+	// Return the mean and (population) RMS over a waveform signal.
+	std::pair<double,double> mean_rms(const realseq_t& wave);
+
+	// Return the median value.
+	real_t median(realseq_t wave);
 
 	/// Discrete Fourier transform of real sequence.  Returns full spectrum.
-	compseq_t dft(realseq_t& seq);
+	compseq_t dft(realseq_t seq);
 
 	/// Inverse, discrete Fourier transform.  Expects full
 	/// spectrum, but only uses first half.
-	realseq_t idft(compseq_t& spec);
-
-
-	// Return the mean and (population) RMS over a waveform signal.
-	std::pair<double,double> mean_rms(realseq_t& wave);
-
-	// Return the median value.
-	real_t median(realseq_t& wave);
-
+	realseq_t idft(compseq_t spec);
     }
 }
 

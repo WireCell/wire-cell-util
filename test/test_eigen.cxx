@@ -6,6 +6,24 @@
 #include <vector>
 #include <iostream>
 
+
+
+// template<typename Val>
+// using Array = Eigen::Array<Val, Eigen::Dynamic, 1>;
+// /// Convert a std::vector to a Sequence
+// template<typename Val>			      // not const correct?
+// Array<Val> std2eig(/*const*/ std::vector<Val>& vec) {
+//     typedef Array<Val> cont_t;
+//     return Eigen::Map<cont_t>(vec.data(), vec.size());
+// }
+
+// /// Convert a Sequence to a std::vector
+// template<typename Val>
+// std::vector<Val> eig2std(/*const*/ Array<Val>& vec) {
+//     return std::vector<Val>(vec.data(), vec.data() + vec.size());
+// }
+
+
 Eigen::ArrayXf vec2arr(const std::vector<float>& v)
 {
     Eigen::ArrayXf ret(v.size());
