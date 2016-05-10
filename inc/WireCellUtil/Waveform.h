@@ -22,14 +22,19 @@ namespace WireCell {
 	/// The type for the spectrum in each bin.
 	typedef std::complex<float> complex_t;
 
+
+	/// A sequence is an ordered array of values (real or
+	/// complex).  By itself it is not associated with a domain.
 	template<typename Val>
 	using Sequence = std::vector<Val>;
+
 
 	// A real-valued sequence, eg for discrete signal values.
 	typedef Sequence<real_t> realseq_t;
 
 	/// A complex-valued sequence, eg for discrete spectrum powers.
 	typedef Sequence<complex_t> compseq_t;
+
 
 	/// A half-open range of bins (from first bin to one past last bin)
 	typedef std::pair<int,int> BinRange;
@@ -39,11 +44,6 @@ namespace WireCell {
 
 	/// A range of frequency
 	typedef std::pair<double,double> Band;
-
-	/// A sequence is an ordered array of values (real or
-	/// complex).  By itself it is not associated with a domain.
-	template<typename Val>
-	using Sequence = std::vector<Val>;
 
 
 	/// A domain of a sequence is bounded by the time or frequency
@@ -79,7 +79,7 @@ namespace WireCell {
 	    std::transform(seq.begin(), seq.end(), seq.begin(), 
 			   [scalar](Val x) { return x+scalar; });
 	}
-	void increase(Sequence<float>& seq, double scalar) {
+	inline void increase(Sequence<float>& seq, double scalar) {
 	    increase(seq, (float)scalar);
 	}
 
@@ -96,15 +96,21 @@ namespace WireCell {
 	    std::transform(seq.begin(), seq.end(), seq.begin(), 
 			   [scalar](Val x) { return x*scalar; });
 	}
-	void scale(Sequence<float>& seq, double scalar) {
+	inline void scale(Sequence<float>& seq, double scalar) {
 	    scale(seq, (float)scalar);
 	}
 
-	/// Scale (multiply) sequence values by values in another sequence
+	/// Scale (multiply) seq values by values from the nother sequence.
 	template<typename Val>
 	void scale(Sequence<Val>& seq, const Sequence<Val>& other) {
 	    std::transform(seq.begin(), seq.end(), other.begin(), seq.begin(),
 			   std::multiplies<Val>());
+	}
+	/// Shrink (divide) seq values by values from the other sequence.
+	template<typename Val>
+	void shrink(Sequence<Val>& seq, const Sequence<Val>& other) {
+	    std::transform(seq.begin(), seq.end(), other.begin(), seq.begin(),
+			   std::divides<Val>());
 	}
 
 
