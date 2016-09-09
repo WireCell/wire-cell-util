@@ -27,7 +27,7 @@
 // http://stackoverflow.com/questions/31463388/can-someone-please-explain-the-indices-trick
 
 /// If we are still before C++14, supply the fodder for doing the "indices trick".
-#if __cplusplus < 201402L
+#if __cplusplus <= 201103L
 namespace std {
     template <std::size_t... Is>
     struct index_sequence {};
@@ -39,6 +39,7 @@ namespace std {
     struct make_index_sequence<0, Is...> : index_sequence<Is...> {};
 }
 #endif	// assume C++14
+
 
 namespace WireCell {
 
