@@ -1,6 +1,7 @@
 #ifndef WIRECELL_WAVEFORM
 #define WIRECELL_WAVEFORM
 
+#include <map>
 #include <cstdint>
 #include <vector>
 #include <complex>
@@ -39,6 +40,24 @@ namespace WireCell {
 	/// A half-open range of bins (from first bin to one past last bin)
 	typedef std::pair<int,int> BinRange;
 
+	/// A list of bin ranges.
+	typedef std::vector<BinRange> BinRangeList;
+
+	/// Return a new list with any overlaps formed into unions.
+	BinRangeList merge(const BinRangeList& br);
+
+	/// Merge two bin range lists, forming a union from any overlapping ranges
+	BinRangeList merge(const BinRangeList& br1, const BinRangeList& br2);
+
+	/// Map channel number to a vector of BinRanges
+	typedef std::map<int, BinRangeList > ChannelMasks;
+
+	/// Return a new mapping which is the union of all same channel masks.
+	ChannelMasks merge(const ChannelMasks& one, const ChannelMasks& two);
+
+	/// Collect channel masks by some label.
+	typedef std::map<std::string, ChannelMasks> ChannelMaskMap;
+
 	/// A range of time
 	typedef std::pair<double,double> Period;
 
@@ -62,7 +81,6 @@ namespace WireCell {
 	/// Return the begin/end sample numbers inside the a subdomain of a domain with nsamples total.
 	std::pair<int,int> sub_sample(const Domain& domain, int nsamples, const Domain& subdomain);
 	    
-
 	/// Return the real part of the sequence
 	realseq_t real(const compseq_t& seq);
 	/// Return the imaginary part of the sequence

@@ -86,3 +86,51 @@ Waveform::realseq_t WireCell::Waveform::idft(compseq_t spec)
     return realseq_t(ret.data(), ret.data()+ret.size());
 }
 
+
+WireCell::Waveform::BinRangeList
+WireCell::Waveform::merge(const WireCell::Waveform::BinRangeList& brl)
+{
+    WireCell::Waveform::BinRangeList tmp(brl.begin(), brl.end());
+    WireCell::Waveform::BinRangeList out;
+    sort(tmp.begin(), tmp.end());
+    Waveform::BinRange last_br = tmp[0];
+    for (int ind=1; ind<tmp.size(); ++ind) {
+	Waveform::BinRange this_br = tmp[ind];
+	if (last_br.second <= this_br.first) {
+	    last_br.second = this_br.second;
+	    continue;
+	}
+	out.push_back(last_br);
+	last_br = this_br;
+    }
+    return out;
+}
+
+	/// Merge two bin range lists, forming a union from any overlapping ranges
+WireCell::Waveform::BinRangeList
+WireCell::Waveform::merge(const WireCell::Waveform::BinRangeList& br1,
+			  const WireCell::Waveform::BinRangeList& br2)
+{
+    WireCell::Waveform::BinRangeList out;
+    out.reserve(br1.size() + br2.size());
+    out.insert(out.end(), br1.begin(), br1.end());
+    out.insert(out.end(), br2.begin(), br2.end());
+    return merge(out);
+}
+
+
+
+
+/// Return a new mapping which is the union of all same channel masks.
+WireCell::Waveform::ChannelMasks
+WireCell::Waveform::merge(const WireCell::Waveform::ChannelMasks& one,
+			  const WireCell::Waveform::ChannelMasks& two)
+{
+    WireCell::Waveform::ChannelMasks out = one;
+    for (auto const &it : two) {
+	int ch = it.first;
+	out[ch] = merge(out[ch], it.second);
+    }
+    return out;
+}
+
