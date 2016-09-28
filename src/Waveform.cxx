@@ -94,14 +94,15 @@ WireCell::Waveform::merge(const WireCell::Waveform::BinRangeList& brl)
     WireCell::Waveform::BinRangeList out;
     sort(tmp.begin(), tmp.end());
     Waveform::BinRange last_br = tmp[0];
+    out.push_back(last_br);
+
     for (int ind=1; ind<tmp.size(); ++ind) {
 	Waveform::BinRange this_br = tmp[ind];
-	if (last_br.second <= this_br.first) {
-	    last_br.second = this_br.second;
-	    continue;
+	if (out.back().second >= this_br.first) {
+	  out.back().second = this_br.second;
+	  continue;
 	}
-	out.push_back(last_br);
-	last_br = this_br;
+	out.push_back(this_br);
     }
     return out;
 }
