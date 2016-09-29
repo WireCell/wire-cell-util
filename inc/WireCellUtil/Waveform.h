@@ -155,6 +155,8 @@ namespace WireCell {
 	// Return the median value.
 	real_t median(realseq_t wave);
 
+	real_t percentile(realseq_t wave, real_t percentage);
+
 	/// Discrete Fourier transform of real sequence.  Returns full spectrum.
 	compseq_t dft(realseq_t seq);
 
