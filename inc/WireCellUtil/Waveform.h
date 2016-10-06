@@ -81,6 +81,35 @@ namespace WireCell {
 	/// Return the begin/end sample numbers inside the a subdomain of a domain with nsamples total.
 	std::pair<int,int> sub_sample(const Domain& domain, int nsamples, const Domain& subdomain);
 	    
+	/// Return a new sequence resampled and interpolated from the
+	/// original wave defined over the domain to a new domain of
+	/// nsamples.
+	template<typename Val>
+	Sequence<Val> resample(const Sequence<Val>& wave, const Domain& domain, int nsamples, const Domain& newdomain) {
+	    const int oldnsamples = wave.size();
+	    const double oldstep = sample_width(domain, oldnsamples);
+	    const double step = sample_width(newdomain, nsamples);
+	    Sequence<Val> ret;
+	    for (int ind=0; ind<nsamples; ++ind) {
+		double cursor = newdomain.first + ind*step;
+		double oldfracsteps = (cursor-domain.first)/oldstep;
+		int oldind = int(oldfracsteps)
+		if (cursor <= domain.first or oldind <= 0) {
+		    ret.push_back(wave[0]);
+		    continue;
+		}
+		if (cursor >= domain.second or oldind+1 >= oldnsamples) {
+		    ret.push_back(wave[oldnsamples-1])
+		    continue;
+		}
+		double d1 = oldfracsteps - oldstep*oldind;
+		double d2 = oldstep - d1;
+		Val newval = (wave[oldind] * d1 + wave[oldind+1]*d2) / oldstep;
+		ret.push_back(newval);
+	    }
+	    return ret;
+	}
+
 	/// Return the real part of the sequence
 	realseq_t real(const compseq_t& seq);
 	/// Return the imaginary part of the sequence
@@ -155,12 +184,23 @@ namespace WireCell {
 	// Return the median value.
 	real_t median(realseq_t wave);
 
-	/// Discrete Fourier transform of real sequence.  Returns full spectrum.
+	/// Discrete Fourier transform of real sequence.  Returns full
+	/// complex spectrum.
 	compseq_t dft(realseq_t seq);
 
 	/// Inverse, discrete Fourier transform.  Expects full
 	/// spectrum, but only uses first half.
 	realseq_t idft(compseq_t spec);
+
+	/// Discrete Fourier transform of complex sequence.  Returns
+	/// full complex spectrum.
+	compseq_t cdftfwd(compseq_t wave);
+
+	/// Inverse, discrete Fourier transform.  Expects full complex
+	/// spectrum, but only uses first half.  Return complex
+	/// waveform.	
+	compseq_t cdftinv(compseq_t spec);
+
     }
 }
 

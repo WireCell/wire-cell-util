@@ -86,6 +86,26 @@ Waveform::realseq_t WireCell::Waveform::idft(compseq_t spec)
     return realseq_t(ret.data(), ret.data()+ret.size());
 }
 
+Waveform::compseq_t WireCell::Waveform::cdftfwd(compseq_t wave)
+{
+    auto v = Eigen::Map<Eigen::VectorXcf>(wave.data(), wave.size());
+    Eigen::FFT<complex> trans;
+    Eigen::VectorXcf ret = trans.fwd(v);
+    return compseq_t(ret.data(), ret.data()+ret.size());
+}
+
+Waveform::compseq_t WireCell::Waveform::cdftinv(compseq_t spec)
+{
+    Eigen::FFT<complex> trans;
+    auto v = Eigen::Map<Eigen::VectorXcf>(spec.data(), spec.size());
+    Eigen::VectorXcf ret;
+    trans.inv(ret, v);
+    return compseq_t(ret.data(), ret.data()+ret.size());
+}
+
+
+
+
 
 WireCell::Waveform::BinRangeList
 WireCell::Waveform::merge(const WireCell::Waveform::BinRangeList& brl)
