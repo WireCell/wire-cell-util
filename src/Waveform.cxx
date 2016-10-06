@@ -69,6 +69,12 @@ Waveform::real_t WireCell::Waveform::median(Waveform::realseq_t wave)
     return wave[wave.size()/2];
 }
 
+Waveform::real_t WireCell::Waveform::percentile(Waveform::realseq_t wave, real_t percentage){
+  std::sort(wave.begin(), wave.end());
+  return wave[wave.size() * percentage];
+}
+
+
 Waveform::compseq_t WireCell::Waveform::dft(realseq_t wave)
 {
     auto v = Eigen::Map<Eigen::VectorXf>(wave.data(), wave.size());
