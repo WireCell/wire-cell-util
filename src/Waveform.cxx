@@ -78,38 +78,21 @@ Waveform::real_t WireCell::Waveform::percentile(Waveform::realseq_t wave, real_t
 Waveform::compseq_t WireCell::Waveform::dft(realseq_t wave)
 {
     auto v = Eigen::Map<Eigen::VectorXf>(wave.data(), wave.size());
-    Eigen::FFT<float> trans;
+    Eigen::FFT<Waveform::real_t> trans;
     Eigen::VectorXcf ret = trans.fwd(v);
     return compseq_t(ret.data(), ret.data()+ret.size());
 }
 
 Waveform::realseq_t WireCell::Waveform::idft(compseq_t spec)
 {
-    Eigen::FFT<float> trans;
+    Eigen::FFT<Waveform::real_t> trans;
     auto v = Eigen::Map<Eigen::VectorXcf>(spec.data(), spec.size());
     Eigen::VectorXf ret;
     trans.inv(ret, v);
     return realseq_t(ret.data(), ret.data()+ret.size());
 }
 
-Waveform::compseq_t WireCell::Waveform::cdftfwd(compseq_t wave)
-{
-    auto v = Eigen::Map<Eigen::VectorXcf>(wave.data(), wave.size());
-    Eigen::FFT<complex> trans;
-    Eigen::VectorXcf ret = trans.fwd(v);
-    return compseq_t(ret.data(), ret.data()+ret.size());
-}
-
-Waveform::compseq_t WireCell::Waveform::cdftinv(compseq_t spec)
-{
-    Eigen::FFT<complex> trans;
-    auto v = Eigen::Map<Eigen::VectorXcf>(spec.data(), spec.size());
-    Eigen::VectorXcf ret;
-    trans.inv(ret, v);
-    return compseq_t(ret.data(), ret.data()+ret.size());
-}
-
-
+ 
 
 
 

@@ -8,10 +8,6 @@
 #include <numeric>
 #include <algorithm>
 
-/*
- * Note, we do not expose any Eigen3 classes.
- */
-
 namespace WireCell {
 
 
@@ -93,13 +89,13 @@ namespace WireCell {
 	    for (int ind=0; ind<nsamples; ++ind) {
 		double cursor = newdomain.first + ind*step;
 		double oldfracsteps = (cursor-domain.first)/oldstep;
-		int oldind = int(oldfracsteps)
-		if (cursor <= domain.first or oldind <= 0) {
+		int oldind = int(oldfracsteps);
+		if (cursor <= domain.first || oldind <= 0) {
 		    ret.push_back(wave[0]);
 		    continue;
 		}
 		if (cursor >= domain.second or oldind+1 >= oldnsamples) {
-		    ret.push_back(wave[oldnsamples-1])
+		    ret.push_back(wave[oldnsamples-1]);
 		    continue;
 		}
 		double d1 = oldfracsteps - oldstep*oldind;
@@ -192,15 +188,6 @@ namespace WireCell {
 	/// Inverse, discrete Fourier transform.  Expects full
 	/// spectrum, but only uses first half.
 	realseq_t idft(compseq_t spec);
-
-	/// Discrete Fourier transform of complex sequence.  Returns
-	/// full complex spectrum.
-	compseq_t cdftfwd(compseq_t wave);
-
-	/// Inverse, discrete Fourier transform.  Expects full complex
-	/// spectrum, but only uses first half.  Return complex
-	/// waveform.	
-	compseq_t cdftinv(compseq_t spec);
 
     }
 }
