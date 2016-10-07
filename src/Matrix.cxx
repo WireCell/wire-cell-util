@@ -1,9 +1,10 @@
 #include "WireCellUtil/Matrix.h"
 
+#include <unsupported/Eigen/FFT>
+
 #include <algorithm>
 
 using namespace WireCell;
-
 
 Matrix::real_matrix Matrix::frame_matrix(const std::vector<Waveform::realseq_t>& waves)
 {
@@ -27,11 +28,52 @@ Matrix::real_matrix Matrix::frame_matrix(const std::vector<Waveform::realseq_t>&
 //http://stackoverflow.com/a/33636445
 Matrix::complex_matrix Matrix::dft(Matrix::real_matrix mat)
 {
+    const int nrows = mat->rows();
+    const int ncols = mat->cols();
+
+    Matrix::complex_matrix ret = std::make_shared<Matrix::complex_matrix_imp> (nrows, ncols);
+
+    Eigen::FFT< float > fft;
+    for (int irow = 0; irow < nrows; ++irow) {
+        Eigen::VectorXcf fspec(ncols); // frequency spectrum 
+        fft.fwd(fspec, mat->row(irow));
+        ret->row(irow) = fspec;
+    }
+
+    for (int icol = 0; icol < ncols; ++icol) {
+        Eigen::VectorXcf pspec(nrows); // periodicity spectrum
+        fft.fwd(pspec, ret->col(icol));
+        ret->col(icol) = pspec;
+    }
+
+    return ret;
 }
 
-	/// Perform 2D inverse, discrete Fourier transform.
-Matrix::real_matrix idft(Matrix::complex_matrix spec)
+Matrix::real_matrix Matrix::idft(Matrix::complex_matrix mat)
 {
+    const int nrows = mat->rows();
+    const int ncols = mat->cols();
+
+    Matrix::complex_matrix partial = std::make_shared<Matrix::complex_matrix_imp> (nrows, ncols);
+
+    Eigen::FFT< float > fft;
+
+    for (int icol = 0; icol < ncols; ++icol) {
+        Eigen::VectorXcf pspec(nrows); // periodicity spectrum
+        fft.inv(pspec, mat->col(icol));
+        partial->col(icol) = pspec;
+    }
+
+    Matrix::real_matrix ret = std::make_shared<Matrix::real_matrix_imp> (nrows, ncols);
+
+    for (int irow = 0; irow < nrows; ++irow) {
+        Eigen::VectorXf wave(ncols); // frequency spectrum 
+        fft.inv(wave, partial->row(irow));
+        ret->row(irow) = wave;
+    }
+
+    return ret;
+
 }
 
 // Waveform::compseq_t WireCell::Waveform::cdftfwd(compseq_t wave)
