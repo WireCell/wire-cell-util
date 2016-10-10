@@ -21,7 +21,7 @@ std::string ExecMon::operator()(std::string msg, TimeKeeper::ptime now, MemUsage
 std::string ExecMon::summary() const
 {
     std::stringstream ss;
-    ss << "Time summary:\n" << tk.summary() << "\nMemory usage:" << mu.summary();
+    ss << "Time summary:\n" << tk.summary() << "\nMemory usage:\n" << mu.summary();
     return ss.str();
 }
 

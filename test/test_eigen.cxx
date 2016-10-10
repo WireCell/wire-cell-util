@@ -1,10 +1,16 @@
 #include "WireCellUtil/Testing.h"
+#include "WireCellUtil/ExecMon.h"
 
 #include <Eigen/Core>
 
 #include <cmath>
 #include <vector>
+#include <memory>
 #include <iostream>
+
+using namespace std;
+
+using namespace Eigen;
 
 
 
@@ -33,11 +39,92 @@ Eigen::ArrayXf vec2arr(const std::vector<float>& v)
     return ret;
 }
 
+// manual says care is needed for passing by value.  Unneeded
+// temporaries can be created or worse.
+Eigen::ArrayXf filter_array(const Eigen::ArrayXf& arr)
+{
+    cerr << "filter.arr = " << arr << endl;
+    auto ret = arr + 1;
+    cerr << "filter.ret = " << ret << endl;
+    return ret;
+}
+
+Eigen::ArrayXf select_row(const Eigen::ArrayXXf& arr, int ind, WireCell::ExecMon& em)
+{
+    auto tmp = arr.row(ind);	// no copy
+    em("after assignment to auto type");
+    Eigen::ArrayXf ret = arr.row(ind); // this does a copy
+    em("after assignment to explicit type");
+    return tmp;			// this does a copy
+}
+
+template <typename Derived>
+using shared_dense = std::shared_ptr< Eigen::DenseBase<Derived> >;
+template <typename Derived>
+using const_shared_dense = std::shared_ptr< const Eigen::DenseBase<Derived> >;
+
+typedef shared_dense<Eigen::ArrayXXf> shared_array_xxf;
+typedef const_shared_dense<Eigen::ArrayXXf> const_shared_array_xxf;
+
+template <typename Derived>
+Eigen::Block<const Derived> return_block(WireCell::ExecMon& em, const_shared_dense<Derived> dense,
+					 int i, int j, int p, int q)
+{
+    //Eigen::Block<const Derived> b = dense->block(i,j,p,q);
+    auto b = dense->block(i,j,p,q);
+    cerr << em("made block") << endl;
+    cerr << " " << b.rows() << " X " << b.cols() << endl;    
+    return b;
+}
+
+void take_pointer(WireCell::ExecMon& em, const_shared_array_xxf ba)
+{
+    cerr << "shared array is " << ba->rows() << " X " << ba->cols() << endl;
+    auto b = return_block(em, ba, 1,1,2,50000);
+    cerr << "block: " << b.rows() << " X " << b.cols() << endl;
+    em("got block");
+
+}
+
+
+void test_bigass(WireCell::ExecMon& em)
+{
+    // not really *that* big....
+    ArrayXXf bigass = ArrayXXf::Random(3, 100000);
+    em("made big array");
+    auto part = select_row(bigass, 0, em);
+    em("got part");
+    cerr << part.rows() << " X " << part.cols() << "\n";
+    auto part2 = part * 10;
+    em("used part");
+    auto part3 = part2 * 0;
+    em("zeroed");
+    auto part4 = select_row(bigass, 0, em);
+    em("select row again");
+    int nzero=0;
+    for (int ind=0; ind<part4.rows(); ++ind) {
+	if (part4(ind) == 0.00001) {
+	    ++nzero;
+	}
+    }
+    cerr << "got zero in " << nzero << " / " << part3.rows() << endl;
+    em("checked");
+
+    auto shared_bigass = std::make_shared<ArrayXXf>(3, 100000);
+    em("make_shared");
+    (*shared_bigass) = bigass;
+    em("copy shared");
+
+    take_pointer(em, shared_bigass); // cast to const
+    em("passed as const shared pointer");
+
+    shared_bigass = nullptr;
+    em("nullified shared");
+
+}
+
 int main()
 {
-    using namespace std;
-    using namespace Eigen;
-
     std::vector<float> v{1.0,1.0,2.0,3.0,4.0,4.0,4.0,3.0};
     ArrayXf ar1 = vec2arr(v);	// copy okay
 
@@ -57,7 +144,21 @@ int main()
     table.col(0) = ar1;
     table.col(1) = ar2;
     table.col(2) = ar3;
-    cerr << table <<endl;
+
+    ArrayXf tmp = filter_array(ar3);
+    cerr << "Tmp col:\n" << tmp << ".\n";
+
+    cerr << "Table:\n" << table << ".\n";
+
+    ArrayXf one_row = table.row(0);
+    cerr << "One row:\n" << one_row << ".\n";
+
+    ArrayXf one_col = table.col(0);
+    cerr << "One col:\n" << one_col << ".\n";
+
+
+
+
     VectorXf v1 = ar1.matrix();
 
     for (int ind=0; ind < v.size(); ++ind) {
@@ -83,6 +184,14 @@ int main()
 	 << " < "
 	 << maxV << "@" << maxI
 	 << endl;
+
+
+    WireCell::ExecMon em;
+    test_bigass(em);
+
+
+
+    cerr << em.summary() << endl;
 
     return 0;
 }
