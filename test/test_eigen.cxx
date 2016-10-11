@@ -2,6 +2,7 @@
 #include "WireCellUtil/ExecMon.h"
 
 #include <Eigen/Core>
+#include <unsupported/Eigen/FFT>
 
 #include <cmath>
 #include <vector>
@@ -63,8 +64,13 @@ using shared_dense = std::shared_ptr< Eigen::DenseBase<Derived> >;
 template <typename Derived>
 using const_shared_dense = std::shared_ptr< const Eigen::DenseBase<Derived> >;
 
-typedef shared_dense<Eigen::ArrayXXf> shared_array_xxf;
-typedef const_shared_dense<Eigen::ArrayXXf> const_shared_array_xxf;
+typedef Eigen::ArrayXXf array_xxf;
+typedef shared_dense<array_xxf> shared_array_xxf;
+typedef const_shared_dense<array_xxf> const_shared_array_xxf;
+
+typedef Eigen::ArrayXXcf array_xxc;
+typedef shared_dense<array_xxc> shared_array_xxc;
+
 
 template <typename Derived>
 Eigen::Block<const Derived> return_block(WireCell::ExecMon& em, const_shared_dense<Derived> dense,
@@ -77,20 +83,64 @@ Eigen::Block<const Derived> return_block(WireCell::ExecMon& em, const_shared_den
     return b;
 }
 
+void do_fft(WireCell::ExecMon& em, const array_xxf& arr)
+{
+    const int nrows = arr.rows();
+    const int ncols = arr.cols();
+
+    em("fft: start");
+
+    Eigen::MatrixXf in = arr.matrix(); 
+    em("fft: convert to matrix");
+    Eigen::MatrixXcf matc(nrows, ncols);
+    em("fft: made temp complex matrix");
+
+    Eigen::FFT< float > fft;
+    em("fft: made fft object");
+
+    for (int irow = 0; irow < nrows; ++irow) {
+        Eigen::VectorXcf fspec(ncols); // frequency spectrum 
+        fft.fwd(fspec, in.row(irow));
+        matc.row(irow) = fspec;
+    }
+    em("fft: first dimension");
+
+    for (int icol = 0; icol < ncols; ++icol) {
+        Eigen::VectorXcf pspec(nrows); // periodicity spectrum
+        fft.fwd(pspec, matc.col(icol));
+        matc.col(icol) = pspec;
+    }
+    em("fft: second dimension");
+
+    shared_array_xxc ret = std::make_shared<array_xxc> (nrows, ncols);
+    em("fft: make shared for return");
+    (*ret) = matc;
+    em("fft: set shared for return");
+    ret = nullptr;
+    em("fft: nullify return");
+}
+
+const int nbig_rows = 3000;
+const int nbig_cols = 10000;
+
 void take_pointer(WireCell::ExecMon& em, const_shared_array_xxf ba)
 {
+    do_fft(em, *ba);
+    em("fft: done");
+
     cerr << "shared array is " << ba->rows() << " X " << ba->cols() << endl;
-    auto b = return_block(em, ba, 1,1,2,50000);
+    auto b = return_block(em, ba, 1,1,nbig_rows/2,nbig_cols/2);
     cerr << "block: " << b.rows() << " X " << b.cols() << endl;
     em("got block");
 
 }
 
 
+
 void test_bigass(WireCell::ExecMon& em)
 {
     // not really *that* big....
-    ArrayXXf bigass = ArrayXXf::Random(3, 100000);
+    ArrayXXf bigass = ArrayXXf::Random(nbig_rows, nbig_cols);
     em("made big array");
     auto part = select_row(bigass, 0, em);
     em("got part");
@@ -107,10 +157,11 @@ void test_bigass(WireCell::ExecMon& em)
 	    ++nzero;
 	}
     }
-    cerr << "got zero in " << nzero << " / " << part3.rows() << endl;
+    cerr << "got zero " << nzero << " times out of " << part3.rows() << endl;
+    Assert(0 == nzero);
     em("checked");
 
-    auto shared_bigass = std::make_shared<ArrayXXf>(3, 100000);
+    auto shared_bigass = std::make_shared<ArrayXXf>(nbig_rows, nbig_cols);
     em("make_shared");
     (*shared_bigass) = bigass;
     em("copy shared");
@@ -120,11 +171,13 @@ void test_bigass(WireCell::ExecMon& em)
 
     shared_bigass = nullptr;
     em("nullified shared");
-
 }
+
 
 int main()
 {
+    WireCell::ExecMon em;
+
     std::vector<float> v{1.0,1.0,2.0,3.0,4.0,4.0,4.0,3.0};
     ArrayXf ar1 = vec2arr(v);	// copy okay
 
@@ -185,12 +238,11 @@ int main()
 	 << maxV << "@" << maxI
 	 << endl;
 
+    em("testing bigass");
 
-    WireCell::ExecMon em;
     test_bigass(em);
 
-
-
+    em("the end");
     cerr << em.summary() << endl;
 
     return 0;

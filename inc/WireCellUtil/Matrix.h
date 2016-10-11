@@ -13,6 +13,7 @@ namespace WireCell {
 
     namespace Matrix {
 
+
 	/// Try to hide dependency on Eigen and avoid "knowing"
 	/// they point to Eigen3 matrices.
 	typedef Eigen::MatrixXf real_matrix_imp;
