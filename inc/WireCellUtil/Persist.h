@@ -1,7 +1,7 @@
 #ifndef WIRECELL_PERSIST
 #define WIRECELL_PERSIST
 
-#include <jsoncpp/json/json.h>
+#include <json/json.h>
 
 
 namespace WireCell {
