@@ -1,3 +1,6 @@
 *~
 old
 *.pdf
+cut
+*.orig
+*.root
