@@ -1,21 +1,23 @@
 /**
-   Wire Cell uses Eigen3 arrays for holding large block data like from
-   one readout frame.  This header provides a shim between Eigen3 and
-   the rest of Wire Cell.
+   Wire Cell uses Eigen3 arrays for holding large block data like the
+   waveforms from one plane of one readout frame.  This header
+   provides a shim between Eigen3 and the rest of Wire Cell.
 
    There are a few important rules:
  
-   - Arrays have element-wise arithmetic and Matrices have matrix-like
-     arithmetic otherwise are similar.
+   - Eigen3 Arrays have element-wise arithmetic and Matrices have
+     matrix-like arithmetic otherwise are similar.
 
-   - Arrays are indexed by (row,col).  
+   - They have .array() and .matrix() methods to produce one from the other.
 
-   - An Eigen3 Vector is a 1D Matrix of shape (2,1), again, (row,col).
+   - Arrays are indexed by (row,col) order.  
+
+   - An Eigen3 Vector is a 1D Matrix of shape (N,1), again, (row,col).
 
    - A row, column or block from an array references the original
      array so can not live beyond it.  
 
-   - The primary array is accessed via const shared pointer.
+   - In Wire Cell large arrays are accessed via const shared pointer.
 
    Usage examples are given below.
  */ 
@@ -82,8 +84,8 @@ namespace WireCell {
 
 	    const_shared_array_xxf arr2 = idft(*spec);
 	 */
-	const_shared_array_xxc dft(const array_xxf& arr);
-	const_shared_array_xxf idft(const array_xxc& arr);
+	array_xxc dft(const array_xxf& arr);
+	array_xxf idft(const array_xxc& arr);
 
 	/** Perform 2D deconvolution. 
 	    
@@ -93,7 +95,7 @@ namespace WireCell {
 	    perform an 2D inverse DFT.
 
 	 */
-	const_shared_array_xxf deconv(const array_xxf& arr, const array_xxc& filter);
+	array_xxf deconv(const array_xxf& arr, const array_xxc& filter);
 
 
     }

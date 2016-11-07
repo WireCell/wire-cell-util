@@ -9,11 +9,38 @@ using namespace WireCell;
 using namespace WireCell::Array;
 
 
-const_shared_array_xxf my_great_array(int nrows, int ncols)
+array_xxf my_great_array(ExecMon& em, int nrows, int ncols)
 {
-    shared_array_xxf arr = std::make_shared<array_xxf>(nrows, ncols);
-    (*arr) = Eigen::ArrayXXf::Random(nrows, ncols);
+    std::stringstream ss;
+    ss << "array(" << nrows << "," << ncols<<")";
+    em(ss.str() + ": constructing");
+    array_xxf arr = Eigen::ArrayXXf::Random(nrows, ncols); // 197 ms opt, 646 ms debug.
+    em(ss.str() + ": constructed");
+
     return arr;
+}
+
+array_xxf dup(const array_xxf& arr)
+{
+    return arr;
+}
+
+void test_copy(ExecMon& em)
+{
+    const int nrows = 3000;
+    const int ncols = 10000;
+    {
+	array_xxf arr = my_great_array(em, nrows, ncols);
+	em("array by value: returned");
+
+	// This loop over 100 copies takes 19.513 s (debug), 1.715 s (opt)
+	for (int ind=0; ind<100; ++ind) {
+	    array_xxf tmp = dup(arr);
+	}
+	em("array by value: 100 dups");
+
+    }
+    em("array by value: left scope");
 }
 
 void test_return(ExecMon& em)
@@ -21,18 +48,11 @@ void test_return(ExecMon& em)
     const int nrows = 3000;
     const int ncols = 10000;
     {
-	auto arr = my_great_array(nrows, ncols);
+	auto arr = my_great_array(em, nrows, ncols);
 	em("ret: to auto");
-	Assert(arr->rows() == nrows);
+	Assert(arr.rows() == nrows);
     }
     em("ret: out of scope");
-    {
-	const_shared_array_xxf arr = my_great_array(nrows, ncols);
-	em("ret: to explicit");
-	Assert(arr->rows() == nrows);
-	arr = nullptr;
-	em("ret: nullify");
-    }
     
 }
 
@@ -42,23 +62,14 @@ void test_dft(ExecMon& em)
     const int nrows = 300;
     const int ncols = 1000;
 
-    auto arr = my_great_array(nrows, ncols);
+    auto arr = my_great_array(em, nrows, ncols);
     em("dft: make array");
     {
-	auto spec = dft(*arr);
-	em("dft: to auto");
-	Assert(arr->rows() == nrows);
+	auto spec = dft(arr);
+	em("dft: to auto"); // 18ms opt
+	Assert(arr.rows() == nrows);
     }
-    em("dft to auto out of scope");
-    {
-	const_shared_array_xxc spec = dft(*arr);
-	em("dft: to explicit");
-	Assert(arr->rows() == nrows);
-	spec = nullptr;
-	em("dft: nullify dft output");
-    }
-    arr = nullptr;
-    em("dft: nullify original array");
+    em("dft: returning");
 }
 
 void test_deconv(ExecMon& em)
@@ -67,14 +78,14 @@ void test_deconv(ExecMon& em)
     const int ncols = 1000;
 
     em("deconv: start");
-    auto arr = my_great_array(nrows, ncols);
+    auto arr = my_great_array(em, nrows, ncols);
     em("deconv: got array");
     array_xxc filt = Eigen::ArrayXXcf::Zero(nrows, ncols) + 1.0;
     em("deconv: got filter");
-    auto deco = deconv(*arr, filt);
-    em("deconv: done");
+    auto deco = deconv(arr, filt);
+    em("deconv: done"); // 38ms opt, 274 debug
     
-    array_xxf diff = arr->array() - deco->array();
+    array_xxf diff = arr - deco;
     em("deconv: diff");
 
     double norm = diff.matrix().norm();
@@ -87,6 +98,7 @@ int main()
 {
     WireCell::ExecMon em;
 
+    test_copy(em);
     test_return(em);
     test_dft(em);
     test_deconv(em);
