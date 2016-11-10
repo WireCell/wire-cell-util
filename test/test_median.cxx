@@ -43,6 +43,7 @@ int main()
 	    float dummy = median_binned(chunk);
 	}
 	cerr << em("end medium_binned (many times)") << endl;
+	cerr << "Median difference: " << med1-med2 << endl;
 	
 	em("done with chunked test");
     }
