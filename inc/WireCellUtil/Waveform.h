@@ -177,8 +177,13 @@ namespace WireCell {
 	// Return the mean and (population) RMS over a waveform signal.
 	std::pair<double,double> mean_rms(const realseq_t& wave);
 
-	// Return the median value.
+	// Return the median value.  This is rather slow as it
+	// involves a sort.
 	real_t median(realseq_t wave);
+
+	// Return the median value.  This is faster but introduces
+	// inaccuracies due to binning.
+	real_t median_binned(realseq_t wave);
 
 	real_t percentile(realseq_t wave, real_t percentage);
 

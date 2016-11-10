@@ -1,5 +1,7 @@
 #include "WireCellUtil/Waveform.h"
 
+#include <algorithm>
+
 // for FFT
 #include <Eigen/Core>
 #include <unsupported/Eigen/FFT>
@@ -68,10 +70,36 @@ Waveform::real_t WireCell::Waveform::median(Waveform::realseq_t wave)
     std::sort(wave.begin(), wave.end());
     return wave[wave.size()/2];
 }
+Waveform::real_t WireCell::Waveform::median_binned(Waveform::realseq_t wave)
+{
+    const auto mm = std::minmax_element(wave.begin(), wave.end());
+    const auto vmin = *mm.first;
+    const auto vmax = *mm.second;
+    const auto binsize = vmax-vmin;
+    const int nbins = wave.size();
+    Waveform::realseq_t hist(nbins);
+    for (auto val : wave) {
+	int bin = int(round((val - vmin)/binsize));
+	bin = std::max(0, bin);
+	bin = std::min(nbins-1, bin);
+	hist[bin] += 1.0;
+    }
+    const int imed = nbins/2;
+    int count = 0;
+    for (int ind=0; ind<nbins; ++ind) {
+	count += hist[ind];
+	if (count > imed) {
+	    return vmin + ind*binsize;
+	}
+    }
+    // can't reach here, return bogus value.
+    return vmin - vmax;
+}
 
-Waveform::real_t WireCell::Waveform::percentile(Waveform::realseq_t wave, real_t percentage){
-  std::sort(wave.begin(), wave.end());
-  return wave[wave.size() * percentage];
+Waveform::real_t WireCell::Waveform::percentile(Waveform::realseq_t wave, real_t percentage)
+{
+    std::sort(wave.begin(), wave.end());
+    return wave[wave.size() * percentage];
 }
 
 
@@ -144,3 +172,7 @@ WireCell::Waveform::merge(const WireCell::Waveform::ChannelMasks& one,
     return out;
 }
 
+// Local Variables:
+// mode: c++
+// c-basic-offset: 4
+// End:
