@@ -69,11 +69,57 @@ Waveform::real_t WireCell::Waveform::median(Waveform::realseq_t wave)
 {
     std::sort(wave.begin(), wave.end());
     return wave[wave.size()/2];
+    //return percentile(wave,0.5);
 }
 
 #include <iostream>
-Waveform::real_t WireCell::Waveform::median_binned(Waveform::realseq_t wave)
+Waveform::real_t WireCell::Waveform::median_binned(Waveform::realseq_t& wave)
 {
+    return percentile_binned(wave,0.5);
+    // const auto mm = std::minmax_element(wave.begin(), wave.end());
+    // const auto vmin = *mm.first;
+    // const auto vmax = *mm.second;
+    // const int nbins = wave.size();
+    // const auto binsize = (vmax-vmin)/nbins;
+    // Waveform::realseq_t hist(nbins);
+    // //std::cerr << "MEDIAN: (" << vmin << "," << vmax <<")/" << binsize << " with " << nbins << std::endl;
+    // for (auto val : wave) {
+    // 	int bin = int(round((val - vmin)/binsize));
+    // 	bin = std::max(0, bin);
+    // 	bin = std::min(nbins-1, bin);
+    // 	hist[bin] += 1.0;
+    // 	//std::cerr << "MEDIAN: " << bin << ":" << val << ", ";
+    // }
+    // //std::cerr << std::endl;
+
+    // // // debug
+    // // for (auto count : hist) {
+    // // 	if (!count) { continue; }
+    // // 	std::cerr << count << " ";
+    // // } std::cerr << std::endl;
+
+    // const int imed = nbins/2;
+    // int count = 0;
+    // for (int ind=0; ind<nbins; ++ind) {
+    // 	count += hist[ind];
+    // 	if (count > imed) {
+    // 	    float ret = vmin + ind*binsize;
+    // 	    //std::cerr << "MEDIAN: [" << count << "] = " << ret << " vmin="<<vmin<<" vmax="<<vmax << " imed="<<imed<<std::endl;
+    // 	    return ret;
+    // 	}
+    // }
+    // // can't reach here, return bogus value.
+    // return (vmin + vmax)/2.;
+}
+
+
+Waveform::real_t WireCell::Waveform::percentile(Waveform::realseq_t wave, real_t percentage)
+{
+    std::sort(wave.begin(), wave.end());
+    return wave[wave.size() * percentage];
+}
+
+Waveform::real_t WireCell::Waveform::percentile_binned(Waveform::realseq_t& wave, real_t percentage){
     const auto mm = std::minmax_element(wave.begin(), wave.end());
     const auto vmin = *mm.first;
     const auto vmax = *mm.second;
@@ -89,14 +135,14 @@ Waveform::real_t WireCell::Waveform::median_binned(Waveform::realseq_t wave)
 	//std::cerr << "MEDIAN: " << bin << ":" << val << ", ";
     }
     //std::cerr << std::endl;
-
+    
     // // debug
     // for (auto count : hist) {
     // 	if (!count) { continue; }
     // 	std::cerr << count << " ";
     // } std::cerr << std::endl;
 
-    const int imed = nbins/2;
+    const int imed = wave.size() * percentage;
     int count = 0;
     for (int ind=0; ind<nbins; ++ind) {
 	count += hist[ind];
@@ -107,13 +153,7 @@ Waveform::real_t WireCell::Waveform::median_binned(Waveform::realseq_t wave)
 	}
     }
     // can't reach here, return bogus value.
-    return vmin - vmax;
-}
-
-Waveform::real_t WireCell::Waveform::percentile(Waveform::realseq_t wave, real_t percentage)
-{
-    std::sort(wave.begin(), wave.end());
-    return wave[wave.size() * percentage];
+    return vmin + (vmax-vmin)*percentage;
 }
 
 

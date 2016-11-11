@@ -183,9 +183,10 @@ namespace WireCell {
 
 	// Return the median value.  This is faster but introduces
 	// inaccuracies due to binning.
-	real_t median_binned(realseq_t wave);
+	real_t median_binned(realseq_t& wave);
 
 	real_t percentile(realseq_t wave, real_t percentage);
+	real_t percentile_binned(realseq_t& wave, real_t percentage);
 
 	/// Discrete Fourier transform of real sequence.  Returns full spectrum.
 	compseq_t dft(realseq_t seq);
