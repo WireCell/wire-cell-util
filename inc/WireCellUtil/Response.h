@@ -1,5 +1,3 @@
-// fixme: this file needs to move to util so gen can also use it
-
 #ifndef WIRECELLSIGPROC_RESPONSE
 #define WIRECELLSIGPROC_RESPONSE
 
@@ -20,9 +18,16 @@ namespace WireCell {
 	    /// Hold information about the induced current response
 	    /// due to passage of a charge along one drift path.
 	    struct PathResponse {
+
+		/// A Bumpy array holding the induced current for the path on the wire-of-interest.
 		WireCell::Waveform::realseq_t current;
+
+		/// The position in the pitch direction to the starting point of the path, in millimeters.
 		double pitchpos;
+
+		/// The position along the wire direction to the starting point of the path, in millimeters.
 		double wirepos;
+
 		PathResponse(const WireCell::Waveform::realseq_t& c, double p, double w)
 		    : current(c), pitchpos(p), wirepos(w) {}
 
@@ -32,11 +37,22 @@ namespace WireCell {
 	    /// Hold information about the collection of induced
 	    /// current responses on one wire plane.
 	    struct PlaneResponse {
+
+		/// List of PathResponse objects.
 		std::vector<PathResponse> paths;
+
+		/// A numerical identifier for the plane.
 		int planeid;
+
+		/// The wire pitch in millimeters.
 		double pitch;
+
+		/// A normalized 3-vector giving direction of the wire pitch.
 		WireCell::Vector pitchdir;
+
+		/// A normalized 3-vector giving direction of the wire run.
 		WireCell::Vector wiredir;
+
 		PlaneResponse(const std::vector<PathResponse>& paths, int pid, double p,
 			      const WireCell::Vector& pdir, const WireCell::Vector& wdir)
 		    : paths(paths), planeid(pid), pitch(p), pitchdir(pdir), wiredir(wdir) {} 
@@ -45,11 +61,22 @@ namespace WireCell {
 	    
 	    /// Hold info about multiple plane responses in the detector.
 	    struct FieldResponse {
+
+		/// List of PlaneResponse objects.
 		std::vector<PlaneResponse> planes;
+
+		/// A normalized 3-vector giving direction of axis (anti)parallel to nominal drift direction.
 		WireCell::Vector axis;
+
+		/// Location in millimeters on the axis where drift paths begin.
 		double origin;
+
+		/// Time in microseconds at which drift paths begin.
 		double tstart;
+
+		/// The sampling period in microseconds.
 		double period;
+
 		FieldResponse(const std::vector<PlaneResponse>& planes, const WireCell::Vector& adir,
 			      double o, double t, double p)
 		    : planes(planes), axis(adir), origin(o), tstart(t), period(p) {}

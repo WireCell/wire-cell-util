@@ -17,21 +17,21 @@ using namespace std;
 
 struct MultiPdf {
     TCanvas canvas;
-    const char* filename;
-    MultiPdf(const char* fn) : canvas("c","canvas",500,500), filename(fn) {
-	canvas.Print(Form("%s[", filename), "pdf");
+    const char* name;
+    MultiPdf(const char* name) : canvas("c","canvas",500,500), name(name) {
+	canvas.Print(Form("%s.pdf[", name), "pdf");
     }
     ~MultiPdf() {
 	close();
     }
     void operator()() {
-	canvas.Print(filename, "pdf");
+	canvas.Print(Form("%s.pdf", name), "pdf");
 	canvas.Clear();
     }
     void close() {
-	if (filename) {
-	    canvas.Print(Form("%s]", filename), "pdf");
-	    filename = nullptr;
+	if (name) {
+	    canvas.Print(Form("%s.pdf]", name), "pdf");
+	    name = nullptr;
 	}
     }
 };
@@ -324,24 +324,24 @@ int main(int argc, const char* argv[])
 
     {
 
-	MultiPdf mpdf("test_response.pdf");
+	MultiPdf mpdf(argv[0]);
 	mpdf.canvas.SetRightMargin(.15);
 
 	plot_cerf(mpdf, all_cerf);
 
-	// for (int ind=0; ind<3; ++ind) {
-	//     em("plot_plane");
-	//     plot_plane_2d(mpdf, fr, ind, false);
-	// }
-	// plot_all_impact(mpdf, fr, false);
-	// em("done with fine responses");
+	for (int ind=0; ind<3; ++ind) {
+	    em("plot_plane");
+	    plot_plane_2d(mpdf, fr, ind, false);
+	}
+	plot_all_impact(mpdf, fr, false);
+	em("done with fine responses");
 
-	// for (int ind=0; ind<3; ++ind) {
-	//     em("plot_plane avg");
-	//     plot_plane_2d(mpdf, fravg, ind, true);
-	// }
-	// plot_all_impact(mpdf, fravg, true);
-	// em("done with avg responses");
+	for (int ind=0; ind<3; ++ind) {
+	    em("plot_plane avg");
+	    plot_plane_2d(mpdf, fravg, ind, true);
+	}
+	plot_all_impact(mpdf, fravg, true);
+	em("done with avg responses");
 
     }
 

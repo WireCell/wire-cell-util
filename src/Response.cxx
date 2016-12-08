@@ -45,7 +45,9 @@ WireCell::Response::Schema::FieldResponse WireCell::Response::Schema::load(const
 	    for (auto c : par["current"]["array"]["elements"]) {
 		current.push_back(c.asDouble());
 	    }
-	    paths.push_back(PathResponse(current, par["pitchpos"].asDouble(), par["wirepos"].asDouble()));
+	    auto wcpath = PathResponse(current, par["pitchpos"].asDouble(), par["wirepos"].asDouble());
+	    paths.push_back(wcpath);
+	    //std::cerr << "\tpath:" << wcpath.pitchpos << std::endl;
 	}
 
 	auto pdir = plr["pitchdir"];
@@ -56,7 +58,7 @@ WireCell::Response::Schema::FieldResponse WireCell::Response::Schema::load(const
 	//em("finish plane");
 	planes.push_back(PlaneResponse(paths, plr["planeid"].asInt(), plr["pitch"].asDouble(), pitchdir, wiredir));
 	//em("make PlaneResponse");
-	std::cerr << "#paths=" << paths.size() << " from " << plr["paths"].size() << std::endl;
+	//std::cerr << "#paths=" << paths.size() << " from " << plr["paths"].size() << std::endl;
     }
     
     
