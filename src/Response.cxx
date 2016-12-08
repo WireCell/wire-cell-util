@@ -55,10 +55,20 @@ WireCell::Response::Schema::FieldResponse WireCell::Response::Schema::load(const
 	
 	auto wdir = plr["wiredir"];
 	auto wiredir = WireCell::Vector(wdir[0].asDouble(),wdir[1].asDouble(),wdir[2].asDouble());
+
+	std::cerr << "PLANE: " << plr["planeid"]
+		  << " pitchdir" << plr["pitchdir"]
+		  << " wiredir" << plr["wiredir"]
+		  << std::endl;
+
+
 	//em("finish plane");
-	planes.push_back(PlaneResponse(paths, plr["planeid"].asInt(), plr["pitch"].asDouble(), pitchdir, wiredir));
+	PlaneResponse wcplr(paths, plr["planeid"].asInt(), plr["pitch"].asDouble(), pitchdir, wiredir);
+	planes.push_back(wcplr);
 	//em("make PlaneResponse");
-	//std::cerr << "#paths=" << paths.size() << " from " << plr["paths"].size() << std::endl;
+	std::cerr << "plane #" << wcplr.planeid
+		  << ": #paths=" << paths.size() << " from " << plr["paths"].size()
+		  << " pitchdir=" << wcplr.pitchdir << std::endl;
     }
     
     

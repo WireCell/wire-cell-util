@@ -1,7 +1,8 @@
+#include "MultiPdf.h"		// local helper shared by a few tests
+
 #include "WireCellUtil/Response.h"
 #include "WireCellUtil/ExecMon.h"
 
-#include "TCanvas.h"
 #include "TH2F.h"
 #include "TFile.h"
 #include "TGraph.h"
@@ -13,28 +14,9 @@
 
 
 using namespace WireCell;
+using namespace WireCell::Test;
 using namespace std;
 
-struct MultiPdf {
-    TCanvas canvas;
-    const char* name;
-    MultiPdf(const char* name) : canvas("c","canvas",500,500), name(name) {
-	canvas.Print(Form("%s.pdf[", name), "pdf");
-    }
-    ~MultiPdf() {
-	close();
-    }
-    void operator()() {
-	canvas.Print(Form("%s.pdf", name), "pdf");
-	canvas.Clear();
-    }
-    void close() {
-	if (name) {
-	    canvas.Print(Form("%s.pdf]", name), "pdf");
-	    name = nullptr;
-	}
-    }
-};
 
 void plot_plane_2d(MultiPdf& mpdf, const Response::Schema::FieldResponse& fr, int planeind, bool isavg)
 {

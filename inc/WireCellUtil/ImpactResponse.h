@@ -49,9 +49,21 @@ namespace WireCell {
 	typedef std::deque<int> region_indices_t;
 	typedef std::vector<region_indices_t> wire_region_indicies_t;
 
-	const wire_region_indicies_t& bywire_map() { return m_bywire; }
+	const wire_region_indicies_t& bywire_map() const { return m_bywire; }
+
+	const Response::Schema::FieldResponse& field_response() const { return m_fr; }
+	const Response::Schema::PlaneResponse& plane_response() const { return m_fr.planes[m_plane_number]; }
+
+	double half_pitch() const { return m_half; }
+	double pitch() const { return m_pitch; }
+	double impact() const { return m_impact; }
+
+	int nwires() const { return m_bywire.size(); }
+	int nimp_per_wire() const { return m_bywire[0].size(); }
 
     private:
+	const Response::Schema::FieldResponse& m_fr;
+	int m_plane_number;
 
 	wire_region_indicies_t m_bywire;
 

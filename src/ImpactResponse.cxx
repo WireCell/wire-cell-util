@@ -5,7 +5,7 @@ using namespace WireCell;
 ImpactResponse::ImpactResponse(const Response::Schema::PathResponse* pr)
     : m_pr(pr)
 {
-    //... calc spectrum
+    m_spectrum = Waveform::dft(waveform());
 }
 
 
@@ -13,7 +13,7 @@ ImpactResponse::ImpactResponse(const Response::Schema::PathResponse* pr)
 
 PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& fr, int plane_number,
 					 double gain, double shaping)
-    : m_half(0.0), m_pitch(0.0), m_impact(0.0)
+    : m_fr(fr), m_plane_number(plane_number), m_half(0.0), m_pitch(0.0), m_impact(0.0)
 {
     auto pr = fr.planes[plane_number];
 
