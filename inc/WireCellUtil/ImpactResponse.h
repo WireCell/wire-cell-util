@@ -40,6 +40,11 @@ namespace WireCell {
 	/// to the wire of interest).
 	const ImpactResponse* closest(double relpitch) const;
 
+        /// Return the ImpactResponse associated with the absolute
+        /// impact index.  See bywire_map() for a convenient way to
+        /// get these indices.
+	const ImpactResponse* impact_response(int ind) const { return m_ir[ind]; }
+
 	/// Return the two responses which are associated with the
 	/// impact positions on either side of the given pitch
 	/// location (measured relative to the wire of interest).
@@ -60,6 +65,7 @@ namespace WireCell {
 
 	int nwires() const { return m_bywire.size(); }
 	int nimp_per_wire() const { return m_bywire[0].size(); }
+
 
     private:
 	const Response::Schema::FieldResponse& m_fr;

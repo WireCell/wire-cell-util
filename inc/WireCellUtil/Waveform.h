@@ -143,7 +143,7 @@ namespace WireCell {
 	    scale(seq, (float)scalar);
 	}
 
-	/// Scale (multiply) seq values by values from the nother sequence.
+	/// Scale (multiply) seq values by values from the other sequence.
 	template<typename Val>
 	void scale(Sequence<Val>& seq, const Sequence<Val>& other) {
 	    std::transform(seq.begin(), seq.end(), other.begin(), seq.begin(),
