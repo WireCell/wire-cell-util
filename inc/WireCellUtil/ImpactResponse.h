@@ -46,7 +46,7 @@ namespace WireCell {
 	typedef std::pair<const ImpactResponse*,const ImpactResponse*> TwoImpactResponses;
 	TwoImpactResponses bounded(double relpitch) const;
 
-	typedef std::deque<int> region_indices_t;
+	typedef std::vector<int> region_indices_t;
 	typedef std::vector<region_indices_t> wire_region_indicies_t;
 
 	const wire_region_indicies_t& bywire_map() const { return m_bywire; }
@@ -54,7 +54,7 @@ namespace WireCell {
 	const Response::Schema::FieldResponse& field_response() const { return m_fr; }
 	const Response::Schema::PlaneResponse& plane_response() const { return m_fr.planes[m_plane_number]; }
 
-	double half_pitch() const { return m_half; }
+	double pitch_range() const { return 2.0*m_half_extent; }
 	double pitch() const { return m_pitch; }
 	double impact() const { return m_impact; }
 
@@ -68,7 +68,7 @@ namespace WireCell {
 	wire_region_indicies_t m_bywire;
 
 	std::vector<ImpactResponse*> m_ir;
-	double m_half, m_pitch, m_impact;
+	double m_half_extent, m_pitch, m_impact;
     };
 
 }

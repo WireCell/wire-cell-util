@@ -84,6 +84,11 @@ namespace WireCell {
 	    
 	    FieldResponse load(const char* filename);
 	    void dump(const char* filename, const FieldResponse& fr);
+
+	    /// Affect a lie about the data by setting the orientation
+	    /// of the wires for the given plane.
+	    void lie(PlaneResponse& fr,
+		     const WireCell::Vector& pitchdir, const WireCell::Vector& wiredir);
 	}
 
 

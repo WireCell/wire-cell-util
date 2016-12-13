@@ -56,19 +56,19 @@ WireCell::Response::Schema::FieldResponse WireCell::Response::Schema::load(const
 	auto wdir = plr["wiredir"];
 	auto wiredir = WireCell::Vector(wdir[0].asDouble(),wdir[1].asDouble(),wdir[2].asDouble());
 
-	std::cerr << "PLANE: " << plr["planeid"]
-		  << " pitchdir" << plr["pitchdir"]
-		  << " wiredir" << plr["wiredir"]
-		  << std::endl;
+	// std::cerr << "PLANE: " << plr["planeid"]
+	// 	  << " pitchdir" << plr["pitchdir"]
+	// 	  << " wiredir" << plr["wiredir"]
+	// 	  << std::endl;
 
 
 	//em("finish plane");
 	PlaneResponse wcplr(paths, plr["planeid"].asInt(), plr["pitch"].asDouble(), pitchdir, wiredir);
 	planes.push_back(wcplr);
 	//em("make PlaneResponse");
-	std::cerr << "plane #" << wcplr.planeid
-		  << ": #paths=" << paths.size() << " from " << plr["paths"].size()
-		  << " pitchdir=" << wcplr.pitchdir << std::endl;
+	// std::cerr << "plane #" << wcplr.planeid
+	// 	  << ": #paths=" << paths.size() << " from " << plr["paths"].size()
+	// 	  << " pitchdir=" << wcplr.pitchdir << std::endl;
     }
     
     
@@ -83,9 +83,26 @@ WireCell::Response::Schema::FieldResponse WireCell::Response::Schema::load(const
     return ret;
 }
 
+
+
 void Response::Schema::dump(const char* filename, const Response::Schema::FieldResponse& fr)
 
 {
+}
+
+
+void Response::Schema::lie(PlaneResponse& pr,
+			   const WireCell::Vector& pitchdir,
+			   const WireCell::Vector& wiredir)
+{
+    double dot = pitchdir.dot(wiredir);
+    if (std::fabs(dot) > 0.00001) {
+	std::cerr << "At least make your lies orthogonal." << std::endl;
+	return;
+    }
+
+    pr.pitchdir = pitchdir;
+    pr.wiredir = wiredir;
 }
 
 
