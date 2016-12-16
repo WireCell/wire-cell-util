@@ -1,6 +1,7 @@
 #include "WireCellUtil/Point.h"
 #include "WireCellUtil/BoundingBox.h"
 #include "WireCellUtil/Testing.h"
+#include "WireCellUtil/Units.h"
 
 #include <iomanip> 
 #include <iostream>
@@ -18,6 +19,14 @@ int main()
 	AssertMsg(2==results.size(), "failed to insert");
     }
 
+
+    {
+        Point origin(0,0,0);
+        Vector zdir(0,0,1);
+        Point pt(0*units::mm, 3.92772*units::mm, 5.34001*units::mm);
+        double dot = zdir.dot(pt-origin);
+        cerr << "origin=" << origin/units::mm << ", zdir=" << zdir << ", pt=" << pt/units::mm << " dot=" << dot/units::mm << endl;
+    }
 
     Point p1(1,2,3);
     Assert (p1.x() == 1 && p1.y() == 2 && p1.z() == 3);
