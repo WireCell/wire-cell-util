@@ -1,21 +1,61 @@
 #include "WireCellUtil/Pimpos.h"
 
+#include <iostream>             // debugging
+
 using namespace WireCell;
 
-
-
-Pimpos::Pimpos(const Point& origin, const Vector& wire, const Vector& pitch,
-	       int nimpacts_per_wire, double impact_offset)
-    : m_origin(origin)
+Pimpos::Pimpos(int nwires, double minwirepitch, double maxwirepitch,
+               const Vector& wire,
+               const Vector& pitch,
+               const Point& origin,
+	       int nbins)
+    : m_nimpbins_per_wire(nbins)
+    , m_origin(origin)
     , m_axis{Vector(0,0,0), wire.norm(), pitch.norm()}
-    , m_pitch(pitch.magnitude())
-    , m_impdist(pitch.magnitude()/nimpacts_per_wire)
-    , m_impoff(impact_offset)
-    , m_niperw(nimpacts_per_wire)
 {
-    // drift = wire X pitch 
+    // drift = wire X pitch = Y cross Z
     m_axis[0] = m_axis[1].cross(m_axis[2]);
+
+    // binnings:
+    const int nimpstot = nwires*nbins;
+    const double regionsize = (maxwirepitch-minwirepitch)/(nwires-1);
+    const double impsize = regionsize/nbins;
+    const double pmin = minwirepitch - 0.5*nbins*impsize;
+    const double pmax = maxwirepitch + 0.5*nbins*impsize;
+    m_regionbins.set(nwires, pmin, pmax);
+    m_impactbins.set(nimpstot, pmin, pmax);
 }
+
+std::pair<int, int> Pimpos::closest(double pitch) const
+{
+    const int iwire = m_regionbins.bin(pitch);
+    const double wire_pitch = m_regionbins.center(iwire);
+    const double remainder = pitch - wire_pitch;
+    const int irelimp = int(round(remainder/m_impactbins.binsize()));
+    return std::make_pair(iwire, irelimp);
+}
+
+int Pimpos::wire_impact(int wireind) const
+{
+    return (0.5 + wireind)*m_nimpbins_per_wire;
+}
+
+std::pair<int,int> Pimpos::wire_impacts(int wireind) const
+{
+    const int wi = wire_impact(wireind);
+    return std::make_pair(wi - m_nimpbins_per_wire/2,
+                          wi + m_nimpbins_per_wire/2);
+}
+
+
+int Pimpos::reflect(int wireind, int impind) const
+{
+    const int wireimpind = wire_impact(wireind);
+    const int delta = impind - wireimpind;
+    return wireimpind - delta;
+}
+
+
 
 
 Vector Pimpos::relative(const Point& pt) const
@@ -36,39 +76,6 @@ Point Pimpos::transform(const Point& pt) const
 	ret[axis] = m_axis[axis].dot(v);
     }
     return ret;
-}
-
-int Pimpos::impact(double pitch_dist) const
-{
-    return round((pitch_dist - m_impoff)/m_impdist);
-}
-
-double Pimpos::pitch(int absimp) const
-{
-    return absimp * m_impdist + m_impoff;
-}
-
-int Pimpos::absolute_impact(int wire, int impact) const
-{
-    return wire * m_niperw + impact;
-}
-
-	/// Return the wire and relative impact associated with the
-	/// absolute impact number.
-std::pair<int,int> Pimpos::wire_impact(int absimp) const
-{
-    const int iwire = int(absimp + 0.5*m_niperw) / m_niperw; // integer division
-
-    const int iimp = absimp - (iwire*m_niperw);
-    return std::make_pair(iwire,iimp);
-}
-
-std::pair<int,int> Pimpos::reflect(int wire, int relimp) const
-{
-    const int me = absolute_impact(wire,0);
-    const int you = absolute_impact(wire, relimp);
-    const int diff = you-me;
-    return wire_impact(me - diff);
 }
 
 

@@ -32,7 +32,7 @@ namespace WireCell {
 	PlaneImpactResponse(const Response::Schema::FieldResponse& fr, int plane_number,
 			    double gain=0.0, double shaping=0.0*units::us);
 	~PlaneImpactResponse();
-	    
+
 	std::pair<int,int> closest_wire_impact(double relpitch) const;
 
 	/// Return the response at the impact position closest to

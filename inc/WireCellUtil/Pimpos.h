@@ -1,102 +1,138 @@
 #ifndef WIRECELLUTIL_PIMPOS
 #define WIRECELLUTIL_PIMPOS
 
+#include "WireCellUtil/Binning.h"
 #include "WireCellUtil/Point.h"
 #include "WireCellUtil/Units.h"
 
 namespace WireCell {
 
+
     /** \brief Pitch-Impact-Position.
 
-	A Pimpos object encapsulates information about a continuous
-	and discrete coordinate system associated with a wire plane.
+	A Pimpos object encapsulates information and methods related
+	to geometry and binning of a plane of parallel and equidistant
+	wires and a further uniform sub division along their pitch
+	directions.
 
-	The coordinate system has three orthogonal axes:
+        A wire region or wire bin is the locus *centered* on a wire
+        and which extends +/- 1/2 pitch from the wire position.
 
-	0) anti nominal drift direction (away from the wire plane) and
-	1) along the wire direction such that,
-	2) the pitch direction is the cross product of axis0 X axis1.
+        An impact region or impact bin is the smaller locus of pitch
+        formed by uniformly splitting a wire region.  It is *bound* by
+        two (not centered on one) impact positions.
 
-	In the pitch direction, two related and discrete scales are
-	supported.  The wire pitch and a subdivision into "impact
-	positions".  There are a given number of impact positions
-	spanning 1/2 of the wire pitch.  The first impact position may
-	either be centered on the wire or offset by 1/2 the distance
-	between impact positions.  If centered then there will be two
-	impact positions at the mid point between two wires, each
-	infinitesimally closer to its associated wire.
+        Impact positions are "in phase" with wires" such that there is
+        one impact position coincident with a wire position.
 
+        For 3D "lab" to "plane" coordinate transformations there is a
+        plane coordinate system which has these three orthogonal axes:
+
+	axis0) anti nominal drift direction (normal to the wire plane) and
+	axis1) along the wire direction such that,
+	axis2) the pitch direction is the cross product of axis0 X axis1.
     */
 
     class Pimpos {
     public:
 	/** Create a Pimpos object for a particular plane.
 	    
-	    \param origin is a Point which sets an origin.  This is
-	    usually the center of wire 0.  
+            \param nwires is the number of wires in the plane.
+
+            \param minwirepitch is the location in the pitch
+            coordinate of the first (zero index) wire.
+
+            \param maxwirepitch is the location in the pitch
+            coordinate of the last (index nwires-1) wire.
 
 	    \param wire is a Vector which sets the direction of the
 	    wires in the plane.  
 
-	    \param pitch is a Vector which sets the direction and
-	    magnitude of the pitch of the wires in the plane.
-	    Nominal anti-drift direction is thus (wire X pitch).
+	    \param pitch is a Vector which sets the direction and of
+            the pitch of the wires in the plane.  Nominal anti-drift
+            direction is thus (wire X pitch).
 
-	    \param nimpacts gives the number of impact positions for
-	    one half of the pitch.
+	    \param origin is a Point which sets an origin of the pitch
+	    coordinate.  Ie, the vector sum of the origin and pitch
+	    vectors is at Pitch = 1.0 (assuming pitch is a unit
+	    vector).
 
-	    \param impact_offset gives a spatial shift in the pitch
-	    direction.  This shift is not interpreted.  If a very
-	    large shift is given a particular impact which is
-	    associated to a particular wire may actually be nearest to
-	    a totally different wire.
-	    
+	    \param nbins gives the number of of bins covering one wire
+	    region.
 
-	    Any quantities must be expressed in the WCT system of units.
+	    The pitch range extremes and the origin must be expressed
+	    in the WCT system of (length) units.
 	 */
-	Pimpos(const Point& origin, const Vector& wire, const Vector& pitch,
-	       int nimpacts_per_wire=10, double impact_offset=0.0*units::m);
+	Pimpos(int nwires, double minwirepitch, double maxwirepitch,
+               const Vector& wire = Vector(0,1,0),
+               const Vector& pitch = Vector(0,0,1),
+               const Point& origin = Point(0,0,0),
+	       int nimpact_bins_per_wire_region=10);
 
+        /// Trivial accessor
+        int nimpbins_per_wire() const { return m_nimpbins_per_wire; }
+
+
+        //// Geometry related:
+
+        /// Return given 3-point origin for plane pitch.
 	const Point& origin() const { return m_origin; }
+
+        /// Return an axis of the plan.  0=normal to plane (aka
+        /// anti-drift), 1=wire direction, 2=pitch direction.
 	const Vector& axis(int i) const { return m_axis[i]; }
+
 
 	/// Return the vector from the origin to the given point.
 	Vector relative(const Point& pt) const;
 
 	/// Return the distance from origin to point along the given
-	/// axis.
-	double distance(const Point& pt, int axis) const;
+	/// axis.  Default is pitch distance.
+	double distance(const Point& pt, int axis=2) const;
 
 	/// Transform the given point into the Pimpos coordinate
 	/// system.
 	Point transform(const Point& pt) const;
+
+
+        //// Binning related:
+
+        /// Return wire region binning.  Each bin is centered on the
+        /// wire.  Bin edges extend a distance of 1/2 pitch between
+        /// neighboring wires.
+        const Binning& region_binning() const { return m_regionbins; }
+
+        /// Return impact position binning.  Bin edges are at impact
+        /// positions and are in-phase with wire centers.
+        const Binning& impact_binning() const { return m_impactbins; }
+
+        /// Return a pair of indices.  The first is the index of the
+        /// wire closest to the given pitch.  The second is the
+        /// *relative* index of the impact closest impact position
+        /// (index=0 means the impact position coincident with the
+        /// wire).
+        std::pair<int, int> closest(double pitch) const;
+
+        /// Return the impact position index coincident with the wire index.
+        int wire_impact(int wireind) const;
+
+        /// Return the impact position indices at either extreme of
+        /// the wire region.  These smaller index for this wire is the
+        /// larger index of wireind-1's values and vice versa.
+        std::pair<int,int> wire_impacts(int wireind) const;
+
+        /// Return the impact position index which is the reflection
+        /// of the given impact position index through the given wire
+        /// index.
+        int reflect(int wireind, int impind) const;
+
 	
-	/// Return the absolute impact number given the pitch distance;
-	int impact(double pitch_dist) const;
-
-	/// Return the pitch distance at the absolute impact number.
-	double pitch(int absimp) const;
-
-	/// Return the absolute impact number from the wire number and
-	/// an impact number counting relative to that wire.
-	int absolute_impact(int wire, int relimp) const;
-
-	/// Return the wire and relative impact associated with the
-	/// absolute impact number.
-	std::pair<int,int> wire_impact(int absimp) const;
-
-	/// Return the (wire,relimp) which is corresponds to the
-	/// impact postion relimp relative to the wire but on the
-	/// other side of the wire.
-	std::pair<int,int> reflect(int wire, int relimp) const;
 
     private:
+        int m_nimpbins_per_wire;
 	Point m_origin;
 	Vector m_axis[3];
-	double m_pitch;
-	double m_impdist;
-	double m_impoff;
-	int m_niperw;
+        Binning m_regionbins, m_impactbins;
     };
 
 }

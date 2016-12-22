@@ -19,7 +19,7 @@ namespace WireCell {
 	    /// due to passage of a charge along one drift path.
 	    struct PathResponse {
 
-		/// A Bumpy array holding the induced current for the path on the wire-of-interest.
+		/// An array holding the induced current for the path on the wire-of-interest.
 		WireCell::Waveform::realseq_t current;
 
 		/// The position in the pitch direction to the starting point of the path, in millimeters.

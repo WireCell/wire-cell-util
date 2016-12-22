@@ -2,34 +2,40 @@
 #include "WireCellUtil/Testing.h"
 
 #include <iostream>
+#include <sstream>
+#include <string>
 
 using namespace std;
 using namespace WireCell;
 
+template<typename Type>
+std::string str(const std::pair<Type,Type>& tt)
+{
+    stringstream ss;
+    ss << "[" << tt.first << "," << tt.second << "]";
+    return ss.str();
+}
+
 int main()
 {
     const double pitch_dist = 3*units::mm;
-    const int nimperw = 10;
-    const double impdist = pitch_dist/nimperw;
-    const double gap = 3*units::mm;
-    const double extent = 5*units::m;
-    const Point origin(0.0, 0.0, -1.0*extent);
-    const Vector wire_dir(0, 1, 0);
-    const Vector pitch_dir(0, 0, 1);
-    const Vector pitch_vec(0, 0, pitch_dist);
+    const int nwires = 2001;
+    const double halfwireextent = pitch_dist * (nwires/2); // integer division
+    cerr << "Wires at extremes +/- " << halfwireextent/units::mm << "mm\n";
+    Pimpos pimpos(nwires, -halfwireextent, halfwireextent);
+
     const Point zero(0,0,0);
-    const Point onetwothree(1.0*units::cm, 2.0*units::cm, 3.0*units::cm);
-
-    Pimpos pimpos(origin, wire_dir, pitch_vec, nimperw);
-
+    const Point pt1(1*units::m,2*units::m,3*units::m);
+    const Point pt2(1*units::mm,2*units::mm,3*units::mm);
+    
     for (int ind=0; ind<3; ++ind) {
-	cerr << ind << ": " << pimpos.axis(ind) << endl;
+	cerr << "axis" << ind << ": " << pimpos.axis(ind) << endl;
     }
 
     {
 	auto val = pimpos.relative(zero);
 	cerr << "relative: " << val << endl;
-	Assert(val == -1.0*origin);
+	Assert(val == -1.0*pimpos.origin());
     }
 
     {
@@ -38,48 +44,31 @@ int main()
 	Assert (val == 0.0);
     }
 
-    {
-	auto val = pimpos.distance(zero, 2);
-	cerr << "distance 2: " << val << endl;
-	Assert (val == extent);
-    }
+    auto rb = pimpos.region_binning();
+    cerr << str(rb.range()) << " " << str(rb.irange()) << " binsize:" << rb.binsize()/units::mm << "mm\n";
+    Assert(rb.nbins()==nwires);
+    Assert(rb.min()==-3001.5*units::mm);
+    Assert(rb.max()==3001.5*units::mm);
+    Assert(rb.binsize() == pitch_dist);
 
-    {
-	auto v = pimpos.transform(onetwothree);
-	cerr << "v123: " << v << endl;
-    }
+    Assert(rb.bin(0) == nwires/2);
+    Assert(rb.center(rb.bin(0)) == 0.0);
+    
+    Assert(rb.inside(0.0));
+    const double outside = halfwireextent+pitch_dist;
+    Assert(!rb.inside(outside));
 
-    {
-	const int nwire = 4;
-	const int relimp = 3;
-	const int wantimp = nwire*nimperw + relimp;
-	Assert(pimpos.absolute_impact(nwire,relimp) == wantimp);
+    auto ib = pimpos.impact_binning();
 
-	auto wi = pimpos.wire_impact(wantimp);
-	Assert(wi.first == nwire && wi.second == relimp);
+    const int center_wire = nwires/2;
+    auto center_wi = pimpos.closest(0.0);
+    Assert(center_wi.first == center_wire);
+    Assert(center_wi.second == 0);
 
-	const double wantpit = wantimp * impdist;
-	const double givepit = wantpit + 0.1*impdist;
-
-	auto gotimp = pimpos.impact(givepit);
-	cerr << "gave: " << givepit/impdist << " got:" << gotimp << " want: " << wantimp << endl;
-	Assert (gotimp == wantimp);
-	auto gotpit = pimpos.pitch(gotimp);
-	Assert (gotpit == wantpit);
-
-	
-    }
-
-    {
-	int iwire = 100;
-	for (int iimp = -3*nimperw; iimp <3*nimperw; ++iimp) {
-	    //auto ii = pimpos.reflect(iwire, iimp);
-	    auto absimp = pimpos.absolute_impact(iwire, iimp);
-	    auto ii = pimpos.wire_impact(absimp);
-	    cerr << absimp << ": " << iwire << ":" << iimp << " --> " << ii.first << ":" << ii.second << endl;
-	}
-    }
-
+    const int center_imp = pimpos.wire_impact(center_wire);
+    auto ref1 = pimpos.reflect(center_wire, center_imp+4);
+    Assert(ref1 == center_imp - 4);
+    
 
 
     return 0;

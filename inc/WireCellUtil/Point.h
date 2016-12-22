@@ -75,6 +75,7 @@ namespace WireCell {
     double ray_dist(const Ray& ray, const Point& point);
 
 
+
     template<>
     inline			// fixme: ignores default
     WireCell::Point convert< WireCell::Point >(const Configuration& cfg, const WireCell::Point& def) {
