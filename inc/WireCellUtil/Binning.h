@@ -112,12 +112,6 @@ namespace WireCell {
                                   std::min(bin(maxval)+1, m_nbins));
         }
 
-        /// Return closed edge range which covers the range of
-        /// values.  Bounds are forced to return values in [0,nbins+1].
-        std::pair<int,int> sample_edge_range(double minval, double maxval) const {
-            return std::make_pair(std::max(edge_index(minval), 0),
-                                  std::min(edge_index(maxval), m_nbins));
-        }
     };
 
 }  // WireCell

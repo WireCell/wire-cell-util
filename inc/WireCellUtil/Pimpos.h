@@ -116,9 +116,10 @@ namespace WireCell {
         /// Return the impact position index coincident with the wire index.
         int wire_impact(int wireind) const;
 
-        /// Return the impact position indices at either extreme of
-        /// the wire region.  These smaller index for this wire is the
-        /// larger index of wireind-1's values and vice versa.
+        /// Return the impact position indices (bin edges) at either
+        /// extreme of the wire region.  The smaller index for this
+        /// wire is the larger index of wireind-1's values and vice
+        /// versa.
         std::pair<int,int> wire_impacts(int wireind) const;
 
         /// Return the impact position index which is the reflection
