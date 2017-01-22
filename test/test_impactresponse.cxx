@@ -20,8 +20,8 @@ void plot_time(MultiPdf& mpdf, PlaneImpactResponse& pir)
     auto fr = pir.field_response();
     auto pr = pir.plane_response();
     const int ntsamples = pr.paths[0].current.size();
-    const double tstart = fr.tstart;
-    const double tdelta = fr.period;
+    const double tstart = fr.tstart*units::us; // fixme, non-standard units
+    const double tdelta = fr.period*units::us; // in Response::Schema!
     const double tend = tstart + tdelta * ntsamples;
 
     const int nwires = pir.nwires();
@@ -40,9 +40,11 @@ void plot_time(MultiPdf& mpdf, PlaneImpactResponse& pir)
     const int npbins = (pmax-pmin)/impact_dist;
 
     gStyle->SetOptStat(0);
-    TH2F hist("h",Form("Pitch vs Time %c-plane", uvw[iplane]),
+    TH2F hist("h",Form("Field Response %c-plane", uvw[iplane]),
 	      ntbins, tmin/units::us, tmax/units::us, 
 	      npbins, pmin/units::mm, pmax/units::mm);
+    hist.SetXTitle("time (us)");
+    hist.SetYTitle("pitch (mm)");
 
     for (double pitch = -half_pitch; pitch <= half_pitch; pitch += impact_dist) {
 	auto ir = pir.closest(pitch);
@@ -59,6 +61,7 @@ void plot_time(MultiPdf& mpdf, PlaneImpactResponse& pir)
     }
 
     hist.Draw("colz");
+    mpdf.canvas.SetRightMargin(0.15);
 
     TLine wline, hline;
     wline.SetLineColorAlpha(1, 0.5);
