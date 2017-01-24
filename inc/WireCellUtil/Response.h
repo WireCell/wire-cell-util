@@ -28,9 +28,11 @@ namespace WireCell {
 		/// The position along the wire direction to the starting point of the path, in millimeters.
 		double wirepos;
 
+                PathResponse() : pitchpos(0.0), wirepos(-99999.0) {}
 		PathResponse(const WireCell::Waveform::realseq_t& c, double p, double w)
 		    : current(c), pitchpos(p), wirepos(w) {}
 
+                ~PathResponse();
 	    };
 
 
@@ -53,10 +55,12 @@ namespace WireCell {
 		/// A normalized 3-vector giving direction of the wire run.
 		WireCell::Vector wiredir;
 
+                PlaneResponse() : planeid(-1), pitch(0.0) {}
 		PlaneResponse(const std::vector<PathResponse>& paths, int pid, double p,
 			      const WireCell::Vector& pdir, const WireCell::Vector& wdir)
 		    : paths(paths), planeid(pid), pitch(p), pitchdir(pdir), wiredir(wdir) {} 
 
+                ~PlaneResponse();
 	    };
 	    
 	    /// Hold info about multiple plane responses in the detector.
@@ -77,9 +81,11 @@ namespace WireCell {
 		/// The sampling period in microseconds.
 		double period;
 
+                FieldResponse() : origin(-999.0), tstart(-999.0), period(0.0) {}
 		FieldResponse(const std::vector<PlaneResponse>& planes, const WireCell::Vector& adir,
 			      double o, double t, double p)
 		    : planes(planes), axis(adir), origin(o), tstart(t), period(p) {}
+                ~FieldResponse();
 	    };
 	    
 	    FieldResponse load(const char* filename);

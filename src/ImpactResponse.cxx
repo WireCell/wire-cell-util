@@ -15,7 +15,7 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
                                          double gain, double shaping)
     : m_fr(fr), m_plane_number(plane_number), m_half_extent(0.0), m_pitch(0.0), m_impact(0.0)
 {
-    auto pr = fr.planes[plane_number];
+    auto& pr = fr.planes[plane_number];
 
     //
     // FIXME HUGE ASSUMPTIONS ABOUT ORGANIZATION OF UNDERLYING
@@ -68,6 +68,8 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
 
 PlaneImpactResponse::~PlaneImpactResponse()
 {
+    std::cerr << "PlaneImpactResponse::~PlaneImpactResponse dying with "
+              << m_ir.size() << " impact responses." << std::endl;
     for (auto tokill : m_ir) {
         delete tokill;
         tokill = 0;
@@ -105,7 +107,7 @@ const ImpactResponse* PlaneImpactResponse::closest(double relpitch) const
                   << std::endl;
         return nullptr;
     }
-    auto region = m_bywire[wi.first];
+    const std::vector<int>& region = m_bywire[wi.first];
     if (wi.second < 0 || wi.second >= region.size()) {
         std::cerr << "PlaneImpactResponse::closest(): relative pitch: "
                   << relpitch
@@ -113,7 +115,15 @@ const ImpactResponse* PlaneImpactResponse::closest(double relpitch) const
                   << std::endl;
         return nullptr;
     }
-    return m_ir[region[wi.second]];
+    int irind = region[wi.second];
+    if (irind < 0 || irind > m_ir.size()) {
+        std::cerr << "PlaneImpactResponse::closest(): relative pitch: "
+                  << relpitch
+                  << " no impact response for region: " << irind
+                  << std::endl;
+        return nullptr;
+    }
+    return m_ir[irind];
 }
 
 PlaneImpactResponse::TwoImpactResponses PlaneImpactResponse::bounded(double relpitch) const

@@ -8,6 +8,21 @@
 using namespace WireCell;
 
 
+Response::Schema::FieldResponse::~FieldResponse()
+{
+//    std::cerr << (void*)this << " FieldResponse "<<period<<" dying\n";
+}
+
+Response::Schema::PlaneResponse::~PlaneResponse()
+{
+//    std::cerr << (void*)this << " PlaneResponse "<<planeid<<" dying\n";
+}
+
+Response::Schema::PathResponse::~PathResponse()
+{
+//    std::cerr << (void*)this << " PathResponse "<<wirepos<<" dying\n";
+}
+
 /**
  frdict['FieldResponse'].keys()
  ['origin', 'axis', 'period', 'tstart', 'planes']
