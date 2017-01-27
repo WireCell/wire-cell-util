@@ -199,6 +199,7 @@ Response::Generator::~Generator()
 {
 }
 
+// FIXME: eradicate Domain in favor of Binning
 WireCell::Waveform::realseq_t Response::Generator::generate(const WireCell::Waveform::Domain& domain, int nsamples)
 {
     WireCell::Waveform::realseq_t ret(nsamples);
@@ -209,7 +210,16 @@ WireCell::Waveform::realseq_t Response::Generator::generate(const WireCell::Wave
     }
     return ret;
 }
-
+WireCell::Waveform::realseq_t Response::Generator::generate(const WireCell::Binning& tbins)
+{
+    const int nsamples = tbins.nbins();
+    WireCell::Waveform::realseq_t ret(nsamples, 0.0);
+    for (int ind=0; ind<nsamples; ++ind) {
+        const double time = tbins.center(ind);
+	ret[ind] = (*this)(time);
+    }
+    return ret;
+}
 
 
 
@@ -226,13 +236,13 @@ WireCell::Waveform::realseq_t Response::Generator::generate(const WireCell::Wave
 
     3. The one you saw in the code is basically the result of the inversion
 
-  - time_us is time in microsecond
+  - time_us is time in system of units
 
   - gain_par is proportional to the gain, basically at 7.8 mV/fC, the
     peak of the shaping function should be at 7.8 mV/fC. In the code,
     you can find what value that I set to reach 14 mV/fC.
 
-  - shaping_us is the shaping time (us)
+  - shaping_us is the shaping time in system of units
 
   - the hard-coded numbers are the result of the inverting the
     Lapalace transformation in Mathematica.

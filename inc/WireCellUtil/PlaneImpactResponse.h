@@ -1,28 +1,31 @@
-#ifndef WIRECELLGEN_IMPACTRESPONSE
-#define WIRECELLGEN_IMPACTRESPONSE
+#ifndef WIRECELLGEN_PLANEIMPACTRESPONSE
+#define WIRECELLGEN_PLANEIMPACTRESPONSE
 
 #include "WireCellUtil/Response.h"
+#include "WireCellUtil/Waveform.h"
 #include "WireCellUtil/Units.h"
 
 namespace WireCell {
 
-    /** The information about detector response at a particular impact.
+    /** The information about detector response at a particular impact
+     * position (discrete position along the pitch direction of a
+     * plane on which a response function is defined).  Note,
+     * different physical positions may share the same ImpactResponse.
      */
     class ImpactResponse {
-	Waveform::compseq_t m_spectrum; // this is the only "real" data held
-	const Response::Schema::PathResponse* m_pr;
+        int m_impact;
+	Waveform::compseq_t m_spectrum;
 
     public:
-	ImpactResponse(const Response::Schema::PathResponse* pr);
-
-	/// Time-domain waveform of response 
-	const Waveform::realseq_t& waveform() const { return m_pr->current; }
+	ImpactResponse(int impact, Waveform::compseq_t spec)
+            : m_impact(impact), m_spectrum(spec) {}
 
 	/// Frequency-domain spectrum of response
 	const Waveform::compseq_t& spectrum() const { return m_spectrum; }
 
-	/// Corresponding path response
-	const struct Response::Schema::PathResponse& path_response() const { return *m_pr; }
+        /// Corresponding impact number
+        int impact() const { return m_impact; }
+
     };
 
     /** Collection of all impact responses for a plane */
@@ -30,6 +33,7 @@ namespace WireCell {
     public:
 
 	PlaneImpactResponse(const Response::Schema::FieldResponse& fr, int plane_number,
+                            Binning tbins,
 			    double gain=0.0, double shaping=0.0*units::us);
 	~PlaneImpactResponse();
 
@@ -66,10 +70,12 @@ namespace WireCell {
 	int nwires() const { return m_bywire.size(); }
 	int nimp_per_wire() const { return m_bywire[0].size(); }
 
+        Binning tbins() const { return m_tbins; }
 
     private:
 	const Response::Schema::FieldResponse& m_fr;
 	int m_plane_number;
+        Binning m_tbins;
 
 	wire_region_indicies_t m_bywire;
 

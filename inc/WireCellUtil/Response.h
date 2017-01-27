@@ -2,6 +2,7 @@
 #define WIRECELLSIGPROC_RESPONSE
 
 #include "WireCellUtil/Waveform.h"
+#include "WireCellUtil/Binning.h"
 #include "WireCellUtil/Units.h"
 
 #include "WireCellUtil/Point.h"
@@ -120,8 +121,10 @@ namespace WireCell {
 	    virtual ~Generator();
 	    virtual double operator()(double time) const = 0;
 
-	    /// Lay down the function into a binned waveform.
+            /// FIXME: eradicate Domain in favor of Binning.
 	    WireCell::Waveform::realseq_t generate(const WireCell::Waveform::Domain& domain, int nsamples);
+	    /// Lay down the function into a binned waveform.
+	    WireCell::Waveform::realseq_t generate(const WireCell::Binning& tbins);
 	};
 
 	/// A functional object caching gain and shape.
@@ -130,9 +133,8 @@ namespace WireCell {
 	public:
 	    // Create cold electronics response function.  Gain is an
 	    // arbitrary scale, typically in mV/fC and shaping time in
-	    // microsecond.  Shaping time in units consistent with
-	    // calling the function.
-	    ColdElec(double gain=7.8, double shaping=1.0);
+	    // microsecond.  Shaping time in system of units units.
+	    ColdElec(double gain=7.8, double shaping=1.0*units::us);
 	    virtual ~ColdElec();
 
 	    // Return the response at given time.  Time in units consistent with shaping.

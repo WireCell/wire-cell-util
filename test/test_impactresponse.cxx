@@ -1,5 +1,4 @@
-
-#include "WireCellUtil/ImpactResponse.h"
+#include "WireCellUtil/PlaneImpactResponse.h"
 
 #include "WireCellUtil/ExecMon.h"
 #include "WireCellUtil/Testing.h"
@@ -19,10 +18,13 @@ void plot_time(MultiPdf& mpdf, PlaneImpactResponse& pir)
 {
     auto fr = pir.field_response();
     auto pr = pir.plane_response();
-    const int ntsamples = pr.paths[0].current.size();
-    const double tstart = fr.tstart*units::us; // fixme, non-standard units
-    const double tdelta = fr.period*units::us; // in Response::Schema!
-    const double tend = tstart + tdelta * ntsamples;
+    Binning tbins = pir.tbins();
+
+    // only show bins where we think the response is
+    const double tmin = tbins.min();
+    const double tspan = 100*units::us;
+    const int ntbins = tbins.bin(tmin+tspan);
+    const double tmax = tbins.edge(ntbins);
 
     const int nwires = pir.nwires();
     const int nimptot = nwires * pir.nimp_per_wire();
@@ -32,9 +34,6 @@ void plot_time(MultiPdf& mpdf, PlaneImpactResponse& pir)
 
     const double half_pitch = 0.5*pir.pitch_range();
     const double impact_dist = pir.impact();
-    
-    const double tmin = tend/2.0, tmax=tend;
-    const int ntbins = (tmax-tmin)/tdelta;
 
     const double pmin = -10*units::mm, pmax=10*units::mm;
     const int npbins = (pmax-pmin)/impact_dist;
@@ -52,10 +51,11 @@ void plot_time(MultiPdf& mpdf, PlaneImpactResponse& pir)
 	    std::cerr << "No closest for pitch " << pitch << endl;
 	    continue;
 	}
-	auto wave = ir->waveform();
+        auto spec = ir->spectrum();
+	auto wave = Waveform::idft(spec);
 	pitch += 0.001*impact_dist;
-	for (int ind=0; ind<ntsamples; ++ind) {
-	    const double time = tstart + (ind+0.001)*tdelta;
+	for (int ind=0; ind < ntbins; ++ind) {
+	    const double time = tbins.center(ind);
 	    hist.Fill(time/units::us, pitch/units::mm, wave[ind]);
 	}
     }
@@ -84,59 +84,61 @@ void plot_time(MultiPdf& mpdf, PlaneImpactResponse& pir)
     mpdf();
 }
 
-void test_stuff(Response::Schema::FieldResponse& fr)
+void test_stuff(Response::Schema::FieldResponse& fr, int iplane)
 {
+    const int ntbins = 10000;
+    const double tmin = 0.0;
+    const double tmax = 5*units::ms;
+    Binning tbins(ntbins, tmin, tmax);
+    const double gain = 14.7;
+    const double shaping = 2*units::us;
 
-    PlaneImpactResponse u(fr,0), v(fr,1), w(fr,2);
-    
-    auto pru = fr.planes[0];
-    auto bywire = u.bywire_map();
+    PlaneImpactResponse pir(fr, iplane, tbins, gain, shaping);
+    auto& pr = fr.planes[iplane];
+    auto bywire = pir.bywire_map();
+
     for (int iwire=0; iwire<bywire.size(); ++iwire) {
-	cerr << "wire #" << iwire << ":\n";
-	auto onewire = bywire[iwire];
-	for (int iimp = 0; iimp < onewire.size(); ++iimp) {
-	    const int ind = onewire[iimp];
 
-	    /// Must doctor pitch since PathResponses are reused by symmetry.
-	    double pitch = std::abs(pru.paths[ind].pitchpos);
-	    if (iwire < 10) {
-		pitch *= -1.0;
-	    }
-	    if (iwire == 10) {
-		if (iimp < onewire.size()/2) {
-		    pitch *= -1.0;
-		}
-	    }
-	    if (iimp == 0) {
-		pitch += 0.0001*units::mm; // sukoshi choto
-	    }
-	    if (iimp == onewire.size()-1) {
-		pitch -= 0.0001*units::mm; // sukoshi choto
-	    }
+        auto onewire = bywire[iwire];
+        for (int iimp = 0; iimp < onewire.size(); ++iimp) {
+            const int ind = onewire[iimp];
 
-	    cerr << "\tiimp=" << iimp << ", ind=" << ind << ", pitch=" << pitch << endl;
-	    auto wi = u.closest_wire_impact(pitch);
-	    cerr << "\tiimp=" << iimp << " ind=" << ind << " pitch=" << pitch
-		 << " closest wire=" << wi.first << " closest impact=" << wi.second << endl;
-	    Assert (iwire == wi.first);
-	    Assert (iimp == wi.second);
-	}
+            /// Must doctor pitch since PathResponses are reused by symmetry.
+            double pitch = std::abs(pr.paths[ind].pitchpos);
+            if (iwire < 10) {
+                pitch *= -1.0;
+            }
+            if (iwire == 10) {
+                if (iimp < onewire.size()/2) {
+                    pitch *= -1.0;
+                }
+            }
+            if (iimp == 0) {
+                pitch += 0.0001*units::mm; // sukoshi choto
+            }
+            if (iimp == onewire.size()-1) {
+                pitch -= 0.0001*units::mm; // sukoshi choto
+            }
 
-    }
+            auto wi = pir.closest_wire_impact(pitch);
+            Assert (iwire == wi.first);
+            Assert (iimp == wi.second);
+        }
+            
+    } // loop over wires
 
     for (double pitch=-33*units::mm; pitch <=33*units::mm; pitch += 0.1*units::mm) {
-    	auto wi = u.closest_wire_impact(pitch);
-    	auto closest = u.closest(pitch);
-    	if (closest) {
-    	    const Response::Schema::PathResponse& pathr = closest->path_response();
-    	    cerr << "relpitch=" << pitch << " wire=" << wi.first << " imp="
-		 << wi.second << " ->  " << pathr.pitchpos << endl;
-	    Assert (std::abs(std::abs(pitch) - std::abs(pathr.pitchpos)) < 0.3*units::mm);
-    	}
-	else {
-	    std::cerr << "No closest for pitch " << pitch << std::endl;
-	}
-    }
+        auto wi = pir.closest_wire_impact(pitch);
+        auto closest = pir.closest(pitch);
+        if (closest) {
+            int impact = closest->impact();
+            const Response::Schema::PathResponse& pathr = pr.paths[impact];
+            Assert (std::abs(std::abs(pitch) - std::abs(pathr.pitchpos)) < 0.3*units::mm);
+        }
+        else {
+            std::cerr << "No closest for pitch " << pitch << std::endl;
+        }
+    } // pitches get stitches
 
 }
 
@@ -151,7 +153,7 @@ int main(int argc, const char* argv[])
 
     WireCell::ExecMon em(argv[0]);
     auto fr = Response::Schema::load(argv[1]);
-    em("loaded");
+    cerr << em("loaded") << endl;
 
     // 1D garfield wires are all parallel
     const double angle = 60*units::degree;
@@ -163,19 +165,24 @@ int main(int argc, const char* argv[])
     Response::Schema::lie(fr.planes[1], vpitch, vwire);
 
 
-    MultiPdf mpdf(argv[0]);
-
-    test_stuff(fr);
     for (int iplane=0; iplane<3; ++iplane) {
-	PlaneImpactResponse pir(fr,iplane);
-	Assert(iplane == pir.plane_response().planeid);
+//        test_stuff(fr, iplane);
+    }
 
-	auto pr = fr.planes[iplane];
-	Assert(iplane == pr.planeid);
+    const int ntbins = 10000;
+    const double tmin = 0.0;
+    const double tmax = 5*units::ms;
+    Binning tbins(ntbins, tmin, tmax);
+    const double gain = 14.7;
+    const double shaping = 2*units::us;
 
-	cerr << "plane: " << iplane << " #paths:" << pr.paths.size() << " pitchv=" << pr.pitchdir << endl;
+    MultiPdf mpdf(argv[0]);
+    for (int iplane=0; iplane<3; ++iplane) {
+	PlaneImpactResponse pir_fonly(fr, iplane, tbins);
+	plot_time(mpdf, pir_fonly);
 
-	plot_time(mpdf, pir);
+	PlaneImpactResponse pir_elec(fr, iplane, tbins, gain, shaping);
+	plot_time(mpdf, pir_elec);
     }
 
     cerr << em.summary() << endl;
