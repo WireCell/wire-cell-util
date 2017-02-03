@@ -7,6 +7,7 @@
 #include "TH2F.h"
 #include "TLine.h"
 #include "TStyle.h"
+#include "TFile.h"
 
 #include <iostream>
 
@@ -14,7 +15,8 @@ using namespace WireCell;
 using namespace WireCell::Test;
 using namespace std;
 
-void plot_time(MultiPdf& mpdf, PlaneImpactResponse& pir)
+void plot_time(MultiPdf& mpdf, PlaneImpactResponse& pir,
+               const std::string& name, const std::string& title)
 {
     auto fr = pir.field_response();
     auto pr = pir.plane_response();
@@ -35,15 +37,16 @@ void plot_time(MultiPdf& mpdf, PlaneImpactResponse& pir)
     const double half_pitch = 0.5*pir.pitch_range();
     const double impact_dist = pir.impact();
 
-    const double pmin = -10*units::mm, pmax=10*units::mm;
+    const double pmin = -36*units::mm, pmax=36*units::mm;
     const int npbins = (pmax-pmin)/impact_dist;
 
     gStyle->SetOptStat(0);
-    TH2F hist("h",Form("Field Response %c-plane", uvw[iplane]),
-	      ntbins, tmin/units::us, tmax/units::us, 
-	      npbins, pmin/units::mm, pmax/units::mm);
-    hist.SetXTitle("time (us)");
-    hist.SetYTitle("pitch (mm)");
+    TH2F* hist = new TH2F(Form("h%s_%c", name.c_str(), uvw[iplane]),
+                          Form("%s %c-plane", title.c_str(), uvw[iplane]),
+                          ntbins, tmin/units::us, tmax/units::us, 
+                          npbins, pmin/units::mm, pmax/units::mm);
+    hist->SetXTitle("time (us)");
+    hist->SetYTitle("pitch (mm)");
 
     for (double pitch = -half_pitch; pitch <= half_pitch; pitch += impact_dist) {
 	auto ir = pir.closest(pitch);
@@ -56,11 +59,11 @@ void plot_time(MultiPdf& mpdf, PlaneImpactResponse& pir)
 	pitch += 0.001*impact_dist;
 	for (int ind=0; ind < ntbins; ++ind) {
 	    const double time = tbins.center(ind);
-	    hist.Fill(time/units::us, pitch/units::mm, wave[ind]);
+	    hist->Fill(time/units::us, pitch/units::mm, wave[ind]);
 	}
     }
-
-    hist.Draw("colz");
+    hist->Write();
+    hist->Draw("colz");
     mpdf.canvas.SetRightMargin(0.15);
 
     TLine wline, hline;
@@ -150,6 +153,11 @@ int main(int argc, const char* argv[])
 	cerr << "This test requires an Wire Cell Field Response input file." << endl;
 	return 0;
     }
+    string out_basename = argv[0];
+    if (argc > 2) {
+        out_basename = argv[2];
+    }
+    TFile* rootfile = TFile::Open(Form("%s.root", out_basename.c_str()), "recreate");
 
     WireCell::ExecMon em(argv[0]);
     auto fr = Response::Schema::load(argv[1]);
@@ -179,14 +187,18 @@ int main(int argc, const char* argv[])
     MultiPdf mpdf(argv[0]);
     for (int iplane=0; iplane<3; ++iplane) {
 	PlaneImpactResponse pir_fonly(fr, iplane, tbins);
-	plot_time(mpdf, pir_fonly);
+	plot_time(mpdf, pir_fonly, "fr", "Field Response");
 
 	PlaneImpactResponse pir_elec(fr, iplane, tbins, gain, shaping);
-	plot_time(mpdf, pir_elec);
+	plot_time(mpdf, pir_elec, "dr", "Detector Response");
     }
 
     cerr << em.summary() << endl;
     mpdf.close();
+
+    cerr << "Closing ROOT file: " << rootfile->GetName() << endl;
+    rootfile->Close();
+    
     return 0;
 
 }
