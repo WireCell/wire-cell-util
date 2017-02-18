@@ -86,7 +86,10 @@ namespace WireCell {
 	 */
 	array_xxc dft(const array_xxf& arr);
 	array_xxf idft(const array_xxc& arr);
-
+#ifdef WCT_HACK_FOR_FFTW_NO_SP
+	array_xxc dftd(const array_xxf& arr);
+	array_xxf idftd(const array_xxc& arr);
+#endif
 	/** Perform 2D deconvolution. 
 	    
 	    This will perform a 2D forward DFT, do an

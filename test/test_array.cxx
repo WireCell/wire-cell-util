@@ -62,14 +62,24 @@ void test_dft(ExecMon& em)
     const int nrows = 300;
     const int ncols = 1000;
 
+    const int nrounds = 100;
+
     auto arr = my_great_array(em, nrows, ncols);
     em("dft: make array");
-    {
+    for (int count = 0; count < nrounds; ++count) {
+
 	auto spec = dft(arr);
-	em("dft: to auto"); // 18ms opt
-	Assert(arr.rows() == nrows);
+        auto orig = idft(spec);
+
     }
-    em("dft: returning");
+    em("dft with floats");
+#ifdef WCT_HACK_FOR_FFTW_NO_SP
+    for (int count = 0; count < nrounds; ++count) {
+        auto spec = dftd(arr);
+        auto orig = idftd(spec);
+    }
+    em("dft up/down cast through doubles");
+#endif
 }
 
 void test_deconv(ExecMon& em)

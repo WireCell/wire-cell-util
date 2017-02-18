@@ -190,10 +190,12 @@ namespace WireCell {
 
 	/// Discrete Fourier transform of real sequence.  Returns full spectrum.
 	compseq_t dft(realseq_t seq);
+	compseq_t dftd(realseq_t seq); // test up/down cast through doubles
 
 	/// Inverse, discrete Fourier transform.  Expects full
 	/// spectrum, but only uses first half.
 	realseq_t idft(compseq_t spec);
+	realseq_t idftd(compseq_t spec);
 
     }
 }
