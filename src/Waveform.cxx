@@ -158,6 +158,26 @@ Waveform::real_t WireCell::Waveform::percentile_binned(Waveform::realseq_t& wave
 }
 
 
+std::pair<int, int> WireCell::Waveform::edge(const realseq_t& wave)
+{
+    const realseq_t::size_type size = wave.size();
+    int imin=size, imax=size;
+
+    for (int ind=0; ind < size; ++ind) {
+        const real_t val = wave[ind];
+        if (val != 0.0) {
+            if (imin == size) { // found start edge
+                imin = ind;
+            }
+            if (imin < size) {
+                imax = ind+1;
+            }
+        }
+    }
+    return std::make_pair(imin, imax);
+}
+
+
 Waveform::compseq_t WireCell::Waveform::dft(realseq_t wave)
 {
     auto v = Eigen::Map<Eigen::VectorXf>(wave.data(), wave.size());

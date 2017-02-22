@@ -54,6 +54,11 @@ namespace WireCell {
     }
     template<>
     inline
+    bool convert<bool>(const Configuration& cfg, const bool& def) {
+	return cfg.asBool();
+    }
+    template<>
+    inline
     int convert<int>(const Configuration& cfg, const int& def) {
 	return cfg.asInt();
     }

@@ -157,6 +157,12 @@ namespace WireCell {
 	}
 
 
+        /// Return a pair of indices into wave which bound non-zero
+        /// region.  First index is of first non-zero sample, second
+        /// index is one past last non-zero sample.  If entire wave is
+        /// empty then both are set to size().
+        std::pair<int, int> edge(const realseq_t& wave);
+            
 
 
 	/// Return sum of all entries in sequence.
