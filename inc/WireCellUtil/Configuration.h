@@ -86,6 +86,24 @@ namespace WireCell {
 	}
 	return ret;
     }
+    template<>
+    inline			// fixme: ignores default
+    std::vector<int> convert< std::vector<int> >(const Configuration& cfg, const std::vector<int>& def) {
+	std::vector<int> ret;
+	for (auto v : cfg) {
+	    ret.push_back(convert<int>(v));
+	}
+	return ret;
+    }
+    template<>
+    inline			// fixme: ignores default
+    std::vector<double> convert< std::vector<double> >(const Configuration& cfg, const std::vector<double>& def) {
+	std::vector<double> ret;
+	for (auto v : cfg) {
+	    ret.push_back(convert<double>(v));
+	}
+	return ret;
+    }
     // for Point and Ray converters, see Point.h
 
 
