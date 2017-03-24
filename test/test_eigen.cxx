@@ -85,6 +85,7 @@ Eigen::Block<const Derived> return_block(WireCell::ExecMon& em, const_shared_den
 
 void do_fft(WireCell::ExecMon& em, const array_xxf& arr)
 {
+#ifndef MISSING_FFTW_SINGLE_PRECISION
     const int nrows = arr.rows();
     const int ncols = arr.cols();
 
@@ -118,6 +119,7 @@ void do_fft(WireCell::ExecMon& em, const array_xxf& arr)
     em("fft: set shared for return");
     ret = nullptr;
     em("fft: nullify return");
+#endif
 }
 
 const int nbig_rows = 3000;
