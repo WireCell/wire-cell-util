@@ -1,6 +1,7 @@
 #ifndef WIRECELL_CONFIGURATION
 #define WIRECELL_CONFIGURATION
 
+#include <vector>
 #include <json/json.h>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>

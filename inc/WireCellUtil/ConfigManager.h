@@ -1,6 +1,7 @@
 #ifndef WIRECELL_CONFIGMANAGER
 #define WIRECELL_CONFIGMANAGER
 
+#include <vector>
 #include "WireCellUtil/Configuration.h"
 
 namespace WireCell {

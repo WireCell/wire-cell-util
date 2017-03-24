@@ -6,6 +6,7 @@
 
 #include <boost/function.hpp>
 
+#include <cmath>
 #include <vector>
 #include <iostream>
 #include <algorithm>		// copy_if

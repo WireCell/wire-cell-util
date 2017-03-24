@@ -1,6 +1,7 @@
 #ifndef WIRECELLUTIL_TIMEKEEPER
 #define WIRECELLUTIL_TIMEKEEPER
 
+#include <vector>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
 namespace WireCell {

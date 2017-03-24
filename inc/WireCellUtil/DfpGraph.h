@@ -1,6 +1,7 @@
 #ifndef WIRECELLUTIL_DFPGRAPH
 #define WIRECELLUTIL_DFPGRAPH
 
+#include <vector>
 #include "WireCellUtil/Configuration.h"
 #include "WireCellUtil/String.h"
 #include <boost/graph/adjacency_list.hpp>

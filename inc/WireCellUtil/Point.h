@@ -4,6 +4,7 @@
 #include "WireCellUtil/D3Vector.h"
 #include "WireCellUtil/Configuration.h"
 
+#include <vector>
 #include <set>
 #include <memory>		// auto_ptr
 
