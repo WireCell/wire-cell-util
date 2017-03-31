@@ -32,8 +32,8 @@ namespace WireCell {
     class PlaneImpactResponse {
     public:
 
-	PlaneImpactResponse(const Response::Schema::FieldResponse& fr, int plane_number,
-                            Binning tbins,
+	PlaneImpactResponse(const Response::Schema::FieldResponse& fr, int plane_ident,
+                            Binning tbins, // fixme, only needs tick+nbins
 			    double gain=0.0, double shaping=0.0*units::us);
 	~PlaneImpactResponse();
 
@@ -61,7 +61,7 @@ namespace WireCell {
 	const wire_region_indicies_t& bywire_map() const { return m_bywire; }
 
 	const Response::Schema::FieldResponse& field_response() const { return m_fr; }
-	const Response::Schema::PlaneResponse& plane_response() const { return m_fr.planes[m_plane_number]; }
+	const Response::Schema::PlaneResponse& plane_response() const;
 
 	double pitch_range() const { return 2.0*m_half_extent; }
 	double pitch() const { return m_pitch; }
@@ -74,7 +74,7 @@ namespace WireCell {
 
     private:
 	const Response::Schema::FieldResponse& m_fr;
-	int m_plane_number;
+	int m_plane_ident;
         Binning m_tbins;
 
 	wire_region_indicies_t m_bywire;

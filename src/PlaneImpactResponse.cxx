@@ -7,15 +7,15 @@ using namespace WireCell;
 
 
 PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& fr,
-                                         int plane_number,
+                                         int plane_ident,
                                          Binning tbins,
                                          double gain, double shaping)
     : m_fr(fr)
-    , m_plane_number(plane_number)
+    , m_plane_ident(plane_ident)
     , m_tbins(tbins)
     , m_half_extent(0.0), m_pitch(0.0), m_impact(0.0)
 {
-    auto& pr = fr.planes[plane_number];
+    auto& pr = plane_response();
 
     WireCell::Waveform::compseq_t elec;
     if (gain > 0.0) {
@@ -24,7 +24,6 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
     }
     
     const int npaths = pr.paths.size();
-    //std::cerr << "PIR: npaths=" << npaths << " in plane " << plane_number << std::endl;
 
     // FIXME HUGE ASSUMPTIONS ABOUT ORGANIZATION OF UNDERLYING
     // RESPONSE DATA!!!
@@ -48,7 +47,6 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
     /// FIXME: this assumes detailed ordering of paths w/in one wire
     m_pitch = 2.0*std::abs(pr.paths[n_per-1].pitchpos - pr.paths[0].pitchpos);
 
-    // std::cerr << "PIR:" << plane_number << ", impact:" << m_impact << ", pitch:" << m_pitch << ", half:" << m_half_extent << std::endl;
 
     // native response time binning
     const int rawresp_size = pr.paths[0].current.size();
@@ -128,6 +126,10 @@ PlaneImpactResponse::~PlaneImpactResponse()
     m_ir.clear();
 }
 
+const Response::Schema::PlaneResponse& PlaneImpactResponse::plane_response() const
+{
+    return *m_fr.plane(m_plane_ident);
+}
 
 std::pair<int,int> PlaneImpactResponse::closest_wire_impact(double relpitch) const
 {

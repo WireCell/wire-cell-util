@@ -3,6 +3,8 @@
 
 #include "WireCellUtil/Interface.h"
 
+#include <vector>
+
 namespace WireCell {
 
     /** A component calls out a particular interface as being
@@ -29,6 +31,9 @@ namespace WireCell {
 
 	/// Access subclass facet by pointer.
 	typedef std::shared_ptr<Type> pointer;
+
+        /// Vector of shared pointers.
+	typedef std::vector<pointer> vector;
 
 	virtual ~IComponent() {};
     };

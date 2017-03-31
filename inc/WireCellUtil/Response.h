@@ -12,9 +12,19 @@ namespace WireCell {
 
     namespace Response {
 
+        //// BIG FAT FIXME: this currently assumes implicit units and
+        //// doesn't follow the WC system of units!!!  This oversight
+        //// has leaked throughout the rest of WC and needs cleaning
+        //// up.
+
 	// These objects correspond to those defined in the Wire Cell
 	// field response transfer file format schema.  
 	namespace Schema {
+
+            // FIXME: this schema is very specific to Garfield 2D
+            // results.  The namespace should reflect that and a more
+            // generic interface should hide it.
+            
 
 	    /// Hold information about the induced current response
 	    /// due to passage of a charge along one drift path.
@@ -46,6 +56,10 @@ namespace WireCell {
 
 		/// A numerical identifier for the plane.
 		int planeid;
+
+                /// location, in direction of drift, of this plane (in
+                /// same coordinate system as giving origin) in mm.
+                double location;
 
 		/// The wire pitch in millimeters.
 		double pitch;
@@ -81,6 +95,23 @@ namespace WireCell {
 
 		/// The sampling period in microseconds.
 		double period;
+
+                PlaneResponse* plane(int ident) {
+                    for (auto& pr : planes) {
+                        if (pr.planeid == ident) {
+                            return &pr;
+                        }
+                    }
+                    return nullptr;
+                }
+                const PlaneResponse* plane(int ident) const {
+                    for (auto& pr : planes) {
+                        if (pr.planeid == ident) {
+                            return &pr;
+                        }
+                    }
+                    return nullptr;
+                }
 
                 FieldResponse() : origin(-999.0), tstart(-999.0), period(0.0) {}
 		FieldResponse(const std::vector<PlaneResponse>& planes, const WireCell::Vector& adir,

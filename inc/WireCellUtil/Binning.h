@@ -52,6 +52,11 @@ namespace WireCell {
             return m_maxval;
         }
 
+        /// Return the max-min
+        double span() const {
+            return m_maxval - m_minval;
+        }
+
         // Binning as a range.
         std::pair<double, double> range() const {
             return std::make_pair(m_minval, m_maxval);
