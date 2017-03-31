@@ -1,6 +1,9 @@
 #ifndef WIRECELL_ITERATORBASE
 #define WIRECELL_ITERATORBASE
 
+#include <vector>
+
+
 namespace WireCell {
 
     /** An abstract base class for an iterator providing access to an

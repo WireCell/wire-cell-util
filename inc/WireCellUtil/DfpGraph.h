@@ -6,6 +6,7 @@
 #include <boost/graph/adjacency_list.hpp>
 
 #include <tuple>
+#include <vector>
 
 namespace WireCell {
     

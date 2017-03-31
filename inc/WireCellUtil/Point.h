@@ -6,6 +6,7 @@
 
 #include <set>
 #include <memory>		// auto_ptr
+#include <vector>
 
 namespace WireCell {
 

@@ -11,6 +11,7 @@
 #include <algorithm>		// copy_if
 #include <iterator>		// back_inserter
 #include <memory>		// shared_ptr
+#include <vector>
 
 using namespace std;
 using namespace WireCell;

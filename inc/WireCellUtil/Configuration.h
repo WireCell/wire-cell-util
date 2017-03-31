@@ -6,6 +6,7 @@
 #include <boost/algorithm/string/classification.hpp>
 
 #include <sstream>
+#include <vector>
 
 namespace WireCell {
 
