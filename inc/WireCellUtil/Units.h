@@ -173,6 +173,7 @@ namespace units {
   static const double megavolt = megaelectronvolt/eplus;
   static const double kilovolt = 1.e-3*megavolt;
   static const double     volt = 1.e-6*megavolt;
+  static const double millivolt = 1.e-3*volt;
 
   //
   // Electric resistance [E][T][Q^-2]
