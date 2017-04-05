@@ -12,10 +12,8 @@ namespace WireCell {
 
     namespace Response {
 
-        //// BIG FAT FIXME: this currently assumes implicit units and
-        //// doesn't follow the WC system of units!!!  This oversight
-        //// has leaked throughout the rest of WC and needs cleaning
-        //// up.
+        //// Units notice: all quantities are expressed in the WCT
+        //// system of unis.  In particular, time is not seconds.
 
 	// These objects correspond to those defined in the Wire Cell
 	// field response transfer file format schema.  
@@ -33,10 +31,10 @@ namespace WireCell {
 		/// An array holding the induced current for the path on the wire-of-interest.
 		WireCell::Waveform::realseq_t current;
 
-		/// The position in the pitch direction to the starting point of the path, in millimeters.
+		/// The position in the pitch direction to the starting point of the path.
 		double pitchpos;
 
-		/// The position along the wire direction to the starting point of the path, in millimeters.
+		/// The position along the wire direction to the starting point of the path.
 		double wirepos;
 
                 PathResponse() : pitchpos(0.0), wirepos(-99999.0) {}
@@ -58,10 +56,11 @@ namespace WireCell {
 		int planeid;
 
                 /// location, in direction of drift, of this plane (in
-                /// same coordinate system as giving origin) in mm.
+                /// same coordinate system as used by
+                /// FieldResponse::origin).
                 double location;
 
-		/// The wire pitch in millimeters.
+		/// The pitch distance between neighboring wires.
 		double pitch;
 
 		/// A normalized 3-vector giving direction of the wire pitch.
@@ -70,10 +69,10 @@ namespace WireCell {
 		/// A normalized 3-vector giving direction of the wire run.
 		WireCell::Vector wiredir;
 
-                PlaneResponse() : planeid(-1), pitch(0.0) {}
-		PlaneResponse(const std::vector<PathResponse>& paths, int pid, double p,
+                PlaneResponse() : planeid(-1), location(0.0), pitch(0.0) {}
+		PlaneResponse(const std::vector<PathResponse>& paths, int pid, double l, double p,
 			      const WireCell::Vector& pdir, const WireCell::Vector& wdir)
-		    : paths(paths), planeid(pid), pitch(p), pitchdir(pdir), wiredir(wdir) {} 
+		    : paths(paths), planeid(pid), location(l), pitch(p), pitchdir(pdir), wiredir(wdir) {} 
 
                 ~PlaneResponse();
 	    };
@@ -84,17 +83,22 @@ namespace WireCell {
 		/// List of PlaneResponse objects.
 		std::vector<PlaneResponse> planes;
 
-		/// A normalized 3-vector giving direction of axis (anti)parallel to nominal drift direction.
+		/// A normalized 3-vector giving direction of axis
+		/// (anti)parallel to nominal drift direction.
 		WireCell::Vector axis;
 
-		/// Location in millimeters on the axis where drift paths begin.
+		/// The location on the X-axis where drift paths
+		/// begin.  See PlaneResponse::location.
 		double origin;
 
-		/// Time in microseconds at which drift paths begin.
+		/// Time at which drift paths begin.
 		double tstart;
 
-		/// The sampling period in microseconds.
+		/// The sampling period of the response function.
 		double period;
+
+                /// The nominal drift speed.
+                double speed;
 
                 PlaneResponse* plane(int ident) {
                     for (auto& pr : planes) {
@@ -113,10 +117,10 @@ namespace WireCell {
                     return nullptr;
                 }
 
-                FieldResponse() : origin(-999.0), tstart(-999.0), period(0.0) {}
+                FieldResponse() : origin(-999.0), tstart(-999.0), period(0.0), speed(0.0) {}
 		FieldResponse(const std::vector<PlaneResponse>& planes, const WireCell::Vector& adir,
-			      double o, double t, double p)
-		    : planes(planes), axis(adir), origin(o), tstart(t), period(p) {}
+			      double o, double t, double p, double s)
+		    : planes(planes), axis(adir), origin(o), tstart(t), period(p), speed(s) {}
                 ~FieldResponse();
 	    };
 	    
@@ -140,12 +144,8 @@ namespace WireCell {
 	/// FieldResponse structure in-place.
 	void normalize_by_collection_integral(Schema::FieldResponse& fr);
 
-
-	// some_matrix deconvolution(fr, ele, filter);
-
-
 	/// The cold electronics response function.
-	double coldelec(double time, double gain=7.8, double shaping=1.0);
+	double coldelec(double time, double gain=7.8, double shaping=1.0*units::us);
 
 	class Generator {
 	public:
@@ -164,11 +164,12 @@ namespace WireCell {
 	public:
 	    // Create cold electronics response function.  Gain is an
 	    // arbitrary scale, typically in mV/fC and shaping time in
-	    // microsecond.  Shaping time in system of units units.
+	    // WCT system of units.
 	    ColdElec(double gain=7.8, double shaping=1.0*units::us);
 	    virtual ~ColdElec();
 
-	    // Return the response at given time.  Time in units consistent with shaping.
+	    // Return the response at given time.  Time is in WCT
+	    // system of units.
 	    virtual double operator()(double time) const;
 
 	};
@@ -181,15 +182,13 @@ namespace WireCell {
 	    // Create (current) response function for a simple RC
 	    // circuit where a unit of charge is placed on the cap at
 	    // time offset and circuit has RC time constant of given
-	    // width.  Times are in units consistent with value used
-	    // to call the function.
+	    // width.  Time is in WCT system of units.
 	    SimpleRC(double width, double tick=0.5*units::microsecond, double offset=0.0);
 	    virtual ~SimpleRC();
 
-	    // Return the response at a given time.  Time in units
-	    // consistent with width and offset.  Warning: to get the
-	    // delta function, one must call *exactly* at the offset
-	    // time.
+	    // Return the response at a given time.  Time in WCT
+	    // system of units.  Warning: to get the delta function,
+	    // one must call *exactly* at the offset time.
 	    virtual double operator()(double time) const;
 
 	};

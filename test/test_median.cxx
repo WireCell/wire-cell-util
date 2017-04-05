@@ -1,6 +1,7 @@
 #include "WireCellUtil/ExecMon.h"
 #include "WireCellUtil/Waveform.h"
 
+#include <random>
 #include <iostream>
 using namespace std;
 using namespace WireCell::Waveform;

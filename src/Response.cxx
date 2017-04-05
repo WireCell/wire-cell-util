@@ -78,7 +78,11 @@ WireCell::Response::Schema::FieldResponse WireCell::Response::Schema::load(const
 
 
 	//em("finish plane");
-	PlaneResponse wcplr(paths, plr["planeid"].asInt(), plr["pitch"].asDouble(), pitchdir, wiredir);
+	PlaneResponse wcplr(paths,
+                            plr["planeid"].asInt(),
+                            plr["location"].asDouble(),
+                            plr["pitch"].asDouble(),
+                            pitchdir, wiredir);
 	planes.push_back(wcplr);
 	//em("make PlaneResponse");
 	// std::cerr << "plane #" << wcplr.planeid
@@ -92,7 +96,10 @@ WireCell::Response::Schema::FieldResponse WireCell::Response::Schema::load(const
     auto adir = fr["axis"];
     auto axis = WireCell::Vector(adir[0].asDouble(),adir[1].asDouble(),adir[2].asDouble());
     auto ret = FieldResponse(planes, axis,
-			     fr["origin"].asDouble(), fr["tstart"].asDouble(), fr["period"].asDouble());
+			     fr["origin"].asDouble(),
+                             fr["tstart"].asDouble(),
+                             fr["period"].asDouble(),
+                             fr["speed"].asDouble());
     //em("returning");
     //std::cerr << em.summary() << std::endl;
     return ret;
@@ -153,12 +160,11 @@ Response::Schema::FieldResponse Response::wire_region_average(const Response::Sc
 		avgs[region] = realseq_t(nsamples);
 	    }
 
-	    // WARNING assumes units.
-	    // WARNING assumes last impact is at 1.5mm.
+	    // WARNING assumes last impact is at 1/2 pitch.
 	    // WARNING assumes impacts are on half-pitch lines of symmetry.
 	    // WARNING assumes ~half the pitch not represented.
 	    double weight = 2.0;
-	    if (std::abs(impact) < 0.01 || std::abs(impact-1.5) < 0.01) { 
+	    if (std::abs(impact) < 0.01*units::mm || std::abs(impact-1.5*units::mm) < 0.01*(0.5*pitch)) { 
 		weight = 1.0;	// don't double count central or last
 	    }
 	    realseq_t& response = avgs[region];
@@ -181,9 +187,14 @@ Response::Schema::FieldResponse Response::wire_region_average(const Response::Sc
 	    // pack up everything for return.
 	    newpaths.push_back(PathResponse(response, region*pitch, 0.0));
 	}
-	newplanes.push_back(PlaneResponse(newpaths, plane.planeid, plane.pitch, plane.pitchdir, plane.wiredir));
+	newplanes.push_back(PlaneResponse(newpaths,
+                                          plane.planeid,
+                                          plane.location,
+                                          plane.pitch,
+                                          plane.pitchdir,
+                                          plane.wiredir));
     }
-    return FieldResponse(newplanes, fr.axis, fr.origin, fr.tstart, fr.period);
+    return FieldResponse(newplanes, fr.axis, fr.origin, fr.tstart, fr.period, fr.speed);
 }
 
 
@@ -236,13 +247,13 @@ WireCell::Waveform::realseq_t Response::Generator::generate(const WireCell::Binn
 
     3. The one you saw in the code is basically the result of the inversion
 
-  - time_us is time in system of units
+  - time is time in system of units
 
   - gain_par is proportional to the gain, basically at 7.8 mV/fC, the
     peak of the shaping function should be at 7.8 mV/fC. In the code,
     you can find what value that I set to reach 14 mV/fC.
 
-  - shaping_us is the shaping time in system of units
+  - shaping is the shaping time in system of units
 
   - the hard-coded numbers are the result of the inverting the
     Lapalace transformation in Mathematica.
