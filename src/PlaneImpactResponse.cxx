@@ -50,12 +50,12 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
 
     // native response time binning
     const int rawresp_size = pr.paths[0].current.size();
-    const double rawresp_min = fr.tstart*units::us; // fixme: Response units
-    const double rawresp_tick = fr.period*units::us; // fixme: Response units
+    const double rawresp_min = fr.tstart;
+    const double rawresp_tick = fr.period;
     const double rawresp_max = rawresp_min + rawresp_size*rawresp_tick;
     Binning rawresp_bins(rawresp_size, rawresp_min, rawresp_max);
-    //std::cerr << "raw response bins: " << rawresp_size
-    //          << " ["<<rawresp_min/units::us<<","<<rawresp_max/units::us<<"] us\n";
+    std::cerr << "raw response bins: " << rawresp_size
+              << " ["<<rawresp_min/units::us<<","<<rawresp_max/units::us<<"] us\n";
 
     const int ntbins = tbins.nbins();
     const double tick = tbins.binsize();
@@ -77,6 +77,7 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
 
             if (bin <0 || bin>= ntbins) {
                 std::cerr << "PIR: out of bounds field response bin: " << bin
+                          << " ntbins=" << ntbins
                           << " time=" << time/units::us << "us"
                           << " tick=" << tick/units::us << "us"
                           << std::endl;
