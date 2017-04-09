@@ -7,33 +7,16 @@ using namespace std;
 using namespace WireCell;
 
 ConfigManager::ConfigManager()
-    : m_top(configuration_loads("[]"))
+    : m_top(Json::arrayValue)
 {
 }
 ConfigManager::~ConfigManager()
 {
 }
 
-void ConfigManager::load(const std::string& filename)
+void ConfigManager::extend(Configuration more)
 {
-    Configuration more = configuration_load(filename);
     m_top = append(m_top, more);
-}
-
-void ConfigManager::loads(const std::string& jsonstring)
-{
-    Configuration more = configuration_loads(jsonstring);
-    m_top = append(m_top, more);
-}
-
-void ConfigManager::dump(const std::string& filename) const
-{
-    configuration_dump(filename, m_top);
-}
-
-std::string ConfigManager::dumps() const
-{
-    return configuration_dumps(m_top);
 }
 
 
@@ -96,7 +79,7 @@ Configuration ConfigManager::pop(int ind)
 	return Configuration();
     }
     Configuration ret;
-    Configuration reduced = configuration_loads("[]");
+    Configuration reduced(Json::arrayValue);
     int siz = size();
     for (int i=0; i<siz; ++i) {
 	if (i == ind) {

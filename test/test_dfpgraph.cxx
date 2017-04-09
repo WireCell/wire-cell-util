@@ -1,5 +1,6 @@
 #include "WireCellUtil/DfpGraph.h"
 #include "WireCellUtil/Configuration.h"
+#include "WireCellUtil/Persist.h"
 
 #include <iostream>
 
@@ -39,7 +40,7 @@ int main()
 ]
 }
 )";
-    auto cfg = configuration_loads(json, "json");
+    auto cfg = Persist::loads(json);
 
     DfpGraph dfp;
     dfp.configure(cfg["edges"]);

@@ -23,14 +23,9 @@ namespace WireCell {
 	ConfigManager();
 	~ConfigManager();
 
-	/// Load configuration from given file, adding it to existing
-	void load(const std::string& filename);
-	/// Load configuration from JSON string, adding it to existing
-	void loads(const std::string& jsonstring);
-	/// Dump configuration to JSON file
-	void dump(const std::string& filename) const;
-	/// Dump configuration to JSON string
-	std::string dumps() const;
+        /// Extend current list of configuration objects with more.
+        void extend(Configuration more);
+
 
 	// Add a fully-built configurable configuration for an instance, return its index
 	int add(Configuration& cfg);

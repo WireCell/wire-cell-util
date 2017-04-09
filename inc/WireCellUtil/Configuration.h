@@ -10,42 +10,52 @@
 
 namespace WireCell {
 
-    /** The data type for configuration.
-     *
-     * Configuration is a recursive in that one Configuration object
-     * may contain others.
-     *
-     * The Configuration object given to a component must be the top
-     * of a component-specific schema.
-     *
-     * Configuration objects are associated to a component using the
-     * component's class name and an optional instance name.
-     * Configurations of multiple components may be aggregated through
-     * a two level dictionary.  Top level keys are component class
-     * names.  Keys of these dictionaries are instance names.  The
-     * empty string is interpreted as an unspecified (or default)
-     * instance.
+    /** The Wire Cell Toolkit configuration layer uses Json::Value
+        objects for its transient data model.        
+     
+        The Configuration type is a recursive in that one
+        Configuration object may contain others.
+     
+        The WCT assumes an Object Configuration Protocol is
+        implemented by the "client" code that uses the toolkit.  See
+        for example the reference implementation in the wire-cell
+        command line program.  This protocol consists of:
+
+        1) Creation of the list of Configuration objects,
+        typically via WireCell::Persist::load().
+
+        2) Iterating this list and for each suitable Configuration
+        object instantiating the appropriately matching IConfigurable
+        via the WireCell::NamedFactory facility.
+
+        3) Obtaining the default Configuration object from the
+        IConfigurable and merging the user-supplied on top of it.
+
+        4) Passing the resulting Configuration object to the
+        IConfigurable::configure() method.
+
+        A suitable Configuration object must have two top level keys
+        and may have a third optional key:
+
+       - type :: must match the "component class name" (as given as
+         first argument to the WIRECELL_FACTORY() macro in the
+         implementation file)
+
+       - data :: an object which follows a schema which is specific to
+         each IConfigurable implementation.  
+
+       - name :: an optional Instance Name.  If not given, the default instance of the type will be used.
      */
 
     typedef Json::Value Configuration;
 
-    /// Load a configuration from the named file.  If format it given,
-    /// force that format, otherwise divine it from the filename
-    /// extension.
-    Configuration configuration_load(const std::string& filename,
-				     const std::string& format="json");
+    /// For persistence use WireCell::Persist::load() and
+    /// WireCell::Persist::dump().
 
-    /// Load a configuration from a string assuming the given format.
-    Configuration configuration_loads(const std::string& data,
-				      const std::string& format="json");
 
-    /// Dump a configuration to the named file
-    bool configuration_dump(const std::string& filename, const Configuration& cfg,
-			    const std::string& format="json");
-
-    /// Dump a configuration to a string
-    std::string configuration_dumps(const Configuration& cfg,
-				    const std::string& format="json");
+    /// The following functions provide some access methods which add
+    /// some value beyond what Json::Value provides including some
+    /// support for basic WCT types.
 
     
     /// Convert a configuration value to a particular type.
@@ -115,6 +125,7 @@ namespace WireCell {
     Configuration update(Configuration& a, Configuration& b);
 
     /// Return an array which is composed of the array b appended to the array a.
+    // fixme: this should be called "extend".
     Configuration append(Configuration& a, Configuration& b);
 
     /// Return dictionary in given list if it value at dotpath matches

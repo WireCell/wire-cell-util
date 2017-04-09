@@ -7,18 +7,18 @@
 #include <boost/iostreams/filtering_stream.hpp>
 
 #include <string>
+#include <sstream>
 #include <fstream>
 #include <iostream> 
 
 using namespace std;
 
-void WireCell::Persist::dump(const char* filename, Json::Value& jroot, bool pretty)
+void WireCell::Persist::dump(const std::string& filename, const Json::Value& jroot, bool pretty)
 {
-    string fname=filename;
-    string ext = fname.substr(fname.rfind("."));
+    string ext = filename.substr(filename.rfind("."));
 
     /// default to .json.bz2 regardless of extension.
-    std::fstream fp(filename, std::ios::binary|std::ios::out);
+    std::fstream fp(filename.c_str(), std::ios::binary|std::ios::out);
     boost::iostreams::filtering_stream<boost::iostreams::output> outfilt;
     if (ext == ".bz2") {
 	outfilt.push(boost::iostreams::bzip2_compressor());
@@ -33,14 +33,21 @@ void WireCell::Persist::dump(const char* filename, Json::Value& jroot, bool pret
 	outfilt << jwriter.write(jroot);
     }
 }
-
-Json::Value WireCell::Persist::load(const char* filename)
+// fixme: support pretty option for indentation
+std::string  WireCell::Persist::dumps(const Json::Value& cfg, bool)
 {
-    string fname=filename;
-    string ext = fname.substr(fname.rfind("."));
+    stringstream ss;
+    ss << cfg;
+    return ss.str();
+}
+
+
+Json::Value WireCell::Persist::load(const std::string& filename)
+{
+    string ext = filename.substr(filename.rfind("."));
     
     Json::Value jroot;
-    std::fstream fp(filename, std::ios::binary|std::ios::in);
+    std::fstream fp(filename.c_str(), std::ios::binary|std::ios::in);
     if (!fp) {
         cerr << "no such file: " << filename << endl;
         return jroot;
@@ -53,5 +60,13 @@ Json::Value WireCell::Persist::load(const char* filename)
     infilt.push(fp);
     infilt >> jroot;
     return jroot;
+}
+
+Json::Value  WireCell::Persist::loads(const std::string& text)
+{
+    Json::Value res;
+    stringstream ss(text);
+    ss >> res;
+    return res;
 }
 

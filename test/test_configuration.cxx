@@ -1,4 +1,5 @@
 #include "WireCellUtil/Configuration.h"
+#include "WireCellUtil/Persist.h"
 #include "WireCellUtil/Testing.h"
 
 #include <iostream>
@@ -28,8 +29,8 @@ int main()
 )";
 
 
-    Configuration cfg = configuration_loads(json);
-    Configuration extra_cfg = configuration_loads(extra_json);
+    Configuration cfg = Persist::loads(json);
+    Configuration extra_cfg = Persist::loads(extra_json);
 
     Assert(get(cfg,"my_int",0) == 1);
     Assert(get(cfg,"my_float",0.0) == 6.9);

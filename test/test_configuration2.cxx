@@ -1,4 +1,5 @@
 #include "WireCellUtil/Configuration.h"
+#include "WireCellUtil/Persist.h"
 #include "WireCellUtil/Testing.h"
 #include "WireCellUtil/Point.h"
 
@@ -71,7 +72,7 @@ int main()
 )";
 
 
-    Configuration cfg = configuration_loads(json);
+    Configuration cfg = Persist::loads(json);
 
     for (auto comp: cfg) {
 	Assert(get<string>(comp,"type") == "TrackDepos");
