@@ -39,10 +39,30 @@ namespace WireCell {
         std::string dumps(const Json::Value& top, bool pretty=false);
 
 	/// Load a file and return the top JSON value.  See
-	/// Persist::dump() for supported file formats.
+	/// Persist::dump() for supported file formats.  In addition
+	/// if filename ends in .jsonnet the file will be evaluated as
+	/// Jsonnet.  Pure JSON can be evaluated resulting in a no-op
+	/// but for very large JSON files this is best avoided.
 	Json::Value load(const std::string& filename);
-        /// As above but load from JSON text string.
-	Json::Value loads(const std::string& text);
+
+        /// As above but load from JSON text string.  Setting
+        /// `isjsonnet` to true will enable Jsonnet evaluation.
+	Json::Value loads(const std::string& text, bool isjsonnet=false);
+
+        /// If Jsonnet support is compiled in, this will evaluate the
+        /// input text as Jsonnet code.  If no support or if the text
+        /// is already plain JSON then this method is an effective
+        /// pass-through.  If support is built in and an error occurs
+        /// the returned string will be empty and the Jsonnet
+        /// evaluator will print an error.  This method may be called
+        /// by load() and loads() if their `jsonnet=true` is passed.
+        /// The JSONNET_PATH external environment variable can be set
+        /// to let the evaluator find any imported jsonnet files.  If
+        /// the filename is not set then any error messages will refer
+        /// to "<stdin>".
+        std::string evaluate_jsonnet(const std::string& text,
+                                     const std::string& filename = "");
+        
     }
 }
 

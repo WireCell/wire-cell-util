@@ -1,8 +1,10 @@
 #include "WireCellUtil/Persist.h"
+#include "WireCellUtil/String.h"
 
 // optional feature
 #ifdef HAVE_LIBJSONNET_H
 #include "libjsonnet++.h"
+#include <cstdlib>              // for getenv
 #endif
 
 
@@ -17,6 +19,7 @@
 #include <iostream> 
 
 using namespace std;
+using namespace WireCell;
 
 void WireCell::Persist::dump(const std::string& filename, const Json::Value& jroot, bool pretty)
 {
@@ -46,35 +49,46 @@ std::string  WireCell::Persist::dumps(const Json::Value& cfg, bool)
     return ss.str();
 }
 
+std::string WireCell::Persist::evaluate_jsonnet(const std::string& text,
+                                                const std::string& filename)
+{
+#ifdef HAVE_LIBJSONNET_H
+    std::string fname = "<stdin>";
+    if (!filename.empty()) {
+        fname = filename;
+    }
+
+    jsonnet::Jsonnet parser;
+    parser.init();
+
+    const char* cpath = std::getenv("JSONNET_PATH");
+    if (cpath) {
+        auto paths = String::split(cpath);
+        for (int ind=0; ind<paths.size(); ++ind) {
+            auto path = paths[ind];
+            //cerr << "Adding Jsonnet path: " << path << " " << ind << "/" << paths.size() << endl;
+            parser.addImportPath(path);
+        }
+    }
+
+    std::string output; // weird API
+    const bool ok =  parser.evaluateSnippet(fname, text, &output);
+    if (!ok) {
+        cerr << parser.lastError() << endl;
+        return "";
+    }
+    return output;
+#else
+    return text;
+#endif
+}
+
 
 Json::Value WireCell::Persist::load(const std::string& filename)
 {
     string ext = filename.substr(filename.rfind("."));
     
     Json::Value jroot;
-
-// this feature is optional contingent on compiling in support for
-// jsonnet.  Compression isn't supported on jsonnet files because I'm
-// lazy.  The whole point is that they are small and hand crafted.
-#ifdef HAVE_LIBJSONNET_H
-    if (ext == ".jsonnet") {
-        // fixme: need a way to specify equivalent of the -J path that
-        // jsonnet CLI accepts so that user jsonnet code can find
-        // wirecell.libsonnet, etc.
-
-        jsonnet::Jsonnet parser;
-        parser.init();
-
-        std::string output; // weird API
-        const bool ok = parser.evaluateFile(filename, &output);
-        if (!ok) {
-            cerr << "failed to evaluate " << filename << endl;
-            return jroot;
-        }
-        jroot = loads(output);
-        return jroot;
-    }
-#endif
 
     std::fstream fp(filename.c_str(), std::ios::binary|std::ios::in);
     if (!fp) {
@@ -87,15 +101,27 @@ Json::Value WireCell::Persist::load(const std::string& filename)
 	infilt.push(boost::iostreams::bzip2_decompressor());
     }
     infilt.push(fp);
-    infilt >> jroot;
-    return jroot;
+    std::string text;
+    infilt >> text;
+    const bool isjsonnet = filename.rfind(".jsonnet") != std::string::npos;
+    return loads(text, isjsonnet);
 }
 
-Json::Value  WireCell::Persist::loads(const std::string& text)
+Json::Value  WireCell::Persist::loads(const std::string& text, bool isjsonnet)
 {
+    if (isjsonnet) {
+        const std::string jtext = evaluate_jsonnet(text);
+        Json::Value res;
+        stringstream ss(jtext);
+        ss >> res;
+        return res;
+    }
+
+    // duplicate this block from above to avoid yet another copy
     Json::Value res;
     stringstream ss(text);
     ss >> res;
     return res;
+
 }
 

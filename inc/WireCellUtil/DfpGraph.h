@@ -18,7 +18,7 @@ namespace WireCell {
 
 	    VertexProperty(const std::string& t, const std::string& n) : type(t), name(n) {}
 	    VertexProperty(const std::string& tn) {
-		std::tie(type,name) = WireCell::parse_pair(tn);
+		std::tie(type,name) = WireCell::String::parse_pair(tn);
 	    }
 	    VertexProperty() : type(""), name("") {}
 
