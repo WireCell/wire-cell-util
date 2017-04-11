@@ -40,8 +40,15 @@ Response::Schema::PathResponse::~PathResponse()
 WireCell::Response::Schema::FieldResponse WireCell::Response::Schema::load(const char* filename)
 {
     //WireCell::ExecMon em("load");
-
+    if (!filename) {
+        std::cerr << "Response::Schema::load(): empty field response file name\n";
+        return FieldResponse();
+    }
     Json::Value top = WireCell::Persist::load(filename);
+    if (top.isNull()) {
+        std::cerr << "Response::Schema::load(): failed to load " << filename << "\n";
+        return FieldResponse();
+    }
     Json::Value fr = top["FieldResponse"];
 
     using namespace WireCell::Response::Schema;

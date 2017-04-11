@@ -24,6 +24,23 @@
 namespace WireCell {
     namespace Persist {
 
+        /// Return true file exists (no file resolution performed).
+        bool exists(const std::string& filename);
+
+
+        /** Return full path to a file of the given filename.  If the
+         * file is not directly located and is a relative path then
+         * the file will be first located in the current working
+         * directory.  Failing that if the `WIRECELL_PATH` environment
+         * variable is defined and set as a `:`-separated list it will
+         * be checked. */
+        std::string resolve(const std::string& filename);
+
+        /** Return a string holding the entire contents of the
+         * file.   File resolution is performed. */
+        std::string slurp(const std::string& filename);
+
+
 	/// Save the data structure held by the given top Json::Value
 	/// in to a file of the given name.  The format of the file is
 	/// determined by the file name extension.  Valid extensions
@@ -32,36 +49,39 @@ namespace WireCell {
 	/// - .json :: JSON text format
 	/// - .json.bz2 :: JSON text format compressed with bzip2
 	///
-	/// If pretty is true then format the JSON text.
+	/// If `pretty` is true then format the JSON text with
+	/// indents.  If also compressed, this formatting can actually
+	/// lead to *smaller* files.
 	void dump(const std::string& filename, const Json::Value& top, bool pretty=false);
+
         /// As above but dump to a JSON text string.
         // fixme: no "pretty" for dumps() is implemented.
         std::string dumps(const Json::Value& top, bool pretty=false);
 
-	/// Load a file and return the top JSON value.  See
-	/// Persist::dump() for supported file formats.  In addition
-	/// if filename ends in .jsonnet the file will be evaluated as
-	/// Jsonnet.  Pure JSON can be evaluated resulting in a no-op
-	/// but for very large JSON files this is best avoided.
-	Json::Value load(const std::string& filename);
+	/** Load a file and return the top JSON value.  
+         
+            If extension is `.jsonnet` and Jsonnet support is compiled
+            in, evaluate the file and use the resulting JSON.  Other
+            supported extensions include raw (`.json`) or compressed
+            (`.json.bz2`) files.  
+        */
+        Json::Value load(const std::string& filename);
 
-        /// As above but load from JSON text string.  Setting
-        /// `isjsonnet` to true will enable Jsonnet evaluation.
-	Json::Value loads(const std::string& text, bool isjsonnet=false);
+        /** Load a JSON or Jsonnet string, returning a Json::Value. */
+	Json::Value loads(const std::string& text);
 
-        /// If Jsonnet support is compiled in, this will evaluate the
-        /// input text as Jsonnet code.  If no support or if the text
-        /// is already plain JSON then this method is an effective
-        /// pass-through.  If support is built in and an error occurs
-        /// the returned string will be empty and the Jsonnet
-        /// evaluator will print an error.  This method may be called
-        /// by load() and loads() if their `jsonnet=true` is passed.
-        /// The JSONNET_PATH external environment variable can be set
-        /// to let the evaluator find any imported jsonnet files.  If
-        /// the filename is not set then any error messages will refer
-        /// to "<stdin>".
-        std::string evaluate_jsonnet(const std::string& text,
-                                     const std::string& filename = "");
+        /** Explicitly evaluate contents of file with Jsonnet.  If no
+            support for Jsonnet is built, return the contents of
+            file.  Return empty string if Jsonnet evaluation failes. */
+        std::string evaluate_jsonnet_file(const std::string& filename);
+
+        /** Explicitly evaluate text with JSonnet.  If no support for
+            Jsonnet is built, return the text. Return empty string if
+            Jsonnet evaluation failes. */
+        std::string evaluate_jsonnet_text(const std::string& text);
+
+        /** Explicitly convert JSON text to Json::Value object */
+        Json::Value json2object(const std::string& text);
         
     }
 }

@@ -4,14 +4,16 @@
 // optional feature
 #ifdef HAVE_LIBJSONNET_H
 #include "libjsonnet++.h"
-#include <cstdlib>              // for getenv
 #endif
+
+#include <cstdlib>              // for getenv, see get_path()
 
 
 #include <boost/iostreams/copy.hpp> 
 #include <boost/iostreams/filter/bzip2.hpp> 
 #include <boost/iostreams/device/file.hpp> 
 #include <boost/iostreams/filtering_stream.hpp>
+#include <boost/filesystem.hpp>
 
 #include <string>
 #include <sstream>
@@ -21,9 +23,20 @@
 using namespace std;
 using namespace WireCell;
 
+#define WIRECELL_PATH_VARNAME "WIRECELL_PATH"
+
+static std::string file_extension(const std::string& filename)
+{
+    auto ind = filename.rfind(".");
+    if (ind == string::npos) {
+        return "";
+    }
+    return filename.substr(ind);
+}
+
 void WireCell::Persist::dump(const std::string& filename, const Json::Value& jroot, bool pretty)
 {
-    string ext = filename.substr(filename.rfind("."));
+    string ext = file_extension(filename);
 
     /// default to .json.bz2 regardless of extension.
     std::fstream fp(filename.c_str(), std::ios::binary|std::ios::out);
@@ -49,79 +62,153 @@ std::string  WireCell::Persist::dumps(const Json::Value& cfg, bool)
     return ss.str();
 }
 
-std::string WireCell::Persist::evaluate_jsonnet(const std::string& text,
-                                                const std::string& filename)
+std::string WireCell::Persist::slurp(const std::string& filename)
 {
+    std::string fname = resolve(filename);
+    if (fname.empty()) {
+        cerr << "Persist::slurp: no such file: " << filename << endl;
+        return "";
+    }
+    std::ifstream fstr(filename);
+    std::stringstream buf;
+    buf << fstr.rdbuf();
+    return buf.str();
+}
+
+
+bool WireCell::Persist::exists(const std::string& filename)
+{
+    return boost::filesystem::exists(filename);
+}
+
+static std::vector<std::string> get_path()
+{
+    std::vector<std::string> ret;
+    const char* cpath = std::getenv(WIRECELL_PATH_VARNAME);
+    if (!cpath) {
+        return ret;
+    }
+    for (auto path : String::split(cpath)) {
+        ret.push_back(path);
+    }
+    return ret;
+}
+
+
+
+std::string WireCell::Persist::resolve(const std::string& filename)
+{
+    if (filename.empty()) {
+        return "";
+    }
+    if (filename[0] == '/') {
+        return filename;
+    }
+
+    std::vector<boost::filesystem::path> tocheck{boost::filesystem::current_path(),};
+    for (auto pathname : get_path()) {
+        tocheck.push_back(boost::filesystem::path(pathname));
+    }
+    for (auto pobj : tocheck) {
+        boost::filesystem::path full = pobj / filename;
+        if (boost::filesystem::exists(full)) {
+            return boost::filesystem::canonical(full).string();
+        }
+    }
+    return "";
+}
+
+Json::Value WireCell::Persist::load(const std::string& filename)
+{
+    Json::Value jroot;    
+    std::string fname = resolve(filename);
+    if (fname.empty()) {
+        cerr << "Persist::load(): no such file: \"" << filename << "\"\n";
+        return jroot;
+    }
+
+    string ext = file_extension(fname);
+    
+    if (ext == ".jsonnet") {    // use libjsonnet++ file interface
+        string text = evaluate_jsonnet_file(fname);
+        return json2object(text);
+    }
+
+    // use jsoncpp file interface
+    std::fstream fp(fname.c_str(), std::ios::binary|std::ios::in);
+    boost::iostreams::filtering_stream<boost::iostreams::input> infilt;	
+    if (ext == ".bz2" ) {
+	cerr << "loading compressed json file: " << fname <<"\n";
+	infilt.push(boost::iostreams::bzip2_decompressor());
+    }
+    infilt.push(fp);
+    std::string text;
+    infilt >> jroot;
+    return jroot;
+}
+
+Json::Value  WireCell::Persist::loads(const std::string& text)
+{
+    const std::string jtext = evaluate_jsonnet_text(text);
+    return json2object(jtext);
+}
+
+// bundles few lines into function to avoid some copy-paste
+Json::Value WireCell::Persist::json2object(const std::string& text)
+{
+    Json::Value res;
+    stringstream ss(text);
+    ss >> res;
+    return res;
+}
+
+
 #ifdef HAVE_LIBJSONNET_H
-    std::string fname = "<stdin>";
-    if (!filename.empty()) {
-        fname = filename;
+static void init_parser(jsonnet::Jsonnet& parser)
+{
+    parser.init();
+    for (auto path : get_path()) {
+        parser.addImportPath(path);
+    }
+}
+std::string WireCell::Persist::evaluate_jsonnet_file(const std::string& filename)
+{
+    std::string fname = resolve(filename);
+    if (fname.empty()) {
+        cerr << "no such file: " << filename << endl;
     }
 
     jsonnet::Jsonnet parser;
-    parser.init();
-
-    const char* cpath = std::getenv("JSONNET_PATH");
-    if (cpath) {
-        auto paths = String::split(cpath);
-        for (int ind=0; ind<paths.size(); ++ind) {
-            auto path = paths[ind];
-            //cerr << "Adding Jsonnet path: " << path << " " << ind << "/" << paths.size() << endl;
-            parser.addImportPath(path);
-        }
-    }
+    init_parser(parser);
 
     std::string output; // weird API
-    const bool ok =  parser.evaluateSnippet(fname, text, &output);
+    const bool ok = parser.evaluateFile(fname, &output);
     if (!ok) {
         cerr << parser.lastError() << endl;
         return "";
     }
     return output;
-#else
+}
+std::string WireCell::Persist::evaluate_jsonnet_text(const std::string& text)
+{
+    jsonnet::Jsonnet parser;
+    init_parser(parser);
+
+    std::string output; // weird API
+    bool ok =  parser.evaluateSnippet("<stdin>", text, &output);
+    if (!ok) {
+        cerr << parser.lastError() << endl;
+        return "";
+    }
+    return output;
+}
+#else  // no jsonnet support
+std::string WireCell::Persist::evaluate_jsonnet_file(const std::string& filename)
+{    
+    return slurp(filename);
+}
+std::string WireCell::Persist::evaluate_jsonnet_text(const std::string& text)
+{
     return text;
-#endif
 }
-
-
-Json::Value WireCell::Persist::load(const std::string& filename)
-{
-    string ext = filename.substr(filename.rfind("."));
-    
-    Json::Value jroot;
-
-    std::fstream fp(filename.c_str(), std::ios::binary|std::ios::in);
-    if (!fp) {
-        cerr << "no such file: " << filename << endl;
-        return jroot;
-    }
-    boost::iostreams::filtering_stream<boost::iostreams::input> infilt;	
-    if (ext == ".bz2" ) {
-	cerr << "loading compressed json file: " << filename <<"\n";
-	infilt.push(boost::iostreams::bzip2_decompressor());
-    }
-    infilt.push(fp);
-    std::string text;
-    infilt >> text;
-    const bool isjsonnet = filename.rfind(".jsonnet") != std::string::npos;
-    return loads(text, isjsonnet);
-}
-
-Json::Value  WireCell::Persist::loads(const std::string& text, bool isjsonnet)
-{
-    if (isjsonnet) {
-        const std::string jtext = evaluate_jsonnet(text);
-        Json::Value res;
-        stringstream ss(jtext);
-        ss >> res;
-        return res;
-    }
-
-    // duplicate this block from above to avoid yet another copy
-    Json::Value res;
-    stringstream ss(text);
-    ss >> res;
-    return res;
-
-}
-
+#endif  // jsonnet support

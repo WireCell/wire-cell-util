@@ -5,6 +5,7 @@
 #include "WireCellUtil/Singleton.h"
 #include "WireCellUtil/PluginManager.h"
 #include "WireCellUtil/Type.h"
+#include "WireCellUtil/String.h"
 #include <unordered_map>
 
 #include <iostream>
@@ -155,6 +156,7 @@ namespace WireCell {
     /// Singleton interface
     namespace Factory {
 
+        /// Associate a factory with the type it makes.
 	template<class IType>
 	bool associate(const std::string& classname, WireCell::INamedFactory* factory) {
 	    NamedFactoryRegistry<IType>&
@@ -164,6 +166,7 @@ namespace WireCell {
             return ok;
 	}
 
+        /// Lookup up a factory for the given type
 	template<class IType>
 	WireCell::INamedFactory* lookup_factory(const std::string& classname) {
 	    NamedFactoryRegistry<IType>&
@@ -173,6 +176,7 @@ namespace WireCell {
 	    return ret;
 	}
 
+        /// Lookup an interface by a type and optional name.
 	template<class IType>
 	std::shared_ptr<IType> lookup(const std::string& classname, const std::string& instname="") {
 	    NamedFactoryRegistry<IType>&
@@ -181,6 +185,14 @@ namespace WireCell {
             if (!ret) { throw FactoryException("Failed to lookup instance for " + classname + " " + instname); }
 	    return ret;
 	}
+
+        /// Lookup an interface by a type:name pair.
+	template<class IType>
+	std::shared_ptr<IType> lookup_tn(const std::string& tn) {
+            std::string t, n;
+            std::tie(t,n) = String::parse_pair(tn);
+            return lookup<IType>(t,n);
+        }
 
 	/// Return a vector of all known classes of given interface.
 	template<class IType>

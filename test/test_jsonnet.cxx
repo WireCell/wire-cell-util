@@ -31,9 +31,10 @@ const std::string want1 = R"({
 }
 )";
 
+#ifdef HAVE_LIBJSONNET_H
 int main()
 {
-    string got1 = Persist::evaluate_jsonnet(give1);
+    string got1 = Persist::evaluate_jsonnet_text(give1);
     // cerr << "------give:\n";
     // cerr << give1 << endl;
     // cerr << "------got:\n";
@@ -47,14 +48,20 @@ int main()
         cerr << "test_jsonnet requires setting JSONNET_PATH to point to where 'wirecell.jsonnet' exists\n";
         return 0;
     }
-    string text = Persist::evaluate_jsonnet("local wc = import \"wirecell.jsonnet\"; [ wc.pi ]");
+    string text = Persist::evaluate_jsonnet_text("local wc = import \"wirecell.jsonnet\"; [ wc.pi ]");
     //cerr << text << endl;
     auto res = Persist::loads(text);
 
     const double mypi = 2*std::acos(0.0);
     const double jspi = res[0].asDouble();
     Assert (std::abs(jspi - mypi) < 1.0e-16);
-    
 
     return 0;
 }
+#else  // no jsonnet
+int main()
+{
+    cerr << "test_jsonnet requires compiling with Jsonnet support\n";    
+    return 0;
+}
+#endif
