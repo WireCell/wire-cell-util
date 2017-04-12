@@ -148,10 +148,13 @@ void test_stuff(Response::Schema::FieldResponse& fr, int iplane)
 
 int main(int argc, const char* argv[])
 {
-
+    string response_file = "garfield-1d-3planes-21wires-6impacts-v4.json.bz2";
     if (argc < 2) {
-	cerr << "This test requires an Wire Cell Field Response input file." << endl;
-	return 0;
+	cerr << "Not  Wire Cell field response input file given, will try to use:\n"
+             << response_file << endl;
+    }
+    else {
+        response_file = argv[1];
     }
     string out_basename = argv[0];
     if (argc > 2) {
@@ -160,7 +163,7 @@ int main(int argc, const char* argv[])
     TFile* rootfile = TFile::Open(Form("%s.root", out_basename.c_str()), "recreate");
 
     WireCell::ExecMon em(argv[0]);
-    auto fr = Response::Schema::load(argv[1]);
+    auto fr = Response::Schema::load(response_file.c_str());
     cerr << em("loaded") << endl;
 
     // 1D garfield wires are all parallel
