@@ -58,6 +58,7 @@ namespace WireCell {
     };
 
 
+    
     /** A registry of factories that produce instances which implement
      * a given interface. */
     template <class IType>
@@ -232,6 +233,7 @@ namespace WireCell {
 
 template<class Concrete, class... Interface>
 void* make_named_factory_factory(std::string name) {
+    //std::cerr << "make_named_factory_factory(\"" << name << "\")\n";
     static void* void_factory = nullptr;
     if (! void_factory) {
 	void_factory = new WireCell::NamedFactory<Concrete>;

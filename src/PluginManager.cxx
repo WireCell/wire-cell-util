@@ -43,7 +43,7 @@ WireCell::Plugin* WireCell::PluginManager::add(const std::string& plugin_name,
     if (libname == "") {
 	lname = "lib";
 	lname += plugin_name;
-	lname += ".so";		// suck it, Mac.  ... for now
+	lname += ".so";		// suck it, Mac.  ... for now (fixme)
     }
     else {
 	lname = libname;
@@ -54,7 +54,7 @@ WireCell::Plugin* WireCell::PluginManager::add(const std::string& plugin_name,
 	return nullptr;
     }
     m_plugins[plugin_name] = new Plugin(lib);
-    //cerr << " PluginManager: loaded plugin #" << m_plugins.size() << " \"" << plugin_name << "\" from library \"" << lname << "\": " << m_plugins[plugin_name] << endl;
+    // cerr << " PluginManager: loaded plugin #" << m_plugins.size() << " \"" << plugin_name << "\" from library \"" << lname << "\": " << m_plugins[plugin_name] << endl;
     return m_plugins[plugin_name];
 }
 
