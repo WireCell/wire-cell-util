@@ -12,6 +12,7 @@
 #include <iterator>		// back_inserter
 #include <memory>		// shared_ptr
 #include <vector>
+#include <cmath>
 
 using namespace std;
 using namespace WireCell;
