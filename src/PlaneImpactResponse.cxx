@@ -54,8 +54,8 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
     const double rawresp_tick = fr.period;
     const double rawresp_max = rawresp_min + rawresp_size*rawresp_tick;
     Binning rawresp_bins(rawresp_size, rawresp_min, rawresp_max);
-    std::cerr << "raw response bins: " << rawresp_size
-              << " ["<<rawresp_min/units::us<<","<<rawresp_max/units::us<<"] us\n";
+    std::cerr << "PlaneImpactResponse: field responses: " << rawresp_size
+              << "bins covering ["<<rawresp_min/units::us<<","<<rawresp_max/units::us<<"] us\n";
 
     const int ntbins = tbins.nbins();
     const double tick = tbins.binsize();
