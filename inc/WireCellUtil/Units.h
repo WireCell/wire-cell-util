@@ -109,6 +109,7 @@ namespace units {
   static const double eplus = 1. ;// positron charge
   static const double e_SI  = 1.602176487e-19;// positron charge in coulomb
   static const double coulomb = eplus/e_SI;// coulomb = 6.24150 e+18 * eplus
+  static const double fC = 1.0e-15*coulomb;// femtocoulomb
 
   //
   // Energy [E]
@@ -174,6 +175,7 @@ namespace units {
   static const double kilovolt = 1.e-3*megavolt;
   static const double     volt = 1.e-6*megavolt;
   static const double millivolt = 1.e-3*volt;
+  static const double mV = millivolt;
 
   //
   // Electric resistance [E][T][Q^-2]

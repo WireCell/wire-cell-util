@@ -32,9 +32,22 @@ namespace WireCell {
     class PlaneImpactResponse {
     public:
 
+        /** Create a PlaneImpactResponse.
+
+            Field response is assumed to be normalized in units of current.
+
+            Pre-amplifier gain and peaking time is that of the FE
+            electronics.  The preamp gain should be in units
+            consistent with the field response.  If 0.0 then no
+            electronics response will be convolved.
+
+            A flat post-FEE amplifier gain can also be given to
+            provide a global scaling of the output of the electronics.
+         */
 	PlaneImpactResponse(const Response::Schema::FieldResponse& fr, int plane_ident,
                             Binning tbins, // fixme, only needs tick+nbins
-			    double gain=0.0, double shaping=0.0*units::us);
+			    double preamp_gain=0.0, double preamp_peaking=0.0*units::us,
+                            double postamp_gain=1.0);
 	~PlaneImpactResponse();
 
 	std::pair<int,int> closest_wire_impact(double relpitch) const;

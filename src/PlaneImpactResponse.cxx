@@ -9,7 +9,8 @@ using namespace WireCell;
 PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& fr,
                                          int plane_ident,
                                          Binning tbins,
-                                         double gain, double shaping)
+                                         double preamp_gain, double preamp_peaking,
+                                         double postamp_gain)
     : m_fr(fr)
     , m_plane_ident(plane_ident)
     , m_tbins(tbins)
@@ -18,10 +19,13 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
     auto& pr = plane_response();
 
     WireCell::Waveform::compseq_t elec;
-    if (gain > 0.0) {
-        Response::ColdElec ce(gain,shaping);
-        elec = Waveform::dft(ce.generate(tbins));
+    if (preamp_gain > 0.0) {
+        Response::ColdElec ce(preamp_gain, preamp_peaking);
+        auto ewave = ce.generate(tbins);
+        Waveform::scale(ewave, postamp_gain);
+        elec = Waveform::dft(ewave);
     }
+
     
     const int npaths = pr.paths.size();
 
@@ -86,7 +90,9 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
             wave[bin] += path.current[rind];
         }
         WireCell::Waveform::compseq_t spec = Waveform::dft(wave);
-        if (gain > 0) {
+
+        // Convolve with electronics response.
+        if (preamp_gain > 0) {  
             for (int find=0; find < ntbins; ++find) {
                 spec[find] *= elec[find];
             }
