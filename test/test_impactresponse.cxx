@@ -10,6 +10,7 @@
 #include "TFile.h"
 
 #include <iostream>
+#include <algorithm>
 
 using namespace WireCell;
 using namespace WireCell::Test;
@@ -40,9 +41,22 @@ void plot_time(MultiPdf& mpdf, PlaneImpactResponse& pir,
     const double pmin = -36*units::mm, pmax=36*units::mm;
     const int npbins = (pmax-pmin)/impact_dist;
 
+    // dr:
+    std::string zunit = "mV";
+    double zunitval = units::mV;
+    double scale = tbins.binsize();
+    if (name=="fr") {
+        zunit = "nAmp";
+        zunitval = units::nanoampere;
+        scale = 1.0;
+    }
+    std::cerr <<"zunits: " << zunit << " scale=" << scale
+              << " tbinsize: " << tbins.binsize()/units::us
+              << std::endl;
+
     gStyle->SetOptStat(0);
     TH2F* hist = new TH2F(Form("h%s_%c", name.c_str(), uvw[iplane]),
-                          Form("%s %c-plane", title.c_str(), uvw[iplane]),
+                          Form("%s 1e- %c-plane [%s]", title.c_str(), uvw[iplane], zunit.c_str()),
                           ntbins, tmin/units::us, tmax/units::us, 
                           npbins, pmin/units::mm, pmax/units::mm);
     hist->SetXTitle("time (us)");
@@ -59,7 +73,7 @@ void plot_time(MultiPdf& mpdf, PlaneImpactResponse& pir,
 	pitch += 0.001*impact_dist;
 	for (int ind=0; ind < ntbins; ++ind) {
 	    const double time = tbins.center(ind);
-	    hist->Fill(time/units::us, pitch/units::mm, wave[ind]);
+	    hist->Fill(time/units::us, pitch/units::mm, scale*wave[ind]/zunitval);
 	}
     }
     hist->Write();
@@ -93,7 +107,7 @@ void test_stuff(Response::Schema::FieldResponse& fr, int iplane)
     const double tmin = 0.0;
     const double tmax = 5*units::ms;
     Binning tbins(ntbins, tmin, tmax);
-    const double gain = 14.7;
+    const double gain = 14.0*units::mV/units::fC;
     const double shaping = 2*units::us;
 
     PlaneImpactResponse pir(fr, iplane, tbins, gain, shaping);
@@ -137,6 +151,19 @@ void test_stuff(Response::Schema::FieldResponse& fr, int iplane)
             int impact = closest->impact();
             const Response::Schema::PathResponse& pathr = pr.paths[impact];
             Assert (std::abs(std::abs(pitch) - std::abs(pathr.pitchpos)) < 0.3*units::mm);
+            if (pitch >= -1.5*units::mm and pitch <= 1.5*units::mm) {
+                auto& wave = pathr.current;
+                const double itot = Waveform::sum(wave);
+                const double qtot = itot * fr.period;
+                auto mm = std::minmax_element(wave.begin(), wave.end());
+                
+                std::cerr << "plane: " << iplane << " pitch:" << pitch
+                          << " itot=" << itot << " "
+                          << " Imm=["
+                          << (*mm.first)/units::nanoampere << ","
+                          << (*mm.second)/units::nanoampere <<"]nAmp "
+                          << " qtot=" << qtot/units::eplus << "eles\n";
+            }
         }
         else {
             std::cerr << "No closest for pitch " << pitch << std::endl;
@@ -148,7 +175,7 @@ void test_stuff(Response::Schema::FieldResponse& fr, int iplane)
 
 int main(int argc, const char* argv[])
 {
-    string response_file = "garfield-1d-3planes-21wires-6impacts-v4.json.bz2";
+    string response_file = "garfield-1d-3planes-21wires-6impacts-v6.json.bz2";
     if (argc < 2) {
 	cerr << "Not  Wire Cell field response input file given, will try to use:\n"
              << response_file << endl;
@@ -184,7 +211,7 @@ int main(int argc, const char* argv[])
     const double tmin = 0.0;
     const double tmax = 5*units::ms;
     Binning tbins(ntbins, tmin, tmax);
-    const double gain = 14.7;
+    const double gain = 14.0*units::mV/units::fC;
     const double shaping = 2*units::us;
 
     MultiPdf mpdf(argv[0]);

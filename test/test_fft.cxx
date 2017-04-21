@@ -15,14 +15,14 @@
 using namespace std;
 using namespace WireCell;
 
+// The preferred display units for gain.
+const double GUnit = units::mV/units::fC;
+
+
 void draw_time_freq(TCanvas& canvas,
 		    Waveform::realseq_t& res, 
 		    const std::string& title, 
-		    const Waveform::Domain& domain = Waveform::Domain(0.0,10.0));
-void draw_time_freq(TCanvas& canvas,
-		    Waveform::realseq_t& res, 
-		    const std::string& title, 
-		    const Waveform::Domain& domain)
+                    const Binning& tbins)
 {
     Waveform::compseq_t spec = Waveform::dft(res);
     Waveform::realseq_t res2 = Waveform::idft(spec);
@@ -30,8 +30,10 @@ void draw_time_freq(TCanvas& canvas,
     const int nticks = res.size();
     cerr << "Drawing nticks=" << nticks << endl;
 
-    TH1F h_wave("response",title.c_str(), nticks, domain.first, domain.second);
-    TH1F h_wave2("response2",title.c_str(), nticks, domain.first, domain.second);
+    TH1F h_wave("response",title.c_str(),
+                tbins.nbins(), tbins.min()/units::us, tbins.max()/units::us);
+    TH1F h_wave2("response2",title.c_str(),
+                 tbins.nbins(), tbins.min()/units::us, tbins.max()/units::us);
     h_wave2.SetLineColor(2);
 
     h_wave.SetXTitle("Time (microsecond)");
@@ -39,31 +41,33 @@ void draw_time_freq(TCanvas& canvas,
     h_wave.GetXaxis()->SetRangeUser(0,10.0);
 
     for (int ind=0; ind<nticks; ++ind) {
-	h_wave.SetBinContent(ind+1, res[ind]);
-	h_wave2.SetBinContent(ind+1, res2[ind]);
+        h_wave.Fill(tbins.center(ind)/units::us, res[ind]/GUnit);
+        h_wave2.Fill(tbins.center(ind)/units::us, res2[ind]/GUnit);
     }
 
     cerr << nticks << " " << spec.size() << endl;
 
-    const double tick = (domain.second-domain.first)/nticks;
+    const double tick = tbins.binsize();
+    const Binning fbins(nticks, 0, 1/tick);
 
-    const double max_freq = 1/tick;
-    TH1F h_mag("mag","Magnitude of Fourier transform of response", nticks, 0, max_freq);
-    h_mag.SetYTitle("Amplitude");
+    TH1F h_mag("mag","Magnitude of Fourier transform of response",
+               fbins.nbins(), fbins.min()/units::megahertz, fbins.max()/units::megahertz);
+    h_mag.SetYTitle("Amplitude [mV/fC]");
     h_mag.SetXTitle("MHz");
 
-    TH1F h_phi("phi","Phase of Fourier transform of response", nticks, 0, max_freq);
-    h_phi.SetYTitle("Amplitude");
+    TH1F h_phi("phi","Phase of Fourier transform of response",
+               fbins.nbins(), fbins.min()/units::megahertz, fbins.max()/units::megahertz);
+    h_phi.SetYTitle("Phase [radian]");
     h_phi.SetXTitle("MHz");
 
     for (int ind=0; ind<nticks; ++ind) {
 	auto c = spec[ind];
-        const double freq = tick*ind;
-	h_mag.SetBinContent(ind+1, std::abs(c));
-	h_phi.SetBinContent(ind+1, std::arg(c));
+        const double freq = fbins.center(ind);
+        h_mag.Fill(freq/units::megahertz, std::abs(c)/GUnit);
+        h_phi.Fill(freq/units::megahertz, std::arg(c));
     }
-    h_mag.GetXaxis()->SetRangeUser(0,2.0);
-    h_phi.GetXaxis()->SetRangeUser(0,2.0);
+    //h_mag.GetXaxis()->SetRangeUser(0,2.0);
+    //h_phi.GetXaxis()->SetRangeUser(0,2.0);
 
     canvas.Clear();
     canvas.Divide(2,1);
@@ -71,15 +75,15 @@ void draw_time_freq(TCanvas& canvas,
     auto pad = canvas.cd(1);
     pad->SetGridx();
     pad->SetGridy();
-    h_wave.Draw();
-    h_wave2.Draw("same");
+    h_wave.Draw("hist");
+    h_wave2.Draw("hist,same");
 
     auto spad = canvas.cd(2);
     spad->Divide(1,2);
     pad = spad->cd(1);
     pad->SetGridx();
     pad->SetGridy();
-    h_mag.Draw();
+    h_mag.Draw("hist");
 
     TLine ndb;
     TText ndbtxt;
@@ -100,52 +104,54 @@ void draw_time_freq(TCanvas& canvas,
     pad = spad->cd(2);
     pad->SetGridx();
     pad->SetGridy();
-    h_phi.Draw();
+    h_phi.Draw("hist");
     canvas.Print("test_fft.pdf","pdf");
 
 }
 
 int main()
 {
-    const std::vector<double> gains = {7.8, 14.0}; // mV/fC
-    const std::vector<double> shapings = {1.0, 2.0}; // microsecond
+    const std::vector<double> gains = {7.8*GUnit, 14.0*GUnit};
+    const std::vector<double> shapings = {1.0*units::us, 2.0*units::us};
 
-    const Waveform::Domain domain(0.0, 100.0); // us
-    const double tick = 0.1;    // us
-    const int nticks = Waveform::sample_count(domain, tick);
+    const double maxtime = 100.0*units::us;
+    const double tick = 0.5*units::us;
+    const Binning tbins(maxtime/tick, 0, maxtime);
+    const int nticks = tbins.nbins();
     cerr << "Using nticks=" << nticks << endl;
-
-    const double tconst = 1000.0; // ms
 
     TCanvas canvas("test_fft", "Response Functions", 500, 500);
     canvas.Print("test_fft.pdf[","pdf");
 
     for (int ind=0; ind<gains.size(); ++ind) {
 	Response::ColdElec ce(gains[ind], shapings[ind]);
-	Waveform::realseq_t res = ce.generate(domain, nticks);
+	Waveform::realseq_t res = ce.generate(tbins);
 
+        const double tshape_us = shapings[ind]/units::us;
 	draw_time_freq(canvas, res,
-		       Form("Cold Electronics Response at %.0fus peaking", shapings[ind]), domain);
+		       Form("Cold Electronics Response at %.0fus peaking", tshape_us), tbins);
     }
 
+
+    // Look at RC filter
+
+    const double tconst = 1000.0*units::ms;
 
     {
 	Response::SimpleRC rc(tconst);
-	Waveform::realseq_t res = rc.generate(domain, nticks);
+	Waveform::realseq_t res = rc.generate(tbins);
 	
 	draw_time_freq(canvas, res,
-		       "RC Response at 1ms time constant", domain);
+		       "RC Response at 1ms time constant", tbins);
     }
     {
-	Waveform::Domain shifted = domain;
-	shifted.first += tick;	// intentionally miss delta function
-	shifted.second += tick;
+        Binning shifted(tbins.nbins(), tbins.min()+tick, tbins.max()+tick);
 
 	Response::SimpleRC rc(tconst); 
-	Waveform::realseq_t res = rc.generate(shifted, nticks);
+	Waveform::realseq_t res = rc.generate(shifted);
 	
 	draw_time_freq(canvas, res,
-		       "RC Response at 1ms time constant (suppress delta)", domain);
+		       "RC Response at 1ms time constant (suppress delta)", tbins);
     }
 
     canvas.Print("test_fft.pdf]","pdf");

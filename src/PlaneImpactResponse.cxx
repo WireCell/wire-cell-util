@@ -1,7 +1,8 @@
 #include "WireCellUtil/PlaneImpactResponse.h"
 #include "WireCellUtil/Testing.h"
 
-#include <iostream>
+#include <iostream>             // debugging
+using namespace std;
 
 using namespace WireCell;
 
@@ -17,6 +18,8 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
     , m_half_extent(0.0), m_pitch(0.0), m_impact(0.0)
 {
     auto& pr = plane_response();
+
+    cerr << "PIR: " << plane_ident << " gain=" << preamp_gain/(units::mV/units::fC) << " mV/fC\n";
 
     WireCell::Waveform::compseq_t elec;
     if (preamp_gain > 0.0) {
@@ -124,8 +127,8 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
 
 PlaneImpactResponse::~PlaneImpactResponse()
 {
-    std::cerr << "PlaneImpactResponse::~PlaneImpactResponse dying with "
-              << m_ir.size() << " impact responses." << std::endl;
+    //std::cerr << "PlaneImpactResponse::~PlaneImpactResponse dying with "
+    //          << m_ir.size() << " impact responses." << std::endl;
     for (auto tokill : m_ir) {
         delete tokill;
         tokill = 0;

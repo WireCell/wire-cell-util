@@ -256,9 +256,8 @@ WireCell::Waveform::realseq_t Response::Generator::generate(const WireCell::Binn
 
   - time is time in system of units
 
-  - gain_par is proportional to the gain, basically at 7.8 mV/fC, the
-    peak of the shaping function should be at 7.8 mV/fC. In the code,
-    you can find what value that I set to reach 14 mV/fC.
+  - gain in units of volts/charge gives peak value of the response to
+    a delta function of current integrating to unit charge.
 
   - shaping is the shaping time in system of units
 
