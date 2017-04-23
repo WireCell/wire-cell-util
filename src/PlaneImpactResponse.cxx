@@ -19,7 +19,8 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
 {
     auto& pr = plane_response();
 
-    cerr << "PIR: " << plane_ident << " gain=" << preamp_gain/(units::mV/units::fC) << " mV/fC\n";
+    //cerr << "PIR: " << plane_ident << " gain=" << preamp_gain/(units::mV/units::fC) << " mV/fC "
+    //     << "tbins=[" << tbins.min() << ","<<tbins.max() <<"]/" << tbins.binsize() /units::us << "us\n";
 
     WireCell::Waveform::compseq_t elec;
     if (preamp_gain > 0.0) {
@@ -61,8 +62,8 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
     const double rawresp_tick = fr.period;
     const double rawresp_max = rawresp_min + rawresp_size*rawresp_tick;
     Binning rawresp_bins(rawresp_size, rawresp_min, rawresp_max);
-    std::cerr << "PlaneImpactResponse: field responses: " << rawresp_size
-              << "bins covering ["<<rawresp_min/units::us<<","<<rawresp_max/units::us<<"] us\n";
+    //std::cerr << "PlaneImpactResponse: field responses: " << rawresp_size
+    //          << "bins covering ["<<rawresp_min/units::us<<","<<rawresp_max/units::us<<"]/"<<rawresp_tick/units::us << " us\n";
 
     const int ntbins = tbins.nbins();
     const double tick = tbins.binsize();
@@ -76,7 +77,7 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
 
         // match response sampling to digi and zero-pad
         WireCell::Waveform::realseq_t wave(ntbins, 0.0);
-        for (int rind=0; rind<rawresp_size; ++rind) {
+        for (int rind=0; rind<rawresp_size; ++rind) { // sample at fine bins of response function
             const double time = rawresp_bins.center(rind);
 
             // fixme: assumes field response appropriately centered
@@ -90,7 +91,18 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
                           << std::endl;
             }
             Assert (bin>=0 && bin<ntbins);
-            wave[bin] += path.current[rind];
+
+            // Here we have sampled, instantaneous induced *current*
+            // (in WCT system-of-units for current) due to a single
+            // drifting electron from the field response function.
+            const double induced_current = path.current[rind];
+
+            // Integrate across the fine time bin to get the element
+            // of induced *charge* over this bin.
+            const double induced_charge = induced_current*rawresp_tick;
+
+            // sum up over coarse ticks.
+            wave[bin] += induced_charge;
         }
         WireCell::Waveform::compseq_t spec = Waveform::dft(wave);
 

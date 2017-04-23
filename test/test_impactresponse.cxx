@@ -1,3 +1,4 @@
+
 #include "WireCellUtil/PlaneImpactResponse.h"
 
 #include "WireCellUtil/ExecMon.h"
@@ -10,7 +11,10 @@
 #include "TFile.h"
 
 #include <iostream>
+#include <vector>
 #include <algorithm>
+
+#include "Utils.h"
 
 using namespace WireCell;
 using namespace WireCell::Test;
@@ -42,25 +46,43 @@ void plot_time(MultiPdf& mpdf, PlaneImpactResponse& pir,
     const int npbins = (pmax-pmin)/impact_dist;
 
     // dr:
-    std::string zunit = "mV";
-    double zunitval = units::mV;
-    double scale = tbins.binsize();
+    std::string zunit = "negative microvolt";
+    double zunitval = -units::microvolt;
+    vector<double> zextent{1.0, 1.0, 2.0};
     if (name=="fr") {
-        zunit = "nAmp";
-        zunitval = units::nanoampere;
-        scale = 1.0;
+        zunit = "induced electrons";
+        zunitval = -units::eplus;
+        zextent = vector<double>{0.3, 0.15, 0.6};
     }
-    std::cerr <<"zunits: " << zunit << " scale=" << scale
+    std::cerr <<"zunits: " << zunit 
               << " tbinsize: " << tbins.binsize()/units::us
               << std::endl;
 
+
+    // they all suck.  black body sucks the least.
+    set_palette(kBlackBody);
+    //set_palette(kLightTemperature);
+    //set_palette(kRedBlue);
+    //set_palette(kTemperatureMap);
+    //set_palette(kThermometer);
+    // set_palette(kVisibleSpectrum);
+    //set_palette();
     gStyle->SetOptStat(0);
     TH2F* hist = new TH2F(Form("h%s_%c", name.c_str(), uvw[iplane]),
-                          Form("%s 1e- %c-plane [%s]", title.c_str(), uvw[iplane], zunit.c_str()),
+                          Form("%s, 1e-/impact %c-plane", title.c_str(), uvw[iplane]),
                           ntbins, tmin/units::us, tmax/units::us, 
                           npbins, pmin/units::mm, pmax/units::mm);
     hist->SetXTitle("time (us)");
     hist->SetYTitle("pitch (mm)");
+    hist->SetZTitle(zunit.c_str());
+
+    hist->GetZaxis()->SetRangeUser(-zextent[iplane], +zextent[iplane]);
+
+    TH1F* htot = new TH1F(Form("htot%s_%c", name.c_str(), uvw[iplane]),
+                          Form("%s total, 1e-/impact %c-plane", title.c_str(), uvw[iplane]),
+                          npbins, pmin/units::mm, pmax/units::mm);
+    htot->SetXTitle("pitch (mm)");
+    htot->SetYTitle(Form("impact total [%s]", zunit.c_str()));
 
     for (double pitch = -half_pitch; pitch <= half_pitch; pitch += impact_dist) {
 	auto ir = pir.closest(pitch);
@@ -73,12 +95,15 @@ void plot_time(MultiPdf& mpdf, PlaneImpactResponse& pir,
 	pitch += 0.001*impact_dist;
 	for (int ind=0; ind < ntbins; ++ind) {
 	    const double time = tbins.center(ind);
-	    hist->Fill(time/units::us, pitch/units::mm, scale*wave[ind]/zunitval);
+	    hist->Fill(time/units::us, pitch/units::mm, wave[ind]/zunitval);
+            htot->Fill(pitch/units::mm, wave[ind]/zunitval);
 	}
     }
     hist->Write();
     hist->Draw("colz");
+
     mpdf.canvas.SetRightMargin(0.15);
+    mpdf.canvas.SetLeftMargin(0.15);
 
     TLine wline, hline;
     wline.SetLineColorAlpha(1, 0.5);
@@ -99,6 +124,9 @@ void plot_time(MultiPdf& mpdf, PlaneImpactResponse& pir,
     }
 
     mpdf();
+    htot->Draw("hist");
+    mpdf();
+
 }
 
 void test_stuff(Response::Schema::FieldResponse& fr, int iplane)
@@ -177,7 +205,7 @@ int main(int argc, const char* argv[])
 {
     string response_file = "garfield-1d-3planes-21wires-6impacts-v6.json.bz2";
     if (argc < 2) {
-	cerr << "Not  Wire Cell field response input file given, will try to use:\n"
+	cerr << "No Wire Cell field response input file given, will try to use:\n"
              << response_file << endl;
     }
     else {
@@ -191,7 +219,7 @@ int main(int argc, const char* argv[])
 
     WireCell::ExecMon em(argv[0]);
     auto fr = Response::Schema::load(response_file.c_str());
-    cerr << em("loaded") << endl;
+    em("loaded");
 
     // 1D garfield wires are all parallel
     const double angle = 60*units::degree;
