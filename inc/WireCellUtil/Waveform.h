@@ -194,12 +194,14 @@ namespace WireCell {
 	real_t percentile(realseq_t wave, real_t percentage);
 	real_t percentile_binned(realseq_t& wave, real_t percentage);
 
-	/// Discrete Fourier transform of real sequence.  Returns full spectrum.
+	/// Discrete Fourier transform of real sequence.  Returns full
+	/// spectrum.  No normalization scaling applied
 	compseq_t dft(realseq_t seq);
 	compseq_t dftd(realseq_t seq); // test up/down cast through doubles
 
 	/// Inverse, discrete Fourier transform.  Expects full
-	/// spectrum, but only uses first half.
+	/// spectrum (twice Nyquist frequency).  Applies the
+	/// 1/Nsamples normalization.
 	realseq_t idft(compseq_t spec);
 	realseq_t idftd(compseq_t spec);
 
