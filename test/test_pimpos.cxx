@@ -58,7 +58,7 @@ int main()
     const double outside = halfwireextent+pitch_dist;
     Assert(!rb.inside(outside));
 
-    auto ib = pimpos.impact_binning();
+    //auto ib = pimpos.impact_binning();
 
     const int center_wire = nwires/2;
     auto center_wi = pimpos.closest(0.0);

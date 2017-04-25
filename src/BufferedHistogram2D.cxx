@@ -42,12 +42,12 @@ bool BufferedHistogram2D::fill(double x, double y, double v)
 	return false;
     }
 
-    if (m_xbindeque.size() < xbin+1) {
+    if ((int)m_xbindeque.size() < xbin+1) {
 	m_xbindeque.resize(xbin+1);
     }
     XBin& vec = m_xbindeque[xbin];
     //cerr << m_xbindeque.size() << "x" << vec.size() << " fill(" << x << "," << y << ")=" << v << endl;
-    if (vec.size() < ybin+1) {
+    if ((int)vec.size() < ybin+1) {
 	vec.resize(ybin+1, 0.0);
     }
     vec[ybin] += v;

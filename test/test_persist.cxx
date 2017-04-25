@@ -17,13 +17,11 @@ int main() {
     cout << "Generating data\n";
     const int nbins = 5000;
     const int narrays = 100;
-    double data[narrays][nbins];
     Json::Value jroot;
     for (int ind=0; ind<narrays; ++ind) {
 	Json::Value jarr;
 	for (int ibin=0; ibin<nbins; ++ibin) {
 	    auto number = uni();
-	    data[ind][ibin] = number;
 	    jarr.append(number);
 	}
 	jroot[ind] = jarr;

@@ -160,7 +160,8 @@ Waveform::real_t WireCell::Waveform::percentile_binned(Waveform::realseq_t& wave
 
 std::pair<int, int> WireCell::Waveform::edge(const realseq_t& wave)
 {
-    const realseq_t::size_type size = wave.size();
+    //const realseq_t::size_type size = wave.size();
+    const int size = wave.size();
     int imin=size, imax=size;
 
     for (int ind=0; ind < size; ++ind) {
@@ -226,7 +227,7 @@ WireCell::Waveform::merge(const WireCell::Waveform::BinRangeList& brl)
     Waveform::BinRange last_br = tmp[0];
     out.push_back(last_br);
 
-    for (int ind=1; ind<tmp.size(); ++ind) {
+    for (size_t ind=1; ind<tmp.size(); ++ind) {
 	Waveform::BinRange this_br = tmp[ind];
 	if (out.back().second >= this_br.first) {
 	  out.back().second = this_br.second;

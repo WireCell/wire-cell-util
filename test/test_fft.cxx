@@ -123,7 +123,7 @@ int main()
     TCanvas canvas("test_fft", "Response Functions", 500, 500);
     canvas.Print("test_fft.pdf[","pdf");
 
-    for (int ind=0; ind<gains.size(); ++ind) {
+    for (size_t ind=0; ind<gains.size(); ++ind) {
 	Response::ColdElec ce(gains[ind], shapings[ind]);
 	Waveform::realseq_t res = ce.generate(tbins);
 

@@ -173,13 +173,13 @@ void plot_all_impact(MultiPdf& mpdf, const Response::Schema::FieldResponse& fr, 
 	    const double impact = path.pitchpos - region*pitch;
 
 	    int imp=-1, reg=-1;	// I hate C++
-	    for (int ind=0; ind<impacts.size(); ++ind) {
+	    for (size_t ind=0; ind<impacts.size(); ++ind) {
 		if (std::abs(impact-impacts[ind]) < 0.001) {
 		    imp = ind;
 		    break;
 		}
 	    }
-	    for (int ind=0; ind<regions.size(); ++ind) {
+	    for (size_t ind=0; ind<regions.size(); ++ind) {
 		if (std::abs(region-regions[ind]) < 0.001) {
 		    reg = ind;
 		    break;

@@ -71,12 +71,12 @@ int WireCell::box_intersection(const Ray& bounds, const Ray& ray, Ray& hits)
 	int got = hit_square(axis, bounds, point, dir, res);
 
 	if (got&1) {
-	    pair<PointSet::iterator, bool> what = 
-		results.insert(res.first);
+	    //pair<PointSet::iterator, bool> what = 
+            results.insert(res.first);
 	}
 	if (got&2) {
-	    pair<PointSet::iterator, bool> what = 
-		results.insert(res.second);
+	    //pair<PointSet::iterator, bool> what = 
+            results.insert(res.second);
 	}
     }
 

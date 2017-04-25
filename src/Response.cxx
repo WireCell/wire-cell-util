@@ -161,7 +161,7 @@ Response::Schema::FieldResponse Response::wire_region_average(const Response::Sc
 	    }
 
 	    const int region = round(adjusted_pitchpos/pitch);
-	    const double impact = path.pitchpos - region*pitch;
+	    //const double impact = path.pitchpos - region*pitch;
 	    const int nsamples = path.current.size();
 	    if (avgs.find(region) == avgs.end()) {
 		avgs[region] = realseq_t(nsamples);
@@ -170,10 +170,10 @@ Response::Schema::FieldResponse Response::wire_region_average(const Response::Sc
 	    // WARNING assumes last impact is at 1/2 pitch.
 	    // WARNING assumes impacts are on half-pitch lines of symmetry.
 	    // WARNING assumes ~half the pitch not represented.
-	    double weight = 2.0;
-	    if (std::abs(impact) < 0.01*units::mm || std::abs(impact-1.5*units::mm) < 0.01*(0.5*pitch)) { 
-		weight = 1.0;	// don't double count central or last
-	    }
+	    // double weight = 2.0;
+	    // if (std::abs(impact) < 0.01*units::mm || std::abs(impact-1.5*units::mm) < 0.01*(0.5*pitch)) { 
+	    //     weight = 1.0;	// don't double count central or last
+	    // }
 	    realseq_t& response = avgs[region];
 	    for (int ind=0; ind<nsamples; ++ind) {
 		response[ind] += path.current[ind];
@@ -308,7 +308,7 @@ double Response::ColdElec::operator()(double time) const
 
 
 Response::SimpleRC::SimpleRC(double width, double tick, double offset)
-  : _width(width), _tick(tick), _offset(offset)
+  : _width(width), _offset(offset), _tick(tick)
 
 {
 }

@@ -209,26 +209,6 @@ namespace WireCell {
 
 
     
-// Include these in the implementation file for a class that can be
-// constructed by a factory.  The CLASS is the bare name and so any
-// namespaces must be resolved in the scope of the macro calls.
-
-// #define WIRECELL_NAMEDFACTORY_BEGIN(CLASS)				\
-//     extern "C" { static void* gs_##CLASS##_factory; }			\
-//     extern "C" { void* make_##CLASS##_factory() {			\
-//     if (! gs_##CLASS##_factory) {					\
-// 	gs_##CLASS##_factory = new WireCell::NamedFactory< CLASS >;	\
-//     }									\
-//     WireCell::NamedFactory< CLASS >* factory			\
-//        = reinterpret_cast< WireCell::NamedFactory< CLASS >* >(gs_##CLASS##_factory); \
-    
-// #define WIRECELL_NAMEDFACTORY_INTERFACE(CLASS, INTERFACE)		\
-//     WireCell::Factory::associate<INTERFACE>(#CLASS, factory);
-
-
-// #define WIRECELL_NAMEDFACTORY_END(CLASS)	\
-//     return gs_##CLASS##_factory;		\
-//     }}
 
 
 template<class Concrete, class... Interface>

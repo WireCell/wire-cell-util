@@ -34,7 +34,7 @@ using namespace Eigen;
 Eigen::ArrayXf vec2arr(const std::vector<float>& v)
 {
     Eigen::ArrayXf ret(v.size());
-    for (int ind=0; ind<v.size(); ++ind) {
+    for (size_t ind=0; ind<v.size(); ++ind) {
 	ret(ind) = v[ind];
     }
     return ret;
@@ -214,7 +214,7 @@ int main()
 
     VectorXf v1 = ar1.matrix();
 
-    for (int ind=0; ind < v.size(); ++ind) {
+    for (size_t ind=0; ind < v.size(); ++ind) {
 	Assert(v[ind] == ar1(ind));
 	Assert(v[ind] == ar2(ind));
 	Assert(v[ind] == ar3(ind));

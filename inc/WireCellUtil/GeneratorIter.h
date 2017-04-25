@@ -35,7 +35,7 @@ namespace WireCell {
 	>
     {
 	GeneratorIter(const Callable& func)
-	    : func(func), last_val(0), count(0)
+	    : count(0), func(func), last_val(0)
 	{
 	    advance();
 	}

@@ -36,7 +36,7 @@ int main()
                bins.nbins(), bins.min()/units::us, bins.max()/units::us);
     resp1.SetLineColor(2);
     resp2.SetLineColor(4);
-    for (int ind=0; ind<res1.size(); ++ind) {
+    for (size_t ind=0; ind<res1.size(); ++ind) {
         const double t_us = bins.center(ind) / units::us;
 	resp1.Fill(t_us, res1[ind] / gain_unit);
 	resp2.Fill(t_us, res2[ind] / gain_unit);

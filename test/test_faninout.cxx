@@ -139,6 +139,7 @@ int test_fanin()
 	cerr << endl;
     }
     
+    return 0;
 }
 
 int main()

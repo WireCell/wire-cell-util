@@ -48,7 +48,7 @@ private:
     void advance(typename facade::difference_type n)
     {
         m_index += n;
-        if (m_index >= m_array.size() || m_index < 0) {
+        if (m_index >= (int)m_array.size() || m_index < 0) {
             m_index = m_array.size();
         }
     }

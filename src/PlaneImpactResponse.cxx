@@ -45,7 +45,7 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
     const int n_per = 6;        // fixme: assumption
     const int n_wires = npaths/n_per;
     const int n_wires_half = n_wires / 2; // integer div
-    const int center_index = n_wires_half * n_per;
+    //const int center_index = n_wires_half * n_per;
 
     /// FIXME: this assumes impact positions are on uniform grid!
     m_impact = std::abs(pr.paths[1].pitchpos - pr.paths[0].pitchpos);
@@ -129,9 +129,9 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
         m_bywire.push_back(indices);
 
         //std::cerr << irelwire << ":";
-        for (auto num : indices) {
+        //for (auto num : indices) {
             //std::cerr << " [" << num << "]:" << m_ir[num]->path_response().pitchpos;
-        }
+        //}
         //std::cerr << std::endl;
     }
 
@@ -175,7 +175,7 @@ const ImpactResponse* PlaneImpactResponse::closest(double relpitch) const
         return nullptr;
     }
     std::pair<int,int> wi = closest_wire_impact(relpitch);
-    if (wi.first < 0 || wi.first >= m_bywire.size()) {
+    if (wi.first < 0 || wi.first >= (int)m_bywire.size()) {
         std::cerr << "PlaneImpactResponse::closest(): relative pitch: "
                   << relpitch
                   << " outside of wire range: " << wi.first
@@ -183,7 +183,7 @@ const ImpactResponse* PlaneImpactResponse::closest(double relpitch) const
         return nullptr;
     }
     const std::vector<int>& region = m_bywire[wi.first];
-    if (wi.second < 0 || wi.second >= region.size()) {
+    if (wi.second < 0 || wi.second >= (int)region.size()) {
         std::cerr << "PlaneImpactResponse::closest(): relative pitch: "
                   << relpitch
                   << " outside of impact range: " << wi.second
@@ -191,7 +191,7 @@ const ImpactResponse* PlaneImpactResponse::closest(double relpitch) const
         return nullptr;
     }
     int irind = region[wi.second];
-    if (irind < 0 || irind > m_ir.size()) {
+    if (irind < 0 || irind > (int)m_ir.size()) {
         std::cerr << "PlaneImpactResponse::closest(): relative pitch: "
                   << relpitch
                   << " no impact response for region: " << irind
@@ -213,7 +213,7 @@ PlaneImpactResponse::TwoImpactResponses PlaneImpactResponse::bounded(double relp
     if (wi.second == 0) {
         return std::make_pair(m_ir[region[0]], m_ir[region[1]]);
     }
-    if (wi.second == region.size()-1) {
+    if (wi.second == (int)region.size()-1) {
         return std::make_pair(m_ir[region[wi.second-1]], m_ir[region[wi.second]]);
     }
 

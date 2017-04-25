@@ -40,7 +40,7 @@ struct Port : public IPort {
     }
     virtual bool put(const port_type& in) { return false; }
     virtual bool get(port_type& out) const { return false; }
-    virtual T make() const { T t; return t; }
+    virtual T make() const { return 0; }
 };
 
 struct SubI : public Port<int> {

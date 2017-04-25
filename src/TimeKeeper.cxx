@@ -51,7 +51,7 @@ TimeKeeper::event TimeKeeper::operator[](int ind) const
 std::string TimeKeeper::summary() const
 {
     stringstream ss;
-    for (int ind=0; ind<m_events.size(); ++ind) {
+    for (size_t ind=0; ind<m_events.size(); ++ind) {
 	ss << this->emit(ind) << "\n";
     }
     return ss.str();

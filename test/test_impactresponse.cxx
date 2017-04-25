@@ -34,7 +34,7 @@ void plot_time(MultiPdf& mpdf, PlaneImpactResponse& pir,
     const double tmax = tbins.edge(ntbins);
 
     const int nwires = pir.nwires();
-    const int nimptot = nwires * pir.nimp_per_wire();
+    //const int nimptot = nwires * pir.nimp_per_wire();
     
     const char *uvw = "UVW";
     const int iplane = pr.planeid;
@@ -142,10 +142,10 @@ void test_stuff(Response::Schema::FieldResponse& fr, int iplane)
     auto& pr = fr.planes[iplane];
     auto bywire = pir.bywire_map();
 
-    for (int iwire=0; iwire<bywire.size(); ++iwire) {
+    for (size_t iwire=0; iwire<bywire.size(); ++iwire) {
 
         auto onewire = bywire[iwire];
-        for (int iimp = 0; iimp < onewire.size(); ++iimp) {
+        for (size_t iimp = 0; iimp < onewire.size(); ++iimp) {
             const int ind = onewire[iimp];
 
             /// Must doctor pitch since PathResponses are reused by symmetry.
@@ -166,14 +166,14 @@ void test_stuff(Response::Schema::FieldResponse& fr, int iplane)
             }
 
             auto wi = pir.closest_wire_impact(pitch);
-            Assert (iwire == wi.first);
-            Assert (iimp == wi.second);
+            Assert ((int)iwire == wi.first);
+            Assert ((int)iimp == wi.second);
         }
             
     } // loop over wires
 
     for (double pitch=-33*units::mm; pitch <=33*units::mm; pitch += 0.1*units::mm) {
-        auto wi = pir.closest_wire_impact(pitch);
+        //auto wi = pir.closest_wire_impact(pitch);
         auto closest = pir.closest(pitch);
         if (closest) {
             int impact = closest->impact();

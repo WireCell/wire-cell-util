@@ -24,6 +24,7 @@ int main()
     const int ntimes = 10000;
     em("start scaling tests");
     int sizes[] = {100, 1000, 10000, 0};
+    float dummy = 0;            // don't optimize away
     for (int ind=0; sizes[ind]; ++ind) {
 	auto size = sizes[ind];
 	std::vector<float> chunk(data.begin(), data.begin()+size);
@@ -32,7 +33,7 @@ int main()
 	float med1 = median(chunk);
 	cerr << ind << ": median of " << size << " = " << med1 << endl;
 	for (int tmp=0; tmp<ntimes; ++tmp) {
-	    float dummy = median(chunk);
+	    dummy += median(chunk);
 	}
 	cerr << em("end medium (many times)") << endl;
 
@@ -41,7 +42,7 @@ int main()
 	float med2 = median_binned(chunk);
 	cerr << ind << ": median_binned of " << size << " = " << med2 << endl;
 	for (int tmp=0; tmp<ntimes; ++tmp) {
-	    float dummy = median_binned(chunk);
+            dummy += median_binned(chunk);
 	}
 	cerr << em("end medium_binned (many times)") << endl;
 	cerr << "Median difference: " << med1-med2 << endl;
