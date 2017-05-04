@@ -66,26 +66,31 @@ namespace WireCell {
     template<>
     inline
     bool convert<bool>(const Configuration& cfg, const bool& def) {
+        if (cfg.isNull()) return def;
 	return cfg.asBool();
     }
     template<>
     inline
     int convert<int>(const Configuration& cfg, const int& def) {
+        if (cfg.isNull()) return def;
 	return cfg.asInt();
     }
     template<>
     inline
     float convert<float>(const Configuration& cfg, const float& def) {
+        if (cfg.isNull()) return def;
 	return cfg.asDouble();
     }
     template<>
     inline
     double convert<double>(const Configuration& cfg, const double& def) {
+        if (cfg.isNull()) return def;
 	return cfg.asDouble();
     }
     template<> 
     inline
     std::string convert<std::string>(const Configuration& cfg, const std::string& def) {
+        if (cfg.isNull()) return def;
 	return cfg.asString();
     }
     template<>
