@@ -1,7 +1,5 @@
-// fixme: this test utterly fails to properly use the system of units!
-
 #include "WireCellUtil/Waveform.h"
-
+#include "WireCellUtil/Units.h"
 #include "WireCellUtil/Response.h"
 
 #include "TCanvas.h"

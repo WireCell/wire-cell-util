@@ -2,9 +2,10 @@
   A system of units compatible with (taken from) CLHEP.
 */
 
-#ifndef HEP_SYSTEM_OF_UNITS_H
-#define HEP_SYSTEM_OF_UNITS_H
+#ifndef WIRECELL_SYSTEM_OF_UNITS_H
+#define WIRECELL_SYSTEM_OF_UNITS_H
 
+namespace WireCell {
 namespace units {
 
   //
@@ -274,5 +275,6 @@ namespace units {
   static const double clight = 2.99792458e8*units::meter/units::second;
 
 }  // namespace units
+} // namespace WireCell
 
 #endif /* HEP_SYSTEM_OF_UNITS_H */
