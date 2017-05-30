@@ -83,6 +83,18 @@ namespace WireCell {
         /** Explicitly convert JSON text to Json::Value object */
         Json::Value json2object(const std::string& text);
         
+
+        /** Convert a collection to a Json::Value */
+        // not really about persistence....
+        template <typename Iterable>
+        Json::Value iterable2json(Iterable const& cont) {
+            Json::Value v;
+            for (auto&& element: cont) {
+                v.append(element);
+            }
+            return v;
+        }
+
     }
 }
 
