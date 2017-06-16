@@ -6,6 +6,7 @@
 #include "WireCellUtil/PluginManager.h"
 #include "WireCellUtil/Type.h"
 #include "WireCellUtil/String.h"
+#include "WireCellUtil/Exceptions.h"
 #include <unordered_map>
 
 #include <iostream>
@@ -15,14 +16,7 @@
 
 namespace WireCell {
 
-    struct FactoryException : public std::exception 
-    {
-        std::string m_message;
-        FactoryException(const std::string& msg = "NamedFactory lookup error") : m_message(msg) {}
-        const char* what() const throw () {
-            return m_message.c_str();
-        }
-    };
+    struct FactoryException : virtual public Exception {};
 
     /** A templated factory of objects of type Type that associates a
      * name to an object, returning a preexisting one if it exists. */
@@ -163,8 +157,8 @@ namespace WireCell {
 	    NamedFactoryRegistry<IType>&
 		nfr = WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance();
             bool ok = nfr.associate(classname, factory);
-            if (!ok) { throw FactoryException("Failed to associate class " + classname); }
-            return ok;
+            if (ok) { return ok; }
+            THROW(FactoryException() << errmsg{"Failed to associate class " + classname}); 
 	}
 
         /// Lookup up a factory for the given type
@@ -173,8 +167,8 @@ namespace WireCell {
 	    NamedFactoryRegistry<IType>&
 		nfr = WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance();
 	    WireCell::INamedFactory* ret = nfr.lookup_factory(classname);
-            if (!ret) { throw FactoryException("Failed to lookup factory for " + classname); }
-	    return ret;
+            if (ret) { return ret; }
+            THROW(FactoryException() << errmsg{"Failed to lookup factory for " + classname});
 	}
 
         /// Lookup an interface by a type and optional name.
@@ -183,8 +177,8 @@ namespace WireCell {
 	    NamedFactoryRegistry<IType>&
 		nfr = WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance();
 	    std::shared_ptr<IType> ret = nfr.instance(classname, instname);
-            if (!ret) { throw FactoryException("Failed to lookup instance for " + classname + " " + instname); }
-	    return ret;
+            if (ret) { return ret; }
+            THROW(FactoryException() << errmsg{"Failed to lookup instance for " + classname + " " + instname});
 	}
 
         /// Lookup an interface by a type:name pair.

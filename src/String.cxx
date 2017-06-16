@@ -24,3 +24,7 @@ std::pair<std::string,std::string> WireCell::String::parse_pair(const std::strin
     return make_pair(first, second);
 }
 
+
+
+// more:
+// http://www.boost.org/doc/libs/1_60_0/doc/html/string_algo/quickref.html#idm45555128584624
