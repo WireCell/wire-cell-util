@@ -39,23 +39,27 @@ WireCell::Plugin* WireCell::PluginManager::add(const std::string& plugin_name,
 	return plugin;
     }
 
-    string lname = "";
-    if (libname == "") {
+    std::string exts[2] = {".so",".dylib"};
+    for (int ind=0; ind<2; ++ind) {
+      std::string ext = exts[ind];
+      string lname = "";
+      if (libname == "") {
 	lname = "lib";
 	lname += plugin_name;
-	lname += ".so";		// suck it, Mac.  ... for now (fixme)
-    }
-    else {
+	lname += ext;
+      }
+      else {
 	lname = libname;
+      }
+      void* lib = dlopen(lname.c_str(), RTLD_NOW);
+      if (lib) {
+	m_plugins[plugin_name] = new Plugin(lib);
+	// cerr << " PluginManager: loaded plugin #" << m_plugins.size() << " \"" << plugin_name << "\" from library \"" << lname << "\": " << m_plugins[plugin_name] << endl;
+	return m_plugins[plugin_name];
+      }
     }
-    void* lib = dlopen(lname.c_str(), RTLD_NOW);
-    if (!lib) {
-	cerr << " PluginManager: failed to open plugin library " << lname << endl;
-	return nullptr;
-    }
-    m_plugins[plugin_name] = new Plugin(lib);
-    // cerr << " PluginManager: loaded plugin #" << m_plugins.size() << " \"" << plugin_name << "\" from library \"" << lname << "\": " << m_plugins[plugin_name] << endl;
-    return m_plugins[plugin_name];
+    cerr << "PluginManager: no such plugin: " << plugin_name << "\n";
+    return nullptr;
 }
 
 WireCell::Plugin* WireCell::PluginManager::get(const std::string& plugin_name)

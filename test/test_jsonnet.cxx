@@ -1,5 +1,6 @@
 #include "WireCellUtil/Persist.h"
 #include "WireCellUtil/Testing.h"
+#include "WireCellUtil/Exceptions.h"
 
 #include <string>
 #include <iostream>
@@ -17,6 +18,7 @@ const std::string give1 = R"(
         welcome: "Hello " + self.name + "!",
     },
     person2: self.person1 { name: "Bob" },
+    person3: self.person1 { name: std.extVar("person") },
 }
 )";
 const std::string want1 = R"({
@@ -27,14 +29,19 @@ const std::string want1 = R"({
    "person2": {
       "name": "Bob",
       "welcome": "Hello Bob!"
+   },
+   "person3": {
+      "name": "Malory",
+      "welcome": "Hello Malory!"
    }
 }
 )";
 
-#ifdef HAVE_LIBJSONNET_H
 int main()
 {
-    string got1 = Persist::evaluate_jsonnet_text(give1);
+    Persist::externalvars_t extra{ {"person", "Malory"} };
+
+    string got1 = Persist::evaluate_jsonnet_text(give1, extra);
     // cerr << "------give:\n";
     // cerr << give1 << endl;
     // cerr << "------got:\n";
@@ -44,8 +51,18 @@ int main()
     // cerr << "------\n";
     Assert(got1 == want1);
 
-    if (!std::getenv("JSONNET_PATH")) {
-        cerr << "test_jsonnet requires setting JSONNET_PATH to point to where 'wirecell.jsonnet' exists\n";
+    try {
+        cerr << "There should be errors following:\n";
+        string what = Persist::evaluate_jsonnet_text("[ std.extVar(\"doesnoteexists\") ]");
+        cerr << what << endl;
+    }
+    catch (Exception& e) {
+        cerr << "Properly caught reference to nonexistent extVar\n";
+    }
+
+
+    if (!std::getenv("WIRECELL_PATH")) {
+        cerr << "test_jsonnet requires setting WIRECELL_PATH to point to where 'wirecell.jsonnet' exists\n";
         return 0;
     }
     string text = Persist::evaluate_jsonnet_text("local wc = import \"wirecell.jsonnet\"; [ wc.pi ]");
@@ -58,10 +75,3 @@ int main()
 
     return 0;
 }
-#else  // no jsonnet
-int main()
-{
-    cerr << "test_jsonnet requires compiling with Jsonnet support\n";    
-    return 0;
-}
-#endif

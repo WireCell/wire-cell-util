@@ -33,11 +33,12 @@ namespace WireCell {
          * the file will be first located in the current working
          * directory.  Failing that if the `WIRECELL_PATH` environment
          * variable is defined and set as a `:`-separated list it will
-         * be checked. */
+         * be checked. Failure to resolve returns an empty string. */
         std::string resolve(const std::string& filename);
 
-        /** Return a string holding the entire contents of the
-         * file.   File resolution is performed. */
+        /** Return a string holding the entire contents of the file.
+         * File resolution is performed.  WireCell::IOError is thrown
+         * if file is not found. */
         std::string slurp(const std::string& filename);
 
 
@@ -58,27 +59,44 @@ namespace WireCell {
         // fixme: no "pretty" for dumps() is implemented.
         std::string dumps(const Json::Value& top, bool pretty=false);
 
+        /// This can hold either Jsonnet external variable/value pairs
+        /// or it can hold JSON path/value pairs.
+        typedef std::map<std::string, std::string> externalvars_t;
+
 	/** Load a file and return the top JSON value.  
          
             If extension is `.jsonnet` and Jsonnet support is compiled
             in, evaluate the file and use the resulting JSON.  Other
             supported extensions include raw (`.json`) or compressed
             (`.json.bz2`) files.  
+
+            WireCell::IOError is thrown if file is not found.
         */
-        Json::Value load(const std::string& filename);
+        Json::Value load(const std::string& filename,
+                         const externalvars_t& extvar = externalvars_t());
 
         /** Load a JSON or Jsonnet string, returning a Json::Value. */
-	Json::Value loads(const std::string& text);
+	Json::Value loads(const std::string& text,
+                          const externalvars_t& extvar = externalvars_t());
 
         /** Explicitly evaluate contents of file with Jsonnet.  If no
             support for Jsonnet is built, return the contents of
-            file.  Return empty string if Jsonnet evaluation failes. */
-        std::string evaluate_jsonnet_file(const std::string& filename);
+            file.  Return empty string if Jsonnet evaluation failes. 
+
+            WireCell::IOError is thrown if file is not found.
+            WireCell::ValueError is thrown parsing fails.
+        */
+        std::string evaluate_jsonnet_file(const std::string& filename,
+                                          const externalvars_t& extvar = externalvars_t());
 
         /** Explicitly evaluate text with JSonnet.  If no support for
             Jsonnet is built, return the text. Return empty string if
-            Jsonnet evaluation failes. */
-        std::string evaluate_jsonnet_text(const std::string& text);
+            Jsonnet evaluation failes. 
+
+            WireCell::ValueError is thrown parsing fails.            
+        */
+        std::string evaluate_jsonnet_text(const std::string& text,
+                                          const externalvars_t& extvar = externalvars_t());
 
         /** Explicitly convert JSON text to Json::Value object */
         Json::Value json2object(const std::string& text);

@@ -1,10 +1,8 @@
 #include "WireCellUtil/Persist.h"
 #include "WireCellUtil/String.h"
+#include "WireCellUtil/Exceptions.h"
 
-// optional feature
-#ifdef HAVE_LIBJSONNET_H
 #include "libjsonnet++.h"
-#endif
 
 #include <cstdlib>              // for getenv, see get_path()
 
@@ -66,9 +64,9 @@ std::string WireCell::Persist::slurp(const std::string& filename)
 {
     std::string fname = resolve(filename);
     if (fname.empty()) {
-        cerr << "Persist::slurp: no such file: " << filename << endl;
-        return "";
+        THROW(IOError() << errmsg{"no such file: " + filename});
     }
+
     std::ifstream fstr(filename);
     std::stringstream buf;
     buf << fstr.rdbuf();
@@ -118,21 +116,20 @@ std::string WireCell::Persist::resolve(const std::string& filename)
     return "";
 }
 
-Json::Value WireCell::Persist::load(const std::string& filename)
+Json::Value WireCell::Persist::load(const std::string& filename,
+                                    const externalvars_t& extvar)
 {
-    Json::Value jroot;    
-    std::string fname = resolve(filename);
-    if (fname.empty()) {
-        cerr << "Persist::load(): no such file: \"" << filename << "\"\n";
-        return jroot;
-    }
-
-    string ext = file_extension(fname);
-    
+    string ext = file_extension(filename);
     if (ext == ".jsonnet") {    // use libjsonnet++ file interface
-        string text = evaluate_jsonnet_file(fname);
+        string text = evaluate_jsonnet_file(filename, extvar);
         return json2object(text);
     }
+
+    std::string fname = resolve(filename);
+    if (fname.empty()) {
+        THROW(IOError() << errmsg{"no such file: " + filename});
+    }
+
 
     // use jsoncpp file interface
     std::fstream fp(fname.c_str(), std::ios::binary|std::ios::in);
@@ -143,13 +140,16 @@ Json::Value WireCell::Persist::load(const std::string& filename)
     }
     infilt.push(fp);
     std::string text;
+    Json::Value jroot;    
     infilt >> jroot;
+    //return update(jroot, extvar); fixme
     return jroot;
 }
 
-Json::Value  WireCell::Persist::loads(const std::string& text)
+Json::Value  WireCell::Persist::loads(const std::string& text,
+                                      const externalvars_t& extvar)
 {
-    const std::string jtext = evaluate_jsonnet_text(text);
+    const std::string jtext = evaluate_jsonnet_text(text, extvar);
     return json2object(jtext);
 }
 
@@ -163,52 +163,47 @@ Json::Value WireCell::Persist::json2object(const std::string& text)
 }
 
 
-#ifdef HAVE_LIBJSONNET_H
-static void init_parser(jsonnet::Jsonnet& parser)
+static void init_parser(jsonnet::Jsonnet& parser, const Persist::externalvars_t& extvar)
 {
     parser.init();
     for (auto path : get_path()) {
         parser.addImportPath(path);
     }
+    for (auto& vv : extvar) {
+        cerr << "extra var: \"" << vv.first << "\" = \"" << vv.second << "\"\n";
+        parser.bindExtVar(vv.first, vv.second);
+    }
 }
-std::string WireCell::Persist::evaluate_jsonnet_file(const std::string& filename)
+std::string WireCell::Persist::evaluate_jsonnet_file(const std::string& filename,
+                                                     const externalvars_t& extvar)
 {
     std::string fname = resolve(filename);
     if (fname.empty()) {
-        cerr << "no such file: " << filename << endl;
+        THROW(IOError() << errmsg{"no such file: " + filename});
     }
 
     jsonnet::Jsonnet parser;
-    init_parser(parser);
+    init_parser(parser, extvar);
 
     std::string output; // weird API
     const bool ok = parser.evaluateFile(fname, &output);
     if (!ok) {
         cerr << parser.lastError() << endl;
-        return "";
+        THROW(ValueError() << errmsg{parser.lastError()});
     }
     return output;
 }
-std::string WireCell::Persist::evaluate_jsonnet_text(const std::string& text)
+std::string WireCell::Persist::evaluate_jsonnet_text(const std::string& text,
+                                                     const externalvars_t& extvar)
 {
     jsonnet::Jsonnet parser;
-    init_parser(parser);
+    init_parser(parser, extvar);
 
     std::string output; // weird API
     bool ok =  parser.evaluateSnippet("<stdin>", text, &output);
     if (!ok) {
         cerr << parser.lastError() << endl;
-        return "";
+        THROW(ValueError() << errmsg{parser.lastError()});
     }
     return output;
 }
-#else  // no jsonnet support
-std::string WireCell::Persist::evaluate_jsonnet_file(const std::string& filename)
-{    
-    return slurp(filename);
-}
-std::string WireCell::Persist::evaluate_jsonnet_text(const std::string& text)
-{
-    return text;
-}
-#endif  // jsonnet support
