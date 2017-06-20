@@ -31,6 +31,15 @@ namespace WireCell {
 	
 	NamedFactory() : m_classname("") {}
 	
+        /// Return existing instance of given name or nullptr if not found.
+	Interface::pointer find(const std::string& name) {
+	    auto it = m_objects.find(name);
+	    if (it == m_objects.end()) {
+		return nullptr;
+	    }
+	    return it->second;
+	}
+
 	/// Return an instance associated with the given name.
 	Interface::pointer create() { return create(""); }
 	Interface::pointer create(const std::string& name) {
@@ -70,6 +79,7 @@ namespace WireCell {
 	    //std::cerr << "Associate \"" << classname << "\" with " << WireCell::type(factory) << std::endl;
 	    return true;
 	}
+
 
 	/// Look up an existing factory by the name of the "class" it can create.
 	factory_ptr lookup_factory(const std::string& classname) {
@@ -113,13 +123,22 @@ namespace WireCell {
 	    return fptr;
 	}
 
-	interface_ptr instance(const std::string& classname, const std::string& instname = "") {
+        /// Return instance of give type and optional instance name.
+        /// If create is true, create the instance if it does not
+        /// exist. O.w., return nullptr if it does not exist.
+	interface_ptr instance(const std::string& classname, const std::string& instname = "", bool create=true) {
 	    factory_ptr fac = lookup_factory(classname);
 	    if (!fac) {
 		std::cerr << "No factory for class \"" << classname << "\"\n";
 		return nullptr;
 	    }
-	    WireCell::Interface::pointer iptr = fac->create(instname);
+	    WireCell::Interface::pointer iptr;
+            if (create) {
+                iptr = fac->create(instname);
+            }
+            else {
+                iptr = fac->find(instname);
+            }
 	    if (!iptr) {
 		std::cerr << "Failed to create instance "<< instname <<" of class " << classname << std::endl;
 		return nullptr;
@@ -171,22 +190,36 @@ namespace WireCell {
             THROW(FactoryException() << errmsg{"Failed to lookup factory for " + classname});
 	}
 
-        /// Lookup an interface by a type and optional name.
+        /// Lookup an interface by a type and optional name.  If
+        /// create is true, create instance if missing, o.w. return
+        /// nullptr.  See also find<IType>().
 	template<class IType>
-	std::shared_ptr<IType> lookup(const std::string& classname, const std::string& instname="") {
+	std::shared_ptr<IType> lookup(const std::string& classname, const std::string& instname="", bool create=true) {
 	    NamedFactoryRegistry<IType>&
 		nfr = WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance();
 	    std::shared_ptr<IType> ret = nfr.instance(classname, instname);
             if (ret) { return ret; }
             THROW(FactoryException() << errmsg{"Failed to lookup instance for " + classname + " " + instname});
 	}
+        /// Return existing instance of given classname with instname or nullptr if it does not yet exist.
+        template<class IType>
+        std::shared_ptr<IType> find(const std::string& classname, const std::string& instname="") {
+            std::shared_ptr<IType> ret = lookup<IType>(classname, instname, false);
+            return ret; 
+        }
 
         /// Lookup an interface by a type:name pair.
 	template<class IType>
-	std::shared_ptr<IType> lookup_tn(const std::string& tn) {
+	std::shared_ptr<IType> lookup_tn(const std::string& tn, bool create=true) {
             std::string t, n;
             std::tie(t,n) = String::parse_pair(tn);
             return lookup<IType>(t,n);
+        }
+        /// Like lookup_tn but with create false
+        template<class IType>
+        std::shared_ptr<IType> find_tn(const std::string& tn) {
+            std::shared_ptr<IType> ret = lookup_tn<IType>(tn, false);
+            return ret;
         }
 
 	/// Return a vector of all known classes of given interface.

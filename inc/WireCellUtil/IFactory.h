@@ -12,6 +12,8 @@ namespace WireCell {
 	/// Create an instance of what we know how to create.
 	virtual Interface::pointer create() = 0;
 
+        /// Return existing instance or nullptr if not found.
+	virtual Interface::pointer find(const std::string& name) = 0;
     };
 
     class INamedFactory : public IFactory {
@@ -28,6 +30,9 @@ namespace WireCell {
 
 	/// Create an instance by name.
 	virtual Interface::pointer create(const std::string& name) = 0;
+
+        /// Return existing instance or nullptr if not found.
+	virtual Interface::pointer find(const std::string& name) = 0;
 
     };
 
