@@ -311,15 +311,21 @@ Response::SimpleRC::SimpleRC(double width, double tick, double offset)
   : _width(width), _offset(offset), _tick(tick)
 
 {
+    /* std::cerr<<"+++++++++++++++++++++++"<<std::endl; */
+    /* std::cerr<<_width/units::ms<<" ms "<<_tick/units::us<<" us " */
+    /*     <<_offset/units::us<<" us\n"; */
+    /* std::cerr<<"unit? "<<_tick/_width<<std::endl; */
+    /* std::cerr<<"+++++++++++++++++++++++"<<std::endl; */
 }
 Response::SimpleRC::~SimpleRC()
 {
 }
 double Response::SimpleRC::operator()(double time) const
 {
-    double ret = -_tick/_width * exp(-(time-_offset)/_width);
-    if (time == _offset) {	// this is a sketchy comparison
+    double ret = -_tick/_width * exp(-(time-_offset)/_width); // _tick here is to make this RC response integrated in each bin
+    if (time < _offset + _tick) {	// just the first bin 
 	ret += 1.0;		// delta function
+    std::cerr<<"delta"<<std::endl;
     }
     return ret;
 }

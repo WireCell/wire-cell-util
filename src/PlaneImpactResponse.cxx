@@ -23,12 +23,24 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
     //     << "tbins=[" << tbins.min() << ","<<tbins.max() <<"]/" << tbins.binsize() /units::us << "us\n";
 
     WireCell::Waveform::compseq_t elec;
+    // Two identical RC responses
+    WireCell::Waveform::compseq_t RCelec;
     if (preamp_gain > 0.0) {
         Response::ColdElec ce(preamp_gain, preamp_peaking);
+        //std::cerr<<"<<<<<<<<<<RC"<<std::endl;
+        Response::SimpleRC rc; // using default paramters now
+        auto rcwave = rc.generate(tbins);
+        //std::cerr<<"1st tbins: "<<tbins.center(0)/units::us<<std::endl;
+        //std::cerr<<"Number tbins: "<<tbins.nbins()<<std::endl;
+        //std::cerr<<"<<<<<<<<<<RC"<<std::endl;
         auto ewave = ce.generate(tbins);
         Waveform::scale(ewave, postamp_gain);
         elec = Waveform::dft(ewave);
+        RCelec = Waveform::dft(rcwave);
     }
+
+
+
 
     
     const int npaths = pr.paths.size();
@@ -106,10 +118,10 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
         }
         WireCell::Waveform::compseq_t spec = Waveform::dft(wave);
 
-        // Convolve with electronics response.
+        // Convolve with electronics response and two RC responses
         if (preamp_gain > 0) {  
             for (int find=0; find < ntbins; ++find) {
-                spec[find] *= elec[find];
+                spec[find] *= elec[find]*RCelec[find]*RCelec[find];
             }
         }
 
