@@ -56,7 +56,7 @@ void plot_time(MultiPdf& mpdf, PlaneImpactResponse& pir,
     }
     std::cerr <<"zunits: " << zunit 
               << " tbinsize: " << tbins.binsize()/units::us
-              << std::endl;
+              << " us\n";
 
 
     // they all suck.  black body sucks the least.
@@ -242,7 +242,7 @@ int main(int argc, const char* argv[])
     const double gain = 14.0*units::mV/units::fC;
     const double shaping = 2*units::us;
 
-    MultiPdf mpdf(argv[0]);
+    MultiPdf mpdf(out_basename.c_str());
     for (int iplane=0; iplane<3; ++iplane) {
 	PlaneImpactResponse pir_fonly(fr, iplane, tbins);
 	plot_time(mpdf, pir_fonly, "fr", "Field Response");

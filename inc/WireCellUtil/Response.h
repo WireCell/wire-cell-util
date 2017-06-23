@@ -139,11 +139,6 @@ namespace WireCell {
 	/// over each wire region.
 	Schema::FieldResponse wire_region_average(const Schema::FieldResponse& fr);
 
-	/// Normalize all PathResponse::current arrays by the integral
-	/// of the wire0 current of the last plane.  This modifies the
-	/// FieldResponse structure in-place.
-	void normalize_by_collection_integral(Schema::FieldResponse& fr);
-
 	/// The cold electronics response function.
 	double coldelec(double time, double gain=7.8, double shaping=1.0*units::us);
 

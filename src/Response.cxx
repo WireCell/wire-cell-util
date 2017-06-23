@@ -205,10 +205,6 @@ Response::Schema::FieldResponse Response::wire_region_average(const Response::Sc
 }
 
 
-void Response::normalize_by_collection_integral(Response::Schema::FieldResponse& fr)
-{
-}
-
 
 
 
