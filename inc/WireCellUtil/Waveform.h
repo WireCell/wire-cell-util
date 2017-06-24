@@ -7,6 +7,7 @@
 #include <complex>
 #include <numeric>
 #include <algorithm>
+#include <string>
 
 namespace WireCell {
 
@@ -51,9 +52,16 @@ namespace WireCell {
 	/// Return a new mapping which is the union of all same channel masks.
 	ChannelMasks merge(const ChannelMasks& one, const ChannelMasks& two);
 
+
+
+	
 	/// Collect channel masks by some label.
 	typedef std::map<std::string, ChannelMasks> ChannelMaskMap;
 
+	// merge second maskmap into the first maskmap
+	void merge(ChannelMaskMap &one,  ChannelMaskMap &two,  std::map<std::string,std::string>& name_map);
+
+	
 	/// A range of time
 	typedef std::pair<double,double> Period;
 
