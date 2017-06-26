@@ -193,11 +193,11 @@ int main()
 {
     WireCell::ExecMon em;
 
-    // test_partial(em);
-    // test_copy(em);
-    // test_return(em);
-    // test_dft(em);
-    // test_deconv(em);
+    test_partial(em);
+    test_copy(em);
+    test_return(em);
+    test_dft(em);
+    test_deconv(em);
     test_division(em);
 
     em("the end");
