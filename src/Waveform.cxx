@@ -266,6 +266,26 @@ WireCell::Waveform::merge(const WireCell::Waveform::ChannelMasks& one,
     return out;
 }
 
+
+void WireCell::Waveform::merge(ChannelMaskMap &one,  ChannelMaskMap &two, std::map<std::string,std::string>& name_map){
+
+    // loop over second map
+    for (auto const& it: two){
+	std::string name = it.first;
+	std::string mapped_name;
+	if (name_map.find(name)!=name_map.end()){
+	    mapped_name = name_map[name];
+	}else{
+	    mapped_name = name;
+	}
+	if (one.find(mapped_name) != one.end()){
+	    one[mapped_name] = merge(one[mapped_name],it.second);
+	}else{
+	    one[mapped_name] = it.second;
+	}
+    }
+}
+
 // Local Variables:
 // mode: c++
 // c-basic-offset: 4

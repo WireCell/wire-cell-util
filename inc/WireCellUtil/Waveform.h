@@ -7,6 +7,7 @@
 #include <complex>
 #include <numeric>
 #include <algorithm>
+#include <string>
 
 namespace WireCell {
 
@@ -51,9 +52,16 @@ namespace WireCell {
 	/// Return a new mapping which is the union of all same channel masks.
 	ChannelMasks merge(const ChannelMasks& one, const ChannelMasks& two);
 
+
+
+	
 	/// Collect channel masks by some label.
 	typedef std::map<std::string, ChannelMasks> ChannelMaskMap;
 
+	// merge second maskmap into the first maskmap
+	void merge(ChannelMaskMap &one,  ChannelMaskMap &two,  std::map<std::string,std::string>& name_map);
+
+	
 	/// A range of time
 	typedef std::pair<double,double> Period;
 
@@ -182,7 +190,8 @@ namespace WireCell {
 	
 	// Return the mean and (population) RMS over a waveform signal.
 	std::pair<double,double> mean_rms(const realseq_t& wave);
-
+	
+	
 	// Return the median value.  This is rather slow as it
 	// involves a sort.
 	real_t median(realseq_t wave);
