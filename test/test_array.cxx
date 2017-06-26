@@ -161,15 +161,44 @@ void test_deconv(ExecMon& em)
     Assert(norm < 0.001);
 }
 
+void test_division(ExecMon& em)
+{
+    array_xxf arr1(3,2), arr2(3,2), arr3(3,2);
+    arr1 <<
+        0.0, 1.0,
+        2.0, 3.0,
+        4.0, 5.0;
+    arr2 <<
+        0.0, 0.5,
+        0.0, 2.0,
+        0.0, -5.0;
+    arr3 = arr1/arr2;
+    cerr << "arr3 before NaN zeroing\n" << arr3 << endl;
+
+    for (int irow=0; irow<arr3.rows(); ++irow) {
+        for (int icol=0; icol<arr3.cols(); ++icol) {
+            float val = arr3(irow,icol);
+            if (std::isnan(val)) {
+                arr3(irow,icol) = -0.0;
+            }
+            if (std::isinf(val)) {
+                arr3(irow,icol) = 0.0;
+            }
+        }
+    }
+    cerr << "arr3 after NaN zeroing\n" << arr3 << endl;
+}  
+
 int main()
 {
     WireCell::ExecMon em;
 
-    test_partial(em);
-    test_copy(em);
-    test_return(em);
-    test_dft(em);
-    test_deconv(em);
+    // test_partial(em);
+    // test_copy(em);
+    // test_return(em);
+    // test_dft(em);
+    // test_deconv(em);
+    test_division(em);
 
     em("the end");
     cerr << em.summary() << endl;
