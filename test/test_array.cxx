@@ -57,6 +57,63 @@ void test_return(ExecMon& em)
 }
 
 
+template<typename arrtype>
+bool same(const arrtype& a1, const arrtype& a2, double eps=1.0e-6)
+{
+    double n1 = a1.matrix().squaredNorm();
+    double n2 = a2.matrix().squaredNorm();
+    if (n1==n2) {
+        return true;
+    }
+    if (n2 == 0.0) {
+        cerr << "norm2=0, norm1=" << n2 << endl;
+        return false;
+    }
+    double diff = std::abs(1-n1/n2);
+    if (diff > eps) {
+        cerr << "differ: " << diff << " n1=" << n1 << " n2=" << n2 << endl;
+    }
+    return (diff <= eps);
+}
+
+void test_partial(ExecMon& em)
+{
+    const int nrows = 300;
+    const int ncols = 1000;
+
+    auto arr = my_great_array(em, nrows, ncols);
+    em("test_partial: make array");
+
+    auto spec = dft(arr);
+    auto spec_rc = dft_rc(arr);
+    auto spec_cc = dft_cc(spec_rc);
+    em("test_partial: forward");
+
+    auto arr2 = idft(spec);
+    auto arr2_cc = idft_cc(spec_cc);
+    auto arr2_cr = idft_cr(arr2_cc);
+    em("test_partial: reverse");
+
+    Assert(same(spec, spec_cc));
+    Assert(same(arr, arr2));
+    Assert(same(arr2, arr2_cr));
+
+    const int nrounds = 100;
+
+    for (int count = 0; count < nrounds; ++count) {
+	auto spec = dft(arr);
+        auto orig = idft(spec);
+    }
+    em("test_partial: direct round trip");
+    for (int count = 0; count < nrounds; ++count) {
+        auto spec_rc = dft_rc(arr);
+        auto spec_cc = dft_cc(spec_rc);
+        auto arr2_cc = idft_cc(spec_cc);
+        auto arr2_cr = idft_cr(arr2_cc);
+    }
+    em("test_partial: partial round trip");
+}
+
 void test_dft(ExecMon& em)
 {
     const int nrows = 300;
@@ -108,6 +165,7 @@ int main()
 {
     WireCell::ExecMon em;
 
+    test_partial(em);
     test_copy(em);
     test_return(em);
     test_dft(em);

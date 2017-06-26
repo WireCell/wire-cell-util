@@ -37,14 +37,59 @@ WireCell::Array::array_xxc WireCell::Array::dft(const WireCell::Array::array_xxf
     return matc;
 }
 
-// WireCell::Array::const_shared_array_xxc WireCell::Array::dftptr(const WireCell::Array::array_xxf& arr)
-// {
-//     shared_array_xxc ret = std::make_shared<array_xxc> (nrows, ncols);
-//     (*ret) = dft(arr);
-//     return ret;
-// }
+WireCell::Array::array_xxc WireCell::Array::dft_rc(const WireCell::Array::array_xxf& arr, int dim)
+{
+    const int nrows = arr.rows();
+    const int ncols = arr.cols();
 
-//WireCell::Array::const_shared_array_xxf WireCell::Array::idft(const WireCell::Array::array_xxc& arr)
+    Eigen::FFT< float > fft;
+    Eigen::MatrixXcf matc(nrows, ncols);
+
+    if (dim == 0) {
+        for (int irow = 0; irow < nrows; ++irow) {
+            Eigen::VectorXcf fspec(ncols);
+            Eigen::VectorXf tmp = arr.row(irow);
+            fft.fwd(fspec, tmp);
+            matc.row(irow) = fspec;
+        }
+    }
+    else if (dim == 1) {
+        for (int icol = 0; icol < ncols; ++icol) {
+            Eigen::VectorXcf fspec(nrows);
+            Eigen::VectorXf tmp = arr.col(icol);
+            fft.fwd(fspec, tmp);
+            matc.col(icol) = fspec;
+        }
+    }        
+    return matc;
+}
+
+WireCell::Array::array_xxc WireCell::Array::dft_cc(const WireCell::Array::array_xxc& arr, int dim)
+{
+    const int nrows = arr.rows();
+    const int ncols = arr.cols();
+
+    Eigen::FFT< float > fft;
+    Eigen::MatrixXcf matc(nrows, ncols);
+    if (dim == 0) {
+        for (int irow = 0; irow < nrows; ++irow) {
+            Eigen::VectorXcf pspec(ncols);
+            fft.fwd(pspec, matc.row(irow));
+            matc.row(irow) = pspec;
+        }
+    }
+    else {
+        for (int icol = 0; icol < ncols; ++icol) {
+            Eigen::VectorXcf pspec(nrows);
+            fft.fwd(pspec, matc.col(icol));
+            matc.col(icol) = pspec;
+        }
+    }
+    return matc;
+}
+
+
+
 WireCell::Array::array_xxf WireCell::Array::idft(const WireCell::Array::array_xxc& arr)
 {
     const int nrows = arr.rows();
@@ -73,6 +118,67 @@ WireCell::Array::array_xxf WireCell::Array::idft(const WireCell::Array::array_xx
 
     return ret;
 }
+
+WireCell::Array::array_xxc WireCell::Array::idft_cc(const WireCell::Array::array_xxc& arr, int dim)
+{
+    const int nrows = arr.rows();
+    const int ncols = arr.cols();
+
+    // fft works on matrices, not arrays, also don't step on const input
+    Eigen::MatrixXcf ret(nrows, ncols);
+    ret = arr.matrix();
+
+    Eigen::FFT< float > fft;
+
+    if (dim == 1) {
+        for (int icol = 0; icol < ncols; ++icol) {
+            Eigen::VectorXcf pspec(nrows);
+            fft.inv(pspec, ret.col(icol));
+            ret.col(icol) = pspec;
+        }
+    }
+    else if (dim == 0) {
+        for (int irow = 0; irow < nrows; ++irow) {
+            Eigen::VectorXcf pspec(ncols);
+            fft.inv(pspec, ret.row(irow));
+            ret.row(irow) = pspec;
+        }
+    }
+    return ret;
+}
+
+WireCell::Array::array_xxf WireCell::Array::idft_cr(const WireCell::Array::array_xxc& arr, int dim)
+{
+    const int nrows = arr.rows();
+    const int ncols = arr.cols();
+
+    // fft works on matrices, not arrays, also don't step on const input
+    Eigen::MatrixXcf partial(nrows, ncols);
+    partial = arr.matrix();
+
+    Eigen::FFT< float > fft;
+
+    array_xxf ret(nrows, ncols);
+
+    if (dim == 0) {
+        for (int irow = 0; irow < nrows; ++irow) {
+            Eigen::VectorXf wave(ncols); // back to real-valued time series
+            fft.inv(wave, partial.row(irow));
+            ret.row(irow) = wave;
+        }
+    }
+    else if (dim == 1) {
+        for (int icol = 0; icol < ncols; ++icol) {
+            Eigen::VectorXf wave(nrows);
+            fft.inv(wave, partial.col(icol));
+            ret.col(icol) = wave;
+        }
+    }
+    return ret;
+}
+
+
+
 
 #ifdef WCT_HACK_FOR_FFTW_NO_SP
 

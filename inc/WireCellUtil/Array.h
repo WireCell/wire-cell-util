@@ -38,44 +38,19 @@ namespace WireCell {
 
     namespace Array {
 
-	// template <typename Derived>
-	// using shared_dense = std::shared_ptr< Eigen::DenseBase<Derived> >;
-	// template <typename Derived>
-	// using const_shared_dense = std::shared_ptr< const Eigen::DenseBase<Derived> >;
-
-
-	/** When creating a new array, do so like:
-
-	    const_shared_array_xxf my_great_array(int nrows, int ncols) {
-	        shared_array_xxf arr = std::make_shared<WireCell::Array::array_xxf>(nrows, ncols);
-		// now fill array
-		return arr;	// casts to const
-	    }
-
-	    // ...
-
-	    const_shared_array_xxf mga = my_great_array(3000,10000);
-	    // use mga...
-	    // explicitly drop
-	    mga = nullptr;
-	    // or wait for it to leave scope
-	 */
-	// real array
+	/// A real, 2D array
 	typedef Eigen::ArrayXXf array_xxf;
-	typedef std::shared_ptr< array_xxf > shared_array_xxf;
-	typedef std::shared_ptr< const array_xxf > const_shared_array_xxf;
 
-	// complex array
+	/// A complex, 2D array
 	typedef Eigen::ArrayXXcf array_xxc;
-	typedef std::shared_ptr< array_xxc > shared_array_xxc;
-	typedef std::shared_ptr< const array_xxc > const_shared_array_xxc;
 
-	
 
-	/** Perform 2D discrete Fourier transform.
+	/** Perform full, 2D discrete Fourier transform on a real 2D
+            array.
 
-	    This first performs 1D DFTs on individual rows and then 1D
-	    DFTs on resulting columns.
+	    The full 2D DFT first performs a 1D DFT (real->complex) on
+	    each individual row and then a 1D DFT (complex->complex)
+	    on each resulting column.
 
 	    const_shared_array_xxf arr = ...;
 	    const_shared_array_xxc spec = dft(*arr);
@@ -86,10 +61,39 @@ namespace WireCell {
 	 */
 	array_xxc dft(const array_xxf& arr);
 	array_xxf idft(const array_xxc& arr);
-#ifdef WCT_HACK_FOR_FFTW_NO_SP
-	array_xxc dftd(const array_xxf& arr);
-	array_xxf idftd(const array_xxc& arr);
-#endif
+
+        /** Partial, 1D DFT and inverse DFT along one dimension of an
+         * array.  Each row is transformed if dim=0, each column if
+         * dim=1.  The transfer is either real->complex (rc),
+         * complex->complex(cc) or complex->real(cr). 
+         *
+         * The full 2D DFT should be used unless an intermediate
+         * filter is required as it will avoid producing some
+         * temporaries.  
+         *
+         * Conceptually:
+         *
+         *    auto xxc = dft(xxf); 
+         *
+         * is equivalent to
+         *
+         *    auto tmp = dft_rc(xxf, 0);
+         *    auto xxc = dft_cc(tmp, 1);
+         *
+         * and:
+         *
+         *     auto xxf = idft(xxc)
+         *
+         * is equivalent to:
+         *
+         *     auto tmp = idft_cc(xxc, 1);
+         *     auto xxf = idft_rc(tmp, 0);
+         */
+	array_xxc dft_rc(const array_xxf& arr, int dim=0);
+	array_xxc dft_cc(const array_xxc& arr, int dim=1);
+	array_xxc idft_cc(const array_xxc& arr, int dim=1);
+	array_xxf idft_cr(const array_xxc& arr, int dim=0);
+
 	/** Perform 2D deconvolution. 
 	    
 	    This will perform a 2D forward DFT, do an
@@ -100,6 +104,11 @@ namespace WireCell {
 	 */
 	array_xxf deconv(const array_xxf& arr, const array_xxc& filter);
 
+
+#ifdef WCT_HACK_FOR_FFTW_NO_SP
+	array_xxc dftd(const array_xxf& arr);
+	array_xxf idftd(const array_xxc& arr);
+#endif
 
     }
 }
