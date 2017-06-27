@@ -71,10 +71,13 @@ WireCell::Array::array_xxc WireCell::Array::dft_cc(const WireCell::Array::array_
 
     Eigen::FFT< float > fft;
     Eigen::MatrixXcf matc(nrows, ncols);
+
+    matc = arr.matrix();
+    
     if (dim == 0) {
         for (int irow = 0; irow < nrows; ++irow) {
             Eigen::VectorXcf pspec(ncols);
-            fft.fwd(pspec, matc.row(irow));
+            fft.fwd(pspec,matc.row(irow));
             matc.row(irow) = pspec;
         }
     }
