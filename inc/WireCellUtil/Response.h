@@ -4,6 +4,7 @@
 #include "WireCellUtil/Waveform.h"
 #include "WireCellUtil/Binning.h"
 #include "WireCellUtil/Units.h"
+#include "WireCellUtil/Array.h"
 
 #include "WireCellUtil/Point.h"
 
@@ -139,6 +140,16 @@ namespace WireCell {
 	/// over each wire region.
 	Schema::FieldResponse wire_region_average(const Schema::FieldResponse& fr);
 
+        
+        /// Return the plane's response as a 2D array.  This is a
+        /// straight copy of the plane's current vectors into rows of
+        /// the returned array.  The first "path" will be in row 0.
+        /// Each column thus contains the same sample (aka tick)
+        /// across all current waveforms.  Column 0 is first sample.
+        /// The plane response input data is taken at face value an
+        /// not attempt to resolve any implicit symmetries is made.
+        Array::array_xxf as_array(const Schema::PlaneResponse& pr);
+
 	/// The cold electronics response function.
 	double coldelec(double time, double gain=7.8, double shaping=1.0*units::us);
 
@@ -158,9 +169,9 @@ namespace WireCell {
 	    const double _g, _s;
 	public:
 	    // Create cold electronics response function.  Gain is an
-	    // arbitrary scale, typically in mV/fC and shaping time in
-	    // WCT system of units.
-	    ColdElec(double gain=7.8, double shaping=1.0*units::us);
+	    // arbitrary scale, typically in [voltage/charge], and
+	    // shaping time in WCT system of units.
+	    ColdElec(double gain=14*units::mV/units::fC, double shaping=1.0*units::us);
 	    virtual ~ColdElec();
 
 	    // Return the response at given time.  Time is in WCT

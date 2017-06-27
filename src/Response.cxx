@@ -206,6 +206,20 @@ Response::Schema::FieldResponse Response::wire_region_average(const Response::Sc
 
 
 
+Array::array_xxf Response::as_array(const Schema::PlaneResponse& pr)
+{
+    int nrows = pr.paths.size();
+    int ncols = pr.paths[0].current.size();
+    Array::array_xxf ret(nrows, ncols); // warning, uninitialized
+
+    for (int irow = 0; irow < nrows; ++irow) {
+        auto& path = pr.paths[irow];
+        for (int icol = 0; icol < ncols; ++icol) {
+            ret(irow,icol) = path.current[icol]; // maybe there is a fast way to do this copy?
+        }
+    }
+    return ret;        
+}
 
 
 

@@ -43,6 +43,8 @@ namespace WireCell {
 
             A flat post-FEE amplifier gain can also be given to
             provide a global scaling of the output of the electronics.
+
+            Fixme: field response should be provided by a component.
          */
 	PlaneImpactResponse(const Response::Schema::FieldResponse& fr, int plane_ident,
                             Binning tbins, // fixme, only needs tick+nbins
