@@ -288,6 +288,21 @@ double Response::coldelec(double time, double gain, double shaping)
 	+0.464924*exp(-2.40318*reltime)*sin(2.5928*reltime)*sin(5.18561*reltime)*gain;
 }
 
+double Response::hf_filter(double freq, double sigma, double power, bool flag){
+  if (flag){
+    if (freq==0) return 0;
+  }
+
+  return exp(-0.5*pow(freq/sigma,power));
+  
+}
+
+double Response::lf_filter(double freq, double tau){
+  return 1-exp(-pow(freq/tau,2));
+}
+
+
+
 Response::ColdElec::ColdElec(double gain, double shaping)
     : _g(gain)
     , _s(shaping)
@@ -324,6 +339,36 @@ double Response::SimpleRC::operator()(double time) const
         //std::cerr<<"delta"<<std::endl;
     }
     return ret;
+}
+
+
+Response::LfFilter::LfFilter(double tau)
+  : _tau(tau)
+{
+}
+
+Response::LfFilter::~LfFilter(){
+}
+
+double Response::LfFilter::operator()(double freq) const
+{
+  return lf_filter(freq,_tau);
+}
+
+
+Response::HfFilter::HfFilter(double sigma, double power, bool flag)
+  : _sigma(sigma)
+  , _power(power)
+  , _flag(flag)
+{
+}
+
+Response::HfFilter::~HfFilter(){
+}
+
+double Response::HfFilter::operator()(double freq) const
+{
+  return hf_filter(freq,_sigma,_power,_flag);
 }
 
 

@@ -141,7 +141,12 @@ namespace WireCell {
 
 	/// The cold electronics response function.
 	double coldelec(double time, double gain=7.8, double shaping=1.0*units::us);
-
+	// HF filter format
+	double hf_filter(double freq, double sigma = 1, double power = 2, bool zero_freq_removal = true);
+	
+	// LF filter format
+	double lf_filter(double freq, double tau = 0.02);
+	  
 	class Generator {
 	public:
 	    virtual ~Generator();
@@ -188,6 +193,25 @@ namespace WireCell {
 
 	};
 
+	class LfFilter : public Generator{
+	  const double _tau;
+	public:
+	  LfFilter(double tau);
+	  virtual ~LfFilter();
+	  virtual double operator()(double freq) const;
+	};
+
+	class HfFilter : public Generator{
+	  const double _sigma, _power;
+	  const bool _flag;
+	public:
+	  HfFilter(double sigma, double power, bool flag);
+	  virtual ~HfFilter();
+	  virtual double operator()(double freq) const;
+	};
+
+	
+	
     }
 }
 
