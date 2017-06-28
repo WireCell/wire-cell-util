@@ -1,4 +1,5 @@
 #include "WireCellUtil/PluginManager.h"
+#include "WireCellUtil/Exceptions.h"
 
 #include <string>
 #include <iostream>
@@ -41,24 +42,25 @@ WireCell::Plugin* WireCell::PluginManager::add(const std::string& plugin_name,
 
     std::string exts[2] = {".so",".dylib"};
     for (int ind=0; ind<2; ++ind) {
-      std::string ext = exts[ind];
-      string lname = "";
-      if (libname == "") {
-	lname = "lib";
-	lname += plugin_name;
-	lname += ext;
-      }
-      else {
-	lname = libname;
-      }
-      void* lib = dlopen(lname.c_str(), RTLD_NOW);
-      if (lib) {
-	m_plugins[plugin_name] = new Plugin(lib);
-	// cerr << " PluginManager: loaded plugin #" << m_plugins.size() << " \"" << plugin_name << "\" from library \"" << lname << "\": " << m_plugins[plugin_name] << endl;
-	return m_plugins[plugin_name];
-      }
+        std::string ext = exts[ind];
+        string lname = "";
+        if (libname == "") {
+            lname = "lib";
+            lname += plugin_name;
+            lname += ext;
+        }
+        else {
+            lname = libname;
+        }
+        void* lib = dlopen(lname.c_str(), RTLD_NOW);
+        if (lib) {
+            m_plugins[plugin_name] = new Plugin(lib);
+            // cerr << " PluginManager: loaded plugin #" << m_plugins.size() << " \"" << plugin_name << "\" from library \"" << lname << "\": " << m_plugins[plugin_name] << endl;
+            return m_plugins[plugin_name];
+        }
     }
     cerr << "PluginManager: no such plugin: " << plugin_name << "\n";
+    THROW(IOError() << errmsg{"no such plugin: " + plugin_name});
     return nullptr;
 }
 
