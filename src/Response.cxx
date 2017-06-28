@@ -3,6 +3,7 @@
 #include "WireCellUtil/Response.h"
 #include <cmath>
 #include <iostream>
+#include <set>
 
 
 using namespace WireCell;
@@ -150,49 +151,110 @@ Response::Schema::FieldResponse Response::wire_region_average(const Response::Sc
 	double pitch = plane.pitch;
 
 	std::map<int, realseq_t> avgs;
-	std::map<int, int> nums;
+	//std::map<int, int> nums;
+
+	
+	std::map<int,realseq_t> fresp_map;
+	std::map<int,std::pair<double,double>> pitch_pos_range_map;
+	 
+	// figure out the range of each response ... 
+
+	int nsamples=0;
+	
 	for (auto path : plane.paths) {
-	    double adjusted_pitchpos = path.pitchpos;
-	    if (adjusted_pitchpos > 0) {
-		adjusted_pitchpos -= 0.001*pitch;
+	  int eff_num = path.pitchpos/(0.01 * pitch);
+	  if (fresp_map.find(eff_num) == fresp_map.end()){
+	    fresp_map[eff_num] = path.current;
+	  }else{
+	    nsamples = path.current.size();
+	    for (int k=0;k!=nsamples;k++){
+	      fresp_map[eff_num].at(k) = (fresp_map[eff_num].at(k) + path.current.at(k))/2.;
 	    }
-	    else {
-		adjusted_pitchpos += -0.001*pitch;
+	  }
+	  if (fresp_map.find(-eff_num) == fresp_map.end()){
+	    fresp_map[-eff_num] = path.current;
+	  }else{
+	    int nsamples = path.current.size();
+	    for (int k=0;k!=nsamples;k++){
+	      fresp_map[-eff_num].at(k) = (fresp_map[-eff_num].at(k) + path.current.at(k))/2.;
 	    }
-
-	    const int region = round(adjusted_pitchpos/pitch);
-	    //const double impact = path.pitchpos - region*pitch;
-	    const int nsamples = path.current.size();
-	    if (avgs.find(region) == avgs.end()) {
-		avgs[region] = realseq_t(nsamples);
-	    }
-
-	    // WARNING assumes last impact is at 1/2 pitch.
-	    // WARNING assumes impacts are on half-pitch lines of symmetry.
-	    // WARNING assumes ~half the pitch not represented.
-	    // double weight = 2.0;
-	    // if (std::abs(impact) < 0.01*units::mm || std::abs(impact-1.5*units::mm) < 0.01*(0.5*pitch)) { 
-	    //     weight = 1.0;	// don't double count central or last
-	    // }
-	    realseq_t& response = avgs[region];
-	    for (int ind=0; ind<nsamples; ++ind) {
-		response[ind] += path.current[ind];
-	    }
-	    nums[region] += 1;
+	  }
 	}
 
+
+	std::vector<double> pitch_pos;
+	for (auto it = fresp_map.begin(); it!= fresp_map.end(); it++){
+	  pitch_pos.push_back((*it).first * 0.01 * pitch);
+	}
+	
+	double min = -1e9;
+	double max = 1e9;
+	for (size_t i=0;i!=pitch_pos.size();i++){
+	  if (i==0){
+	    pitch_pos_range_map[pitch_pos.at(i)] = std::make_pair(min,(pitch_pos.at(i) + pitch_pos.at(i+1))/2.);
+	  }else if (i==pitch_pos.size()-1){
+	    pitch_pos_range_map[pitch_pos.at(i)] = std::make_pair((pitch_pos.at(i) + pitch_pos.at(i-1))/2.,max);
+	  }else{
+	    pitch_pos_range_map[pitch_pos.at(i)] = std::make_pair((pitch_pos.at(i) + pitch_pos.at(i-1))/2.,(pitch_pos.at(i) + pitch_pos.at(i+1))/2.);
+	  }
+	}
+
+	// for (size_t i=0;i!=pitch_pos.size();i++){
+	//   std::cout << i << " " << pitch_pos.at(i) << " " << pitch_pos_range_map[pitch_pos.at(i)].first << " " << pitch_pos_range_map[pitch_pos.at(i)].second << std::endl;
+	// }
+
+	// figure out how many wires ...
+	std::set<int> wire_regions;
+	for (size_t i=0;i!=pitch_pos.size();i++){
+	  if (pitch_pos.at(i)>0){
+	    wire_regions.insert( round((pitch_pos.at(i)-0.001*pitch)/pitch));
+	  }else{
+	    wire_regions.insert( round((pitch_pos.at(i)+0.001*pitch)/pitch));
+	  }
+	}
+	
+
+	// do the average ... 
+	for(auto it = wire_regions.begin(); it!=wire_regions.end(); it++){
+	  int wire_no = *it;
+	  if (avgs.find(wire_no) == avgs.end()) {
+	    avgs[wire_no] = realseq_t(nsamples);
+	  }
+	  for (auto it1 =  fresp_map.begin(); it1!= fresp_map.end(); it1++){
+	    int resp_num = (*it1).first;
+	    realseq_t& response = (*it1).second;
+	    double low_limit = pitch_pos_range_map[resp_num].first;
+	    double high_limit = pitch_pos_range_map[resp_num].second;
+	    if (low_limit < (wire_no - 0.5)*pitch ){
+	      low_limit = (wire_no - 0.5)*pitch;
+	    }
+	    if (high_limit > (wire_no+0.5)*pitch ){
+	      high_limit = (wire_no+0.5)*pitch;
+	    }
+	    if (high_limit > low_limit){
+	      for (int k=0;k!=nsamples;k++){
+		avgs[wire_no].at(k) += response.at(k) * (high_limit - low_limit) / pitch;
+	      }
+	    }
+	  }
+	}
+	
+
+		
+
+	  // realseq_t& response = avgs[region];
+	  // for (int ind=0; ind<nsamples; ++ind) {
+	  //   response[ind] += path.current[ind];
+	  // }
+	 
+	
 	// do average.
 	for (auto it : avgs) {
-	    int region = it.first;
-	    int num = nums[region];
-	    realseq_t& response = it.second;
-	    const int nsamples = response.size();
-	    for (int ind=0; ind<nsamples; ++ind) {
-		response[ind] /= num;
-	    }
-
-	    // pack up everything for return.
-	    newpaths.push_back(PathResponse(response, region*pitch, 0.0));
+	  int region = it.first;
+	  realseq_t& response = it.second;
+	  	  
+	  // pack up everything for return.
+	  newpaths.push_back(PathResponse(response, region*pitch, 0.0));
 	}
 	newplanes.push_back(PlaneResponse(newpaths,
                                           plane.planeid,
