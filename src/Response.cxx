@@ -182,34 +182,36 @@ Response::Schema::FieldResponse Response::wire_region_average(const Response::Sc
 	}
 
 
-	std::vector<double> pitch_pos;
+	std::vector<int> pitch_pos;
 	for (auto it = fresp_map.begin(); it!= fresp_map.end(); it++){
-	  pitch_pos.push_back((*it).first * 0.01 * pitch);
+	  pitch_pos.push_back((*it).first);
 	}
 	
 	double min = -1e9;
 	double max = 1e9;
 	for (size_t i=0;i!=pitch_pos.size();i++){
+	  int eff_num = pitch_pos.at(i);
 	  if (i==0){
-	    pitch_pos_range_map[pitch_pos.at(i)] = std::make_pair(min,(pitch_pos.at(i) + pitch_pos.at(i+1))/2.);
+	    pitch_pos_range_map[eff_num] = std::make_pair(min,(pitch_pos.at(i) + pitch_pos.at(i+1))/2.*0.01*pitch);
 	  }else if (i==pitch_pos.size()-1){
-	    pitch_pos_range_map[pitch_pos.at(i)] = std::make_pair((pitch_pos.at(i) + pitch_pos.at(i-1))/2.,max);
+	    pitch_pos_range_map[eff_num] = std::make_pair((pitch_pos.at(i) + pitch_pos.at(i-1))/2.*0.01*pitch,max);
 	  }else{
-	    pitch_pos_range_map[pitch_pos.at(i)] = std::make_pair((pitch_pos.at(i) + pitch_pos.at(i-1))/2.,(pitch_pos.at(i) + pitch_pos.at(i+1))/2.);
+	    pitch_pos_range_map[eff_num] = std::make_pair((pitch_pos.at(i) + pitch_pos.at(i-1))/2.*0.01*pitch,(pitch_pos.at(i) + pitch_pos.at(i+1))/2.*0.01*pitch);
 	  }
 	}
 
 	// for (size_t i=0;i!=pitch_pos.size();i++){
-	//   std::cout << i << " " << pitch_pos.at(i) << " " << pitch_pos_range_map[pitch_pos.at(i)].first << " " << pitch_pos_range_map[pitch_pos.at(i)].second << std::endl;
+	//   int eff_num = pitch_pos.at(i)/(0.01*pitch);
+	//   std::cout << i << " " << pitch_pos.at(i) << " " << eff_num << " " << pitch_pos_range_map[eff_num].first << " " << pitch_pos_range_map[eff_num].second << std::endl;
 	// }
 
 	// figure out how many wires ...
 	std::set<int> wire_regions;
 	for (size_t i=0;i!=pitch_pos.size();i++){
 	  if (pitch_pos.at(i)>0){
-	    wire_regions.insert( round((pitch_pos.at(i)-0.001*pitch)/pitch));
+	    wire_regions.insert( round((pitch_pos.at(i)*0.01*pitch-0.001*pitch)/pitch));
 	  }else{
-	    wire_regions.insert( round((pitch_pos.at(i)+0.001*pitch)/pitch));
+	    wire_regions.insert( round((pitch_pos.at(i)*0.01*pitch+0.001*pitch)/pitch));
 	  }
 	}
 	
@@ -231,7 +233,11 @@ Response::Schema::FieldResponse Response::wire_region_average(const Response::Sc
 	    if (high_limit > (wire_no+0.5)*pitch ){
 	      high_limit = (wire_no+0.5)*pitch;
 	    }
+
+	    //
+	    
 	    if (high_limit > low_limit){
+	      //std::cout << wire_no << " " << resp_num << " " << low_limit/pitch << " " << high_limit/pitch << std::endl;
 	      for (int k=0;k!=nsamples;k++){
 		avgs[wire_no].at(k) += response.at(k) * (high_limit - low_limit) / pitch;
 	      }
@@ -240,6 +246,7 @@ Response::Schema::FieldResponse Response::wire_region_average(const Response::Sc
 	}
 	
 
+	
 		
 
 	  // realseq_t& response = avgs[region];
@@ -252,7 +259,13 @@ Response::Schema::FieldResponse Response::wire_region_average(const Response::Sc
 	for (auto it : avgs) {
 	  int region = it.first;
 	  realseq_t& response = it.second;
-	  	  
+
+	  double sum = 0;
+	  for (int k=0;k!=nsamples;k++){
+	    sum += response.at(k);
+	  }
+	  //std::cout << plane.planeid << " " << sum*0.1*units::microsecond << std::endl;
+	  
 	  // pack up everything for return.
 	  newpaths.push_back(PathResponse(response, region*pitch, 0.0));
 	}
