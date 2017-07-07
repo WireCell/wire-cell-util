@@ -170,7 +170,7 @@ static void init_parser(jsonnet::Jsonnet& parser, const Persist::externalvars_t&
         parser.addImportPath(path);
     }
     for (auto& vv : extvar) {
-        cerr << "extra var: \"" << vv.first << "\" = \"" << vv.second << "\"\n";
+        //cerr << "extra var: \"" << vv.first << "\" = \"" << vv.second << "\"\n";
         parser.bindExtVar(vv.first, vv.second);
     }
 }
