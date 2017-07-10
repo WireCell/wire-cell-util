@@ -197,10 +197,10 @@ namespace WireCell {
 	std::shared_ptr<IType> lookup(const std::string& classname, const std::string& instname="", bool create=true) {
 	    NamedFactoryRegistry<IType>&
 		nfr = WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance();
-	    std::shared_ptr<IType> ret = nfr.instance(classname, instname);
+	    std::shared_ptr<IType> ret = nfr.instance(classname, instname, create);
             if (ret) { return ret; }
             THROW(FactoryException() << errmsg{"Failed to lookup instance for " + classname + " " + instname});
-	}
+        }
         /// Return existing instance of given classname with instname or nullptr if it does not yet exist.
         template<class IType>
         std::shared_ptr<IType> find(const std::string& classname, const std::string& instname="") {
@@ -209,7 +209,7 @@ namespace WireCell {
         }
 
         /// Lookup an interface by a type:name pair.
-	template<class IType>
+        template<class IType>
 	std::shared_ptr<IType> lookup_tn(const std::string& tn, bool create=true) {
             std::string t, n;
             std::tie(t,n) = String::parse_pair(tn);
