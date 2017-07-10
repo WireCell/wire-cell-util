@@ -64,7 +64,7 @@ std::string WireCell::Persist::slurp(const std::string& filename)
 {
     std::string fname = resolve(filename);
     if (fname.empty()) {
-        THROW(IOError() << errmsg{"no such file: " + filename});
+        THROW(IOError() << errmsg{"no such file: " + filename + ". Maybe you need to add to WIRECELL_PATH."});
     }
 
     std::ifstream fstr(filename);
@@ -127,7 +127,7 @@ Json::Value WireCell::Persist::load(const std::string& filename,
 
     std::string fname = resolve(filename);
     if (fname.empty()) {
-        THROW(IOError() << errmsg{"no such file: " + filename});
+        THROW(IOError() << errmsg{"no such file: " + filename + ". Maybe you need to add to WIRECELL_PATH."});
     }
 
 
@@ -179,7 +179,7 @@ std::string WireCell::Persist::evaluate_jsonnet_file(const std::string& filename
 {
     std::string fname = resolve(filename);
     if (fname.empty()) {
-        THROW(IOError() << errmsg{"no such file: " + filename});
+        THROW(IOError() << errmsg{"no such file: " + filename + ", maybe you need to add to WIRECELL_PATH."});
     }
 
     jsonnet::Jsonnet parser;
