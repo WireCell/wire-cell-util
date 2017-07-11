@@ -40,6 +40,9 @@ namespace WireCell {
     /// Thrown when an error involving accessing input or output has occurred.
     class IOError : virtual public Exception { } ;
 
+    /// Thrown when an error occurs during the data processing
+    class RuntimeError : virtual public Exception { } ;
+
     typedef boost::error_info<struct tag_errmsg, std::string> errmsg;
 
 }
