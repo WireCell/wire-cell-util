@@ -23,7 +23,7 @@ WireCell::Waveform::sub_sample(const Waveform::Domain& domain, int nsamples, con
 std::pair<double,double>
 WireCell::Waveform::mean_rms(const realseq_t& wf)
 {
-    int n = wf.size();
+    const int n = wf.size();
     if (n==0) {
 	return std::make_pair<double,double>(0,0);
     }
@@ -31,8 +31,14 @@ WireCell::Waveform::mean_rms(const realseq_t& wf)
 	return std::make_pair<double,double>(wf[0],0);
     }
 
-    double mean = Waveform::sum(wf)/n;
-    double rms = sqrt(Waveform::sum2(wf)/n - mean*mean);
+    // if left as float, numerical precision will lead to many NaN for
+    // the RMS due to sometimes subtracting similar sized numbers.
+    std::vector<double> wfd(wf.begin(), wf.end());
+
+    const double wsum = Waveform::sum(wfd);
+    const double w2sum = Waveform::sum2(wfd);
+    const double mean = wsum/2.0;
+    const double rms = sqrt( (w2sum - wsum*wsum/n) / (n-1) );
     return std::make_pair(mean,rms);
 }
 

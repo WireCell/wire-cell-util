@@ -1,5 +1,6 @@
 #include "WireCellUtil/NamedFactory.h"
 #include "WireCellUtil/Testing.h"
+#include "WireCellUtil/Exceptions.h"
 
 #include <iostream>
 using namespace std;
@@ -31,5 +32,18 @@ int main()
     cerr << "Got SomeConcrete @ " << ins << endl;
     cerr << "Got bogus @ " << std::shared_ptr<ISomeComponent>() << endl;
     ins->chirp();
+
+    bool caught = false;
+    try {
+        auto should_fail = WireCell::Factory::lookup<ISomeComponent>("NothingNamedThis");
+    }
+    catch (WireCell::FactoryException& e) {
+        cerr << errstr(e) << endl;
+        cerr << "^^^ Successfully failed to lookup a nonexistent component:\n";
+             
+        caught=true;
+    }
+    Assert(caught);
+
 }
 
