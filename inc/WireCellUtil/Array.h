@@ -38,6 +38,9 @@ namespace WireCell {
 
     namespace Array {
 
+	typedef Eigen::ArrayXf array_xf;
+	typedef Eigen::ArrayXf array_xc;
+
 	/// A real, 2D array
 	typedef Eigen::ArrayXXf array_xxf;
 
