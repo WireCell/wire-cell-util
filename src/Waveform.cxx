@@ -38,7 +38,8 @@ WireCell::Waveform::mean_rms(const realseq_t& wf)
     const double wsum = Waveform::sum(wfd);
     const double w2sum = Waveform::sum2(wfd);
     const double mean = wsum/n;
-    const double rms = sqrt( (w2sum - wsum*wsum/n) / (n-1) );
+    const double rms = sqrt( (w2sum - wsum*wsum/n) / n );
+    //   const double rms = sqrt( (w2sum - wsum*wsum/n) / (n-1) );
     return std::make_pair(mean,rms);
 }
 
