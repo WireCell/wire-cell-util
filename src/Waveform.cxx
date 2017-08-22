@@ -293,6 +293,18 @@ void WireCell::Waveform::merge(ChannelMaskMap &one,  ChannelMaskMap &two, std::m
     }
 }
 
+short WireCell::Waveform::most_frequent(const std::vector<short>& vals)
+{
+    const size_t nbins = 1<<16;
+    std::vector<unsigned int> hist(nbins, 0);
+    for (unsigned short val : vals) {
+	hist[val] += 1;
+    }
+    auto it = std::max_element(hist.begin(), hist.end());
+    return it - hist.begin();	// casts back to signed short
+}
+
+
 // Local Variables:
 // mode: c++
 // c-basic-offset: 4

@@ -214,6 +214,10 @@ namespace WireCell {
 	realseq_t idft(compseq_t spec);
 	realseq_t idftd(compseq_t spec);
 
+
+	/// Return the smallest, most frequent value to appear in vector.
+	short most_frequent(const std::vector<short>& vals);
+
     }
 }
 
