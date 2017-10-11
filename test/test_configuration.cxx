@@ -60,8 +60,11 @@ int main()
 
     Configuration other;
     update(other, cfg);
-    update(other, extra_cfg);
+    Configuration last = update(other, extra_cfg);
     cerr << "other:\n" << other << endl;
+    cerr << "last:\n" << last << endl;
+    Assert(last["a"]["b"]["c"] == 42);
+    Assert(last["data3"]["data4"] == 4);
 
     return 0;
 }
