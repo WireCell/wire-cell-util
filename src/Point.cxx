@@ -98,4 +98,9 @@ double WireCell::ray_dist(const WireCell::Ray& ray, const WireCell::Point& point
 }
 
 
+double WireCell::ray_volume(const WireCell::Ray& ray)
+{
+    auto diff = ray_vector(ray);
+    return diff.x() * diff.y() * diff.z();
+}
 

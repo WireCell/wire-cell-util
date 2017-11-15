@@ -75,6 +75,9 @@ namespace WireCell {
      * projected onto the ray's direction. */
     double ray_dist(const Ray& ray, const Point& point);
 
+    /** Return the volume of a box aligned with axes and with the ray
+     * at opposite corners. */
+    double ray_volume(const Ray& ray);
 
 
     template<>
