@@ -163,7 +163,7 @@ int main()
 	};
 
 	// Some popular choices with powers-of-two sprinkled in
-	std::vector<int> nsampleslist{256,
+	std::vector<int> nsampleslist{128, 256,
 		400,480,	// DUNE U/V and W channels per plane
 		512,
 		800,		// DUNE, sum of U or V channels for both faces
@@ -204,11 +204,15 @@ int main()
 	    }
 	    rev_time /= ntries;
 	    
-	    cerr << "DFT nsampls=" << nsamps 
+	    cerr << "DFT nsampels=" << nsamps 
 		 << "\n\tforward: " << fwd_time/1000.0 << " us, " << fwd_time/nsamps/1000.0 << " us/sample"
 		 << "\n\treverse: " << rev_time/1000.0 << " us, " << rev_time/nsamps/1000.0 << " us/sample"
 		 << "\n\taverage: " << 0.5*(fwd_time+rev_time)/1000.0 << " us"
 		 << endl;
+
+	    cout << "timing " << nsamps << " "
+		 << fwd_time/1000.0 << " "
+		 << rev_time/1000.0 << "\n";
 
 	    timings[0]->SetPoint(timings[0]->GetN(), nsamps, fwd_time);
 	    timings[1]->SetPoint(timings[1]->GetN(), nsamps, fwd_time/nsamps);
