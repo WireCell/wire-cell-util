@@ -59,8 +59,8 @@ template<> std::vector<char>& cnpy::operator+=(std::vector<char>& lhs, const cha
 
 void cnpy::parse_npy_header(unsigned char* buffer,size_t& word_size, std::vector<size_t>& shape, bool& fortran_order) {
     //std::string magic_string(buffer,6);
-    uint8_t major_version = *reinterpret_cast<uint8_t*>(buffer+6);
-    uint8_t minor_version = *reinterpret_cast<uint8_t*>(buffer+7);
+    //uint8_t major_version = *reinterpret_cast<uint8_t*>(buffer+6);
+    //uint8_t minor_version = *reinterpret_cast<uint8_t*>(buffer+7);
     uint16_t header_len = *reinterpret_cast<uint16_t*>(buffer+8);
     std::string header(reinterpret_cast<char*>(buffer+9),header_len);
 
@@ -195,7 +195,7 @@ cnpy::NpyArray load_the_npz_array(FILE* fp, uint32_t compr_bytes, uint32_t uncom
     if(nread != compr_bytes)
         throw std::runtime_error("load_the_npy_file: failed fread");
 
-    int err;
+    //int err;
     z_stream d_stream;
 
     d_stream.zalloc = Z_NULL;
@@ -203,15 +203,15 @@ cnpy::NpyArray load_the_npz_array(FILE* fp, uint32_t compr_bytes, uint32_t uncom
     d_stream.opaque = Z_NULL;
     d_stream.avail_in = 0;
     d_stream.next_in = Z_NULL;
-    err = inflateInit2(&d_stream, -MAX_WBITS);
+    /*err =*/ inflateInit2(&d_stream, -MAX_WBITS);
 
     d_stream.avail_in = compr_bytes;
     d_stream.next_in = &buffer_compr[0];
     d_stream.avail_out = uncompr_bytes;
     d_stream.next_out = &buffer_uncompr[0];
 
-    err = inflate(&d_stream, Z_FINISH);
-    err = inflateEnd(&d_stream);
+    /*err =*/ inflate(&d_stream, Z_FINISH);
+    /*err =*/ inflateEnd(&d_stream);
 
     std::vector<size_t> shape;
     size_t word_size;
