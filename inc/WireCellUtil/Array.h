@@ -41,6 +41,9 @@ namespace WireCell {
 	typedef Eigen::ArrayXf array_xf;
 	typedef Eigen::ArrayXf array_xc;
 
+        /// A 16 bit short integer 2D array.
+        typedef Eigen::Array<short, Eigen::Dynamic, Eigen::Dynamic> array_xxs;
+
 	/// A real, 2D array
 	typedef Eigen::ArrayXXf array_xxf;
 
