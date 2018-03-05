@@ -67,7 +67,7 @@ namespace WireCell {
             }
 
             // return edge queue size or 0 if no edge has been plugged
-            int size() {
+            size_t size() {
                 if (!m_edge) { return 0; }
                 return m_edge->size();
             }
@@ -107,10 +107,10 @@ namespace WireCell {
             const std::string& name() { return m_name; }
 
         private:
-            std::string m_name;
-            Type m_type;
-            Edge m_edge;
             Node* m_node;       // node to which port belongs
+            Type m_type;
+            std::string m_name;
+            Edge m_edge;
         };
 
         typedef std::vector<Port> PortList;
@@ -134,10 +134,10 @@ namespace WireCell {
                 return true;
             }
 
-            Port& iport(int ind=0) {
+            Port& iport(size_t ind=0) {
                 return port(Port::input, ind);
             }
-            Port& oport(int ind=0) {
+            Port& oport(size_t ind=0) {
                 return port(Port::output, ind);
             }
 
@@ -148,14 +148,14 @@ namespace WireCell {
                 return m_ports[Port::output];
             }
 
-            Port& port(Port::Type type, int ind=0) {
-                if (ind < 0 or ind >= m_ports[type].size()) {
+            Port& port(Port::Type type, size_t ind=0) {
+                if (ind >= m_ports[type].size()) {
                     THROW(ValueError() << errmsg{"unknown port"});
                 }
                 return m_ports[type][ind];
             }
             Port& port(Port::Type type, const std::string& name) {
-                for (int ind=0; ind<m_ports[type].size(); ++ind) {
+                for (size_t ind=0; ind<m_ports[type].size(); ++ind) {
                     if (m_ports[type][ind].name() != name) {
                         continue;
                     }
@@ -173,7 +173,7 @@ namespace WireCell {
         class Graph {
         public:
             // Connect two nodes by their given ports.
-            void connect(Node* tail, Node* head, int tpind=0, int hpind=0) {
+            void connect(Node* tail, Node* head, size_t tpind=0, size_t hpind=0) {
                 m_edges.push_back(std::make_pair(tail,head));
                 Edge edge = std::make_shared<Queue>();
                 tail->port(Port::output, tpind).plug(edge);
@@ -183,7 +183,7 @@ namespace WireCell {
             // return a topological sort of the graph as per Kahn algorithm.
             std::vector<Node*> sort_kahn() {
                 std::unordered_map< Node*, std::vector<Node*> > edges;
-                std::unordered_map<Node*,int> nincoming;
+                std::unordered_map<Node*, int> nincoming;
                 for (auto th : m_edges) {
                     edges[th.first].push_back(th.second);
                     nincoming[th.first] += 0; // make sure all nodes represented
@@ -245,52 +245,7 @@ namespace WireCell {
             std::vector<std::pair<Node*,Node*> > m_edges;
         };
 
-        // class GraphSorter {
-        // public:
-        //     void add_edge(Node* tail, Node* head) {
-        //         m_edges[tail].push_back(head);
-        //         m_nincoming[tail] += 0;
-        //         m_nincoming[head] += 1;
-        //     }
-            
-        //     // topological sort by Kahn
-        //     std::vector<Node*> operator()() {
-        //         std::vector<Node*> ret;
-        //         std::unordered_set<Node*> seeds;
 
-        //         for (auto it : m_nincoming) {
-        //             //std::cerr << "#incoming: " << it.second << std::endl;
-        //             if (it.second == 0) {
-        //                 seeds.insert(it.first);
-        //             }
-        //         }
-        //         //std::cerr << "Sorting with " << seeds.size() << " seeds\n";
-
-        //         while (!seeds.empty()) {
-        //             Node* t = *seeds.begin();
-        //             seeds.erase(t);
-        //             ret.push_back(t);
-
-        //             for (auto h : m_edges[t]) {
-        //                 m_nincoming[h] -= 1;
-        //                 if (m_nincoming[h] == 0) {
-        //                     seeds.insert(h);
-        //                 }
-        //             }
-        //         }
-        //         return ret;
-        //     }
-
-
-        // private:
-        //     // map tail to collection of heads
-        //     std::unordered_map< Node*, std::vector<Node*> > m_edges;
-        //     std::unordered_map<Node*,int> m_nincoming;
-
-        // };
-
-
-
-    }
-}
+    } // namespace PipeGraph
+}     // namespace WireCell
 #endif
