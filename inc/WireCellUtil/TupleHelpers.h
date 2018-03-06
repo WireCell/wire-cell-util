@@ -43,8 +43,8 @@ namespace std {
 
 namespace WireCell {
 
-
-    /** A bag of functions to help deal with tuples at runtime.
+    /** The basic tuple_helper provides functions to convert a tuple
+     * to a vector of boost::any.
      * 
      * The doc strings on each helper assume an example tuple type like:
      *
@@ -76,9 +76,6 @@ namespace WireCell {
 	    typedef std::tuple<Container<const Types>...> type;
 	};
 
-	typedef typename Wrapped<std::deque>::type queued_tuple_type;
-
-	typedef std::deque<boost::any> any_queue_type;
 	typedef std::vector<boost::any> any_vector_type;
 
 
@@ -90,8 +87,6 @@ namespace WireCell {
 	    return { std::string(typeid(Types).name())... };
 	}
 
-
-	
 	// internal
 	template<std::size_t... Indices>
 	any_vector_type as_any_impl(const tuple_type& t, std::index_sequence<Indices...>) {
@@ -123,16 +118,45 @@ namespace WireCell {
 	    return from_any_impl(anyv, std::make_index_sequence<std::tuple_size<tuple_type>::value>{});
 	}
 
+    };                          // tuple_helpers
 
-	// internal
+
+    /** This convert a tuple of types to vector of deque shared_ptr's
+     * of those types.
+     */
+
+    template <typename Tuple>
+    struct shared_queued;
+
+    template<
+	template <typename...> class T,
+	typename... Types
+	>
+    struct shared_queued< T<Types...> >
+    {
+	typedef T<Types...> tuple_type;
+        //typedef tuple_helper<tuple_type> helper;
+
+	template< template <typename...> class Container >
+	struct WrappedShared {
+	    typedef std::tuple<Container< std::shared_ptr<Types> >...> type;
+	};
+
+	typedef std::deque<boost::any> any_queue_type;
+
+        // This is a tuple<deque<shared_ptr<T1>>, deque<shared_ptr<T2>>, ...>
+	typedef typename WrappedShared<std::deque>::type shared_queued_tuple_type;
+
+	// internal, convert a deque<shared_ptr<T>> to a any_queue_type.
 	template<typename Element>
-	any_queue_type as_any_queue_convert(const std::deque<Element>& in) {
+	any_queue_type as_any_queue_convert(const std::deque< std::shared_ptr<Element> >& in) {
 	    return any_queue_type(in.begin(), in.end());
 	}
 
-	// internal
+	// internal, index a tuple of typed deque into a vector of any_queues.
 	template<std::size_t... Indices>
-	std::vector< any_queue_type > as_any_queue_impl(const queued_tuple_type& toq, std::index_sequence<Indices...>) {
+	std::vector< any_queue_type > as_any_queue_impl(const shared_queued_tuple_type& toq,
+                                                        std::index_sequence<Indices...>) {
 	    return { as_any_queue_convert(std::get<Indices>(toq))... };
 	}
 
@@ -148,36 +172,35 @@ namespace WireCell {
 	 *     cerr << any_cast<char>(any_q[3][0]) << endl;
 	 *     cerr << any_cast<std::string>(any_q[4][0]) << endl;
 	 */
-	std::vector< any_queue_type > as_any_queue(const queued_tuple_type& toq) {
+	std::vector< any_queue_type > as_any_queue(const shared_queued_tuple_type& toq) {
 	    return as_any_queue_impl(toq, std::make_index_sequence<std::tuple_size<tuple_type>::value>{});
 	}
 
 
 
-
-	// internal
+	// internal, cast an any queue to a deque of shared_ptrs of Type.
 	template <typename Type>
-	std::deque<Type> from_any_queue_convert(const any_queue_type& aq) {
-	    std::deque<Type> ret;
+	std::deque< std::shared_ptr<Type> > from_any_queue_convert(const any_queue_type& aq) {
+	    std::deque< std::shared_ptr<Type> > ret;
 	    for (auto a : aq) {
-		ret.push_back(boost::any_cast<Type>(a));
+		ret.push_back(boost::any_cast< std::shared_ptr<Type> >(a));
 	    }
 	    return ret;
 	}
 
-	// internal
+	// internal, index a vector of any queues returning a typed deque<shared_ptr<Type>>.
 	template<std::size_t... Indices>
-	queued_tuple_type from_any_queue_impl(const std::vector< any_queue_type >& vaq, std::index_sequence<Indices...>) {
+	shared_queued_tuple_type from_any_queue_impl(const std::vector< any_queue_type >& vaq, std::index_sequence<Indices...>) {
 	    return std::make_tuple(from_any_queue_convert<Types>(vaq[Indices])...);
 	}
 
 	/** Convert a vector of queues of any to a tuple of queues of type.
 	 */
-	queued_tuple_type from_any_queue(const std::vector< any_queue_type >& vaq) {
+	shared_queued_tuple_type from_any_queue(const std::vector< any_queue_type >& vaq) {
 	    return from_any_queue_impl(vaq, std::make_index_sequence<std::tuple_size<tuple_type>::value>{});	    
 	}
 
-    };
+    };                          // shared_queued
 
     // http://stackoverflow.com/a/20711990
     /** Make an N-tuple of elements all the same type
