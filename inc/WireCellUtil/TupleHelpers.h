@@ -139,7 +139,7 @@ namespace WireCell {
 
 	template< template <typename...> class Container >
 	struct WrappedShared {
-	    typedef std::tuple<Container< std::shared_ptr<Types> >...> type;
+	    typedef std::tuple<Container< std::shared_ptr<const Types> >...> type;
 	};
 
 	typedef std::deque<boost::any> any_queue_type;
@@ -149,7 +149,7 @@ namespace WireCell {
 
 	// internal, convert a deque<shared_ptr<T>> to a any_queue_type.
 	template<typename Element>
-	any_queue_type as_any_queue_convert(const std::deque< std::shared_ptr<Element> >& in) {
+	any_queue_type as_any_queue_convert(const std::deque< std::shared_ptr<const Element> >& in) {
 	    return any_queue_type(in.begin(), in.end());
 	}
 
@@ -180,10 +180,10 @@ namespace WireCell {
 
 	// internal, cast an any queue to a deque of shared_ptrs of Type.
 	template <typename Type>
-	std::deque< std::shared_ptr<Type> > from_any_queue_convert(const any_queue_type& aq) {
-	    std::deque< std::shared_ptr<Type> > ret;
+	std::deque< std::shared_ptr<const Type> > from_any_queue_convert(const any_queue_type& aq) {
+	    std::deque< std::shared_ptr<const Type> > ret;
 	    for (auto a : aq) {
-		ret.push_back(boost::any_cast< std::shared_ptr<Type> >(a));
+		ret.push_back(boost::any_cast< std::shared_ptr<const Type> >(a));
 	    }
 	    return ret;
 	}
