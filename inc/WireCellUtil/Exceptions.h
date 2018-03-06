@@ -11,7 +11,7 @@
     Exceptions should be thrown something like:
 
     if (omg) {
-        THROW(ValueError() << errmsg{"I didn't expect"
+        THROW(ValueError() << errmsg{"I didn't expect that"});
     }
  */
 

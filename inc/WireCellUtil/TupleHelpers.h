@@ -77,6 +77,7 @@ namespace WireCell {
 	};
 
 	typedef typename Wrapped<std::deque>::type queued_tuple_type;
+
 	typedef std::deque<boost::any> any_queue_type;
 	typedef std::vector<boost::any> any_vector_type;
 
