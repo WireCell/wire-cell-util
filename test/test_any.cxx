@@ -13,6 +13,8 @@ struct Foo : public Base {
     int a;
 };
 
+enum DFPMeta { notdfp, eos, restart };
+
 int main()
 {
     boost::any aobj;
@@ -28,6 +30,20 @@ int main()
         cerr << "base is not null\n";
     }
 
+    boost::any what = eos;
+    if (eos == boost::any_cast<DFPMeta>(what)) {
+        cerr << "Got eos from eos\n";
+    }
+
+    DFPMeta dfpm;
+    try {
+         dfpm = boost::any_cast<DFPMeta>(aobj);
+    }
+    catch (boost::bad_any_cast &e) {
+        std::cerr << "aobj not a DFPMeta: " << e.what() << '\n';
+        dfpm = notdfp;
+    }
+    cerr << "DFPMeta = " << dfpm << "\n";
 
     return 0;
     
