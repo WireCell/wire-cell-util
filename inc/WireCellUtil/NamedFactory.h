@@ -84,7 +84,7 @@ namespace WireCell {
 	/// Look up an existing factory by the name of the "class" it can create.
 	factory_ptr lookup_factory(const std::string& classname) {
 	    if (classname == "") {
-		std::cerr << "No class name given for type " << demangle(typeid(IType).name()) << std::endl;
+		std::cerr << "NamedFactory: No class name given for type " << demangle(typeid(IType).name()) << std::endl;
 		return nullptr;
 	    }
 
@@ -100,21 +100,21 @@ namespace WireCell {
 	    std::string factory_maker = "make_" + classname + "_factory";
 	    auto plugin = pm.find(factory_maker.c_str());
 	    if (!plugin) {
-		std::cerr << "No plugin for " << classname << std::endl;
+		std::cerr << "NamedFactory: No plugin for " << classname << std::endl;
 		return nullptr;
 	    }
 
 	    typedef void* (*maker_function)();
 	    maker_function mf;
 	    if (!plugin->symbol(factory_maker.c_str(), mf)) {
-		std::cerr << "No factory maker symbol for " << classname << std::endl;
+		std::cerr << "NamedFactory: No factory maker symbol for " << classname << std::endl;
 		return nullptr;
 	    }
 
 	    void* fac_void_ptr = mf();
 
 	    if (!fac_void_ptr) {
-		std::cerr << "No factory for \"" << classname << "\"\n";
+		std::cerr << "NamedFactory: No factory for \"" << classname << "\"\n";
 		return nullptr;
 	    }
 
@@ -129,7 +129,7 @@ namespace WireCell {
 	interface_ptr instance(const std::string& classname, const std::string& instname = "", bool create=true) {
 	    factory_ptr fac = lookup_factory(classname);
 	    if (!fac) {
-		std::cerr << "No factory for class \"" << classname << "\"\n";
+		std::cerr << "NamedFactory: No factory for class \"" << classname << "\"\n";
 		return nullptr;
 	    }
 	    WireCell::Interface::pointer iptr;
@@ -140,12 +140,13 @@ namespace WireCell {
                 iptr = fac->find(instname);
             }
 	    if (!iptr) {
-		std::cerr << "Failed to create instance "<< instname <<" of class " << classname << std::endl;
+		std::cerr << "NamedFactory: Failed to create instance "<< instname <<" of class " << classname << std::endl;
 		return nullptr;
 	    }
 	    interface_ptr uptype = std::dynamic_pointer_cast<interface_type>(iptr);
 	    if (!uptype) {
-		std::cerr << "Failed to cast "<< instname <<" of class " << classname
+		std::cerr << "NamedFactory: Failed to cast instance: \""<< instname <<"\" of class " << classname
+                          << " (c++ type: " << type(iptr) << ") "
 			  << " to " << type(uptype) << std::endl;
 	    }
 	    return uptype;
