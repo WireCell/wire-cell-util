@@ -422,9 +422,12 @@ Response::SimpleRC::~SimpleRC()
 }
 double Response::SimpleRC::operator()(double time) const
 {
-    double ret = -_tick/_width * exp(-(time-_offset)/_width); // _tick here is to make this RC response integrated in each bin
+    double ret = 0;
+    if (_width > 0){
+        ret += -_tick/_width * exp(-(time-_offset)/_width); // _tick here is to make this RC response integrated in each bin
+    }
     if (time < _offset + _tick) {	// just the first bin 
-	ret += 1.0;		// delta function
+       ret += 1.0;		// delta function
         //std::cerr<<"delta"<<std::endl;
     }
     return ret;
