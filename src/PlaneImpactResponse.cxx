@@ -11,7 +11,7 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
                                          int plane_ident,
                                          Binning tbins,
                                          double preamp_gain, double preamp_peaking,
-                                         double postamp_gain)
+                                         double postamp_gain, double rc_constant)
     : m_fr(fr)
     , m_plane_ident(plane_ident)
     , m_tbins(tbins)
@@ -28,7 +28,7 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
     if (preamp_gain > 0.0) {
         Response::ColdElec ce(preamp_gain, preamp_peaking);
         //std::cerr<<"<<<<<<<<<<RC"<<std::endl;
-        Response::SimpleRC rc; // using default paramters now
+        Response::SimpleRC rc(rc_constant, tbins.binsize());
         auto rcwave = rc.generate(tbins);
         //std::cerr<<"1st tbins: "<<tbins.center(0)/units::us<<std::endl;
         //std::cerr<<"Number tbins: "<<tbins.nbins()<<std::endl;

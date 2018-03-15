@@ -194,7 +194,7 @@ namespace WireCell {
 	    // circuit where a unit of charge is placed on the cap at
 	    // time offset and circuit has RC time constant of given
 	    // width.  Time is in WCT system of units.
-	    SimpleRC(double width=1.0*units::ms, double tick=0.5*units::microsecond, double offset=0.0);
+	    SimpleRC(double width=1.0*units::ms, double tick=0.5*units::us, double offset=0.0);
 	    virtual ~SimpleRC();
 
 	    // Return the response at a given time.  Time in WCT

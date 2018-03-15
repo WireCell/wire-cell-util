@@ -49,7 +49,7 @@ namespace WireCell {
 	PlaneImpactResponse(const Response::Schema::FieldResponse& fr, int plane_ident,
                             Binning tbins, // fixme, only needs tick+nbins
 			    double preamp_gain=0.0, double preamp_peaking=0.0*units::us,
-                            double postamp_gain=1.0);
+                            double postamp_gain=1.0, double rc_constant=1.0*units::ms);
 	~PlaneImpactResponse();
 
 	std::pair<int,int> closest_wire_impact(double relpitch) const;
