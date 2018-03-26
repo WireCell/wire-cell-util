@@ -30,6 +30,7 @@ namespace WireCell {
 
 	/// Create an instance by name.
 	virtual Interface::pointer create(const std::string& name) = 0;
+        using IFactory::create;
 
         /// Return existing instance or nullptr if not found.
 	virtual Interface::pointer find(const std::string& name) = 0;
