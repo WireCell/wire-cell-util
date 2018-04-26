@@ -135,7 +135,7 @@ Json::Value WireCell::Persist::load(const std::string& filename,
     std::fstream fp(fname.c_str(), std::ios::binary|std::ios::in);
     boost::iostreams::filtering_stream<boost::iostreams::input> infilt;	
     if (ext == ".bz2" ) {
-	cerr << "loading compressed json file: " << fname <<"\n";
+	cerr << "WCT: loading compressed json file: " << fname <<"\n";
 	infilt.push(boost::iostreams::bzip2_decompressor());
     }
     infilt.push(fp);
