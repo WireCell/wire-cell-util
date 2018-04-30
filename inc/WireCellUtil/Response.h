@@ -140,6 +140,8 @@ namespace WireCell {
 	/// over each wire region.
 	Schema::FieldResponse wire_region_average(const Schema::FieldResponse& fr);
 
+	Schema::FieldResponse average_1D(const Schema::FieldResponse& fr);
+
         
         /// Return the plane's response as a 2D array.  This is a
         /// straight copy of the plane's current vectors into rows of
