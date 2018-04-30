@@ -281,6 +281,42 @@ Response::Schema::FieldResponse Response::wire_region_average(const Response::Sc
 
 
 
+Response::Schema::FieldResponse Response::average_1D(const Response::Schema::FieldResponse& fr)
+{
+  using namespace WireCell::Waveform;
+  using namespace WireCell::Response::Schema;
+
+  FieldResponse fr_wire_avg = Response::wire_region_average(fr);
+  
+  std::vector<PlaneResponse> newplanes;
+  for (auto plane : fr_wire_avg.planes) {
+    std::vector<PathResponse> newpaths;
+
+    int nsamples = Response::as_array(plane).cols();
+    
+    realseq_t ave_response(nsamples,0);
+    
+    for (auto path : plane.paths) {
+      // std::cout << nsamples << " " << path.current.size() << std::endl;
+      for (int k=0;k!=nsamples;k++){
+	ave_response.at(k) += path.current.at(k);
+      }
+    }
+
+    newpaths.push_back(PathResponse(ave_response,0.0,0.0));	 
+	
+    newplanes.push_back(PlaneResponse(newpaths,
+				      plane.planeid,
+				      plane.location,
+				      plane.pitch,
+				      plane.pitchdir,
+				      plane.wiredir));
+  }
+  return FieldResponse(newplanes, fr.axis, fr.origin, fr.tstart, fr.period, fr.speed);
+}
+
+
+
 Array::array_xxf Response::as_array(const Schema::PlaneResponse& pr)
 {
     int nrows = pr.paths.size();
@@ -300,6 +336,8 @@ Array::array_xxf Response::as_array(const Schema::PlaneResponse& pr)
 
 Response::Generator::~Generator()
 {
+
+  
 }
 
 // FIXME: eradicate Domain in favor of Binning
