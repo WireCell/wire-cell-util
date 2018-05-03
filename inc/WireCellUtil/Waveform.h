@@ -208,6 +208,23 @@ namespace WireCell {
 	compseq_t dft(realseq_t seq);
 	compseq_t dftd(realseq_t seq); // test up/down cast through doubles
 
+        // Linear convolution, returns in1.size()+in2.size()-1.  If
+        // truncate is false then the returned sequence will be
+        // truncated to length that of the first input.  Otherwise the
+        // function is symmetric between the two inputs.
+        realseq_t linear_convolve(Waveform::realseq_t in1,
+                                  Waveform::realseq_t in2,
+                                  bool truncate = true);
+
+        // Replace old response in wave with new response.  If
+        // truncate is false then the returned sequence will be the
+        // length required for linear convolution.  This is the sum of
+        // the sizes of all input less one and less the smallest.
+        realseq_t replace_convolve(Waveform::realseq_t wave,
+                                   Waveform::realseq_t newres,
+                                   Waveform::realseq_t oldres,
+                                   bool truncate = true);
+
 	/// Inverse, discrete Fourier transform.  Expects full
 	/// spectrum (twice Nyquist frequency).  Applies the
 	/// 1/Nsamples normalization.

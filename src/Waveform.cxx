@@ -223,6 +223,67 @@ Waveform::realseq_t WireCell::Waveform::idftd(compseq_t spec)
 
  
 
+// Linear convolution, returns in1.size()+in2.size()-1.
+Waveform::realseq_t WireCell::Waveform::linear_convolve(Waveform::realseq_t in1,
+                                                        Waveform::realseq_t in2,
+                                                        bool truncate)
+{
+    size_t n1_orig = in1.size(), n2_orig = in2.size();
+    size_t n_out = n1_orig + n2_orig - 1;
+
+    in1.resize(n_out, 0);
+    in2.resize(n_out, 0);
+
+    auto v1 = Eigen::Map<Eigen::VectorXf>(in1.data(), in1.size());
+    auto v2 = Eigen::Map<Eigen::VectorXf>(in2.data(), in2.size());
+
+    Eigen::FFT<Waveform::real_t> trans;
+
+    Eigen::VectorXcf s1 = trans.fwd(v1);
+    Eigen::VectorXcf s2 = trans.fwd(v2);
+    Eigen::VectorXcf s12 = (s1.array() * s2.array()).matrix();
+    Eigen::VectorXf vret;
+    trans.inv(vret, s12);
+    realseq_t ret(vret.data(), vret.data()+vret.size());
+    if (truncate) {
+        ret.resize(n1_orig);
+    }
+    return ret;
+}
+
+// Replace old response in wave with new response.  
+Waveform::realseq_t WireCell::Waveform::replace_convolve(Waveform::realseq_t wave,
+                                                         Waveform::realseq_t newres,
+                                                         Waveform::realseq_t oldres,
+                                                         bool truncate)
+{
+    size_t sizes[3] = {wave.size(), newres.size(), oldres.size()};
+    size_t n_out = sizes[0]+sizes[1]+sizes[2] - *std::min_element(sizes, sizes+3) - 1;
+
+    wave.resize(n_out, 0);
+    newres.resize(n_out, 0);
+    oldres.resize(n_out, 0);
+
+    auto v1 = Eigen::Map<Eigen::VectorXf>(wave.data(),     wave.size());
+    auto v2 = Eigen::Map<Eigen::VectorXf>(newres.data(), newres.size());
+    auto v3 = Eigen::Map<Eigen::VectorXf>(oldres.data(), oldres.size());
+
+    Eigen::FFT<Waveform::real_t> trans;
+
+    Eigen::VectorXcf s1 = trans.fwd(v1);
+    Eigen::VectorXcf s2 = trans.fwd(v2);
+    Eigen::VectorXcf s3 = trans.fwd(v3);
+
+    Eigen::VectorXcf s123 = (s1.array() * s2.array() / s3.array()).matrix();
+
+    Eigen::VectorXf vret;
+    trans.inv(vret, s123);
+    realseq_t ret(vret.data(), vret.data()+vret.size());
+    if (truncate) {
+        ret.resize(sizes[0]);
+    }
+    return ret;
+}
 
 
 WireCell::Waveform::BinRangeList
