@@ -43,7 +43,17 @@ int main()
              
         caught=true;
     }
-    Assert(caught);
+    AssertMsg(caught, "Failed to throw");
 
+    cerr << "Should not hear anything from this failed find_tn:\n";
+    std::shared_ptr<ISomeComponent> ptr
+        = WireCell::Factory::find_maybe_tn<ISomeComponent>("SomeConcrete:doesnotexist");
+    AssertMsg(ptr==nullptr, "Got non null for nonexistent named component");
+
+    cerr << "Success.\nNext, should the find should be successful:\n";
+    std::shared_ptr<ISomeComponent> ptr2
+        = WireCell::Factory::find_maybe_tn<ISomeComponent>("SomeConcrete");
+    cerr << (void*)ptr2.get() << endl;
+    AssertMsg(ptr2 != nullptr, "Got null for existing component");
 }
 
