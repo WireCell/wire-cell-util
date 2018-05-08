@@ -171,7 +171,7 @@ static void init_parser(jsonnet::Jsonnet& parser, const Persist::externalvars_t&
     }
     for (auto& vv : extvar) {
         //cerr << "extra var: \"" << vv.first << "\" = \"" << vv.second << "\"\n";
-        parser.bindExtVar(vv.first, vv.second);
+        parser.bindExtCodeVar(vv.first, vv.second);
     }
 }
 std::string WireCell::Persist::evaluate_jsonnet_file(const std::string& filename,
