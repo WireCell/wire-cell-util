@@ -44,6 +44,9 @@ namespace WireCell {
 
             \param maxwirepitch is the location in the pitch
             coordinate of the last (index nwires-1) wire.
+            \fix by Hanyu: the real implementation of max/minwirepitch is (nwires/2)*m_pitch
+            this is equivalent to an extend of the wire range by half pitch on both sides.
+            So nwires instead of nwires-1.
 
 	    \param wire is a Vector which sets the direction of the
 	    wires in the plane.  

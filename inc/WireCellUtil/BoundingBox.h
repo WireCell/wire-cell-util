@@ -10,6 +10,8 @@ namespace WireCell {
      */
     class BoundingBox {
 	Ray m_bounds;
+    bool initialized = false;
+        
     public:
 	
 	/// Return true if point is inside bounding box
@@ -18,12 +20,14 @@ namespace WireCell {
 	/// Return the ray representing the bounds.
 	const Ray& bounds() const { return m_bounds; }
 
-
-	/// Create a bounding box bounding an initial point.
+    /// Create a bounding box without an initial point or ray
+    BoundingBox(){ m_bounds = Ray();}
+	
+    /// Create a bounding box bounding an initial point.
 	BoundingBox(const Point& initial);
 
 	/// Create a bounding box bounding an initial ray.
-	BoundingBox(const Ray& initial = Ray());
+	BoundingBox(const Ray& initial);
 
 	/// Create a bounding box from an iterator pair.
 	template<typename RayOrPointIterator>

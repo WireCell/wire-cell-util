@@ -18,10 +18,11 @@ Pimpos::Pimpos(int nwires, double minwirepitch, double maxwirepitch,
 
     // binnings:
     const int nimpstot = nwires*nbins;
-    const double regionsize = (maxwirepitch-minwirepitch)/(nwires-1);
+    //const double regionsize = (maxwirepitch-minwirepitch)/(nwires-1);
+    const double regionsize = (maxwirepitch-minwirepitch)/(nwires); // fixed by Hanyu
     const double impsize = regionsize/nbins;
-    const double pmin = minwirepitch - 0.5*nbins*impsize;
-    const double pmax = maxwirepitch + 0.5*nbins*impsize;
+    const double pmin = minwirepitch;// - 0.5*nbins*impsize; fixed by Hanyu
+    const double pmax = maxwirepitch;// + 0.5*nbins*impsize;
     m_regionbins.set(nwires, pmin, pmax);
     m_impactbins.set(nimpstot, pmin, pmax);
 }
