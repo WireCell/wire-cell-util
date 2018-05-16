@@ -22,7 +22,7 @@ namespace instantiations {
 
 
 bool WireCell::ComparePoints::operator()(const WireCell::Point& lhs,
-					 const WireCell::Point& rhs)
+					 const WireCell::Point& rhs) const
 {
     double mag = (lhs-rhs).magnitude();
     if (mag < 1e-10) {

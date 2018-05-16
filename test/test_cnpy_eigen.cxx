@@ -5,7 +5,7 @@
 typedef Eigen::Array<short, Eigen::Dynamic, Eigen::Dynamic> ArrayXXs;
 
 const int Nchanc = 480;
-const int Nchani = 800;
+//const int Nchani = 800;
 const int Ntick = 2000;
 
 const char* out = "eigentest.npz";

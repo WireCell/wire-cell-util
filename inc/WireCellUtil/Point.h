@@ -35,7 +35,7 @@ namespace WireCell {
 
     /// Return true if lhs<rhs w/in tolerance.
     struct ComparePoints {
-	bool operator()(const Point& lhs, const Point& rhs);
+	bool operator()(const Point& lhs, const Point& rhs) const;
     };
     typedef std::set<Point, ComparePoints> PointSet;
 
