@@ -116,12 +116,6 @@ namespace WireCell {
 	 */
 	array_xxf deconv(const array_xxf& arr, const array_xxc& filter);
 
-
-#ifdef WCT_HACK_FOR_FFTW_NO_SP
-	array_xxc dftd(const array_xxf& arr);
-	array_xxf idftd(const array_xxc& arr);
-#endif
-
     }
 }
 

@@ -194,15 +194,6 @@ Waveform::compseq_t WireCell::Waveform::dft(realseq_t wave)
     return compseq_t(ret.data(), ret.data()+ret.size());
 }
 
-Waveform::compseq_t WireCell::Waveform::dftd(realseq_t wave)
-{
-    const Eigen::VectorXd vd = Eigen::Map<const Eigen::VectorXf>(wave.data(), wave.size()).cast<double>();
-    Eigen::FFT<double> transd;
-    const Eigen::VectorXcd retd = transd.fwd(vd);
-    const Eigen::VectorXcf ret = retd.cast< std::complex<float> >();
-    return compseq_t(ret.data(), ret.data()+ret.size());
-}
-
 Waveform::realseq_t WireCell::Waveform::idft(compseq_t spec)
 {
     Eigen::FFT<Waveform::real_t> trans;
@@ -211,17 +202,6 @@ Waveform::realseq_t WireCell::Waveform::idft(compseq_t spec)
     trans.inv(ret, v);
     return realseq_t(ret.data(), ret.data()+ret.size());
 }
-Waveform::realseq_t WireCell::Waveform::idftd(compseq_t spec)
-{
-    const Eigen::VectorXcd vcd = Eigen::Map<Eigen::VectorXcf>(spec.data(), spec.size()).cast< std::complex<double> >();
-    Eigen::FFT<double> transd;
-    Eigen::VectorXd retd;
-    transd.inv(retd, vcd);
-    const Eigen::VectorXf ret = retd.cast<float>();
-    return realseq_t(ret.data(), ret.data()+ret.size());
-}
-
- 
 
 // Linear convolution, returns in1.size()+in2.size()-1.
 Waveform::realseq_t WireCell::Waveform::linear_convolve(Waveform::realseq_t in1,

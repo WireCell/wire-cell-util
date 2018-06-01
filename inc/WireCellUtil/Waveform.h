@@ -206,7 +206,6 @@ namespace WireCell {
 	/// Discrete Fourier transform of real sequence.  Returns full
 	/// spectrum.  No normalization scaling applied
 	compseq_t dft(realseq_t seq);
-	compseq_t dftd(realseq_t seq); // test up/down cast through doubles
 
         // Linear convolution, returns in1.size()+in2.size()-1.  If
         // truncate is false then the returned sequence will be
@@ -229,8 +228,6 @@ namespace WireCell {
 	/// spectrum (twice Nyquist frequency).  Applies the
 	/// 1/Nsamples normalization.
 	realseq_t idft(compseq_t spec);
-	realseq_t idftd(compseq_t spec);
-
 
 	/// Return the smallest, most frequent value to appear in vector.
 	short most_frequent(const std::vector<short>& vals);
