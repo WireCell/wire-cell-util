@@ -1,5 +1,5 @@
 #ifndef WIRECELLTEST_UTILS
-#define WIRECELLTEST_Utils
+#define WIRECELLTEST_UTILS
 
 #include "TStyle.h"
 #include "TColor.h"

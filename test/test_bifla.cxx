@@ -22,7 +22,7 @@ struct EveryOther {
 	cerr << "Creating EveryOther starting at " << *it << " and " << *other << endl;
     }
     value_type operator()() {
-	value_type ret;
+        value_type ret = value_type();
 	if (*this) {
 	    ret = *it + *other;
 	    ++it;
