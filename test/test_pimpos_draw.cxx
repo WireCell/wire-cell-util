@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
                                  Vector(0,  cos(angle), -sin(angle)), // points Y>0, Z<0
                                  Vector(0, 1, 0)};
 
-    // Pitch direction points generally in +Z direction
+    // Pitch direction points generally in +Z direction (for "front" faces)
     std::vector<Vector> uvw_pitch{Vector(0, -sin(angle),  cos(angle)),
                                   Vector(0,  sin(angle),  cos(angle)),
                                   Vector(0, 0, 1)};
@@ -44,7 +44,6 @@ int main(int argc, char* argv[])
         pimpos.push_back(p);
 
         const double wpdot = uvw_wire[iplane].dot(uvw_pitch[iplane]);
-        cerr << wpdot << endl;
         Assert(std::abs(wpdot) < 1.0e-6);
 
     }
