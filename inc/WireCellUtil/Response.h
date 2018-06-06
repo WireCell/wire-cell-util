@@ -64,16 +64,9 @@ namespace WireCell {
 		/// The pitch distance between neighboring wires.
 		double pitch;
 
-		/// A normalized 3-vector giving direction of the wire pitch.
-		WireCell::Vector pitchdir;
-
-		/// A normalized 3-vector giving direction of the wire run.
-		WireCell::Vector wiredir;
-
                 PlaneResponse() : planeid(-1), location(0.0), pitch(0.0) {}
-		PlaneResponse(const std::vector<PathResponse>& paths, int pid, double l, double p,
-			      const WireCell::Vector& pdir, const WireCell::Vector& wdir)
-		    : paths(paths), planeid(pid), location(l), pitch(p), pitchdir(pdir), wiredir(wdir) {} 
+		PlaneResponse(const std::vector<PathResponse>& paths, int pid, double l, double p)
+		    : paths(paths), planeid(pid), location(l), pitch(p) {} 
 
                 ~PlaneResponse();
 	    };
@@ -128,10 +121,6 @@ namespace WireCell {
 	    FieldResponse load(const char* filename);
 	    void dump(const char* filename, const FieldResponse& fr);
 
-	    /// Affect a lie about the data by setting the orientation
-	    /// of the wires for the given plane.
-	    void lie(PlaneResponse& fr,
-		     const WireCell::Vector& pitchdir, const WireCell::Vector& wiredir);
 	}
 
 

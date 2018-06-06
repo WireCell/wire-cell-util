@@ -221,18 +221,8 @@ int main(int argc, const char* argv[])
     auto fr = Response::Schema::load(response_file.c_str());
     em("loaded");
 
-    // 1D garfield wires are all parallel
-    const double angle = 60*units::degree;
-    Vector upitch(0, -sin(angle),  cos(angle));
-    Vector uwire (0,  cos(angle),  sin(angle));
-    Vector vpitch(0,  cos(angle),  sin(angle));
-    Vector vwire (0, -sin(angle),  cos(angle));
-    Response::Schema::lie(fr.planes[0], upitch, uwire);
-    Response::Schema::lie(fr.planes[1], vpitch, vwire);
-
-
     for (int iplane=0; iplane<3; ++iplane) {
-//        test_stuff(fr, iplane);
+        test_stuff(fr, iplane);
     }
 
     const int ntbins = 10000;

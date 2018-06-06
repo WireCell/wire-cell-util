@@ -29,7 +29,7 @@ Response::Schema::PathResponse::~PathResponse()
  ['origin', 'axis', 'period', 'tstart', 'planes']
 
  frdict['FieldResponse']['planes'][0]['PlaneResponse'].keys()
- ['paths', 'planeid', 'pitchdir', 'wiredir', 'pitch']
+ ['paths', 'planeid', 'pitch']
 
  frdict['FieldResponse']['planes'][0]['PlaneResponse']['paths'][0]['PathResponse'].keys()
  ['current', 'wirepos', 'pitchpos']
@@ -40,7 +40,6 @@ Response::Schema::PathResponse::~PathResponse()
  */
 WireCell::Response::Schema::FieldResponse WireCell::Response::Schema::load(const char* filename)
 {
-    //WireCell::ExecMon em("load");
     if (!filename) {
         std::cerr << "Response::Schema::load(): empty field response file name\n";
         return FieldResponse();
@@ -55,10 +54,8 @@ WireCell::Response::Schema::FieldResponse WireCell::Response::Schema::load(const
     using namespace WireCell::Response::Schema;
 
     std::vector<PlaneResponse> planes;
-    
-    //em("start conversion");
     for (auto plane : fr["planes"]) {
-	//em("start plane");
+
 	auto plr = plane["PlaneResponse"];
 
 	std::vector<PathResponse> paths;
@@ -70,37 +67,16 @@ WireCell::Response::Schema::FieldResponse WireCell::Response::Schema::load(const
 	    }
 	    auto wcpath = PathResponse(current, par["pitchpos"].asDouble(), par["wirepos"].asDouble());
 	    paths.push_back(wcpath);
-	    //std::cerr << "\tpath:" << wcpath.pitchpos << std::endl;
 	}
 
-	auto pdir = plr["pitchdir"];
-	auto pitchdir = WireCell::Vector(pdir[0].asDouble(),pdir[1].asDouble(),pdir[2].asDouble());
-	
-	auto wdir = plr["wiredir"];
-	auto wiredir = WireCell::Vector(wdir[0].asDouble(),wdir[1].asDouble(),wdir[2].asDouble());
-
-	// std::cerr << "PLANE: " << plr["planeid"]
-	// 	  << " pitchdir" << plr["pitchdir"]
-	// 	  << " wiredir" << plr["wiredir"]
-	// 	  << std::endl;
-
-
-	//em("finish plane");
 	PlaneResponse wcplr(paths,
                             plr["planeid"].asInt(),
                             plr["location"].asDouble(),
-                            plr["pitch"].asDouble(),
-                            pitchdir, wiredir);
+                            plr["pitch"].asDouble());
+
 	planes.push_back(wcplr);
-	//em("make PlaneResponse");
-	// std::cerr << "plane #" << wcplr.planeid
-	// 	  << ": #paths=" << paths.size() << " from " << plr["paths"].size()
-	// 	  << " pitchdir=" << wcplr.pitchdir << std::endl;
     }
     
-    
-    //em("done loop");
-
     auto adir = fr["axis"];
     auto axis = WireCell::Vector(adir[0].asDouble(),adir[1].asDouble(),adir[2].asDouble());
     auto ret = FieldResponse(planes, axis,
@@ -108,8 +84,6 @@ WireCell::Response::Schema::FieldResponse WireCell::Response::Schema::load(const
                              fr["tstart"].asDouble(),
                              fr["period"].asDouble(),
                              fr["speed"].asDouble());
-    //em("returning");
-    //std::cerr << em.summary() << std::endl;
     return ret;
 }
 
@@ -118,21 +92,6 @@ WireCell::Response::Schema::FieldResponse WireCell::Response::Schema::load(const
 void Response::Schema::dump(const char* filename, const Response::Schema::FieldResponse& fr)
 
 {
-}
-
-
-void Response::Schema::lie(PlaneResponse& pr,
-			   const WireCell::Vector& pitchdir,
-			   const WireCell::Vector& wiredir)
-{
-    double dot = pitchdir.dot(wiredir);
-    if (std::fabs(dot) > 0.00001) {
-	std::cerr << "At least make your lies orthogonal." << std::endl;
-	return;
-    }
-
-    pr.pitchdir = pitchdir;
-    pr.wiredir = wiredir;
 }
 
 
@@ -245,15 +204,6 @@ Response::Schema::FieldResponse Response::wire_region_average(const Response::Sc
 	  }
 	}
 	
-
-	
-		
-
-	  // realseq_t& response = avgs[region];
-	  // for (int ind=0; ind<nsamples; ++ind) {
-	  //   response[ind] += path.current[ind];
-	  // }
-	 
 	
 	// do average.
 	for (auto it : avgs) {
@@ -264,7 +214,6 @@ Response::Schema::FieldResponse Response::wire_region_average(const Response::Sc
 	  for (int k=0;k!=nsamples;k++){
 	    sum += response.at(k);
 	  }
-	  //std::cout << plane.planeid << " " << sum*0.1*units::microsecond << std::endl;
 	  
 	  // pack up everything for return.
 	  newpaths.push_back(PathResponse(response, region*pitch, 0.0));
@@ -272,9 +221,7 @@ Response::Schema::FieldResponse Response::wire_region_average(const Response::Sc
 	newplanes.push_back(PlaneResponse(newpaths,
                                           plane.planeid,
                                           plane.location,
-                                          plane.pitch,
-                                          plane.pitchdir,
-                                          plane.wiredir));
+                                          plane.pitch));
     }
     return FieldResponse(newplanes, fr.axis, fr.origin, fr.tstart, fr.period, fr.speed);
 }
@@ -297,7 +244,6 @@ Response::Schema::FieldResponse Response::average_1D(const Response::Schema::Fie
     realseq_t ave_response(nsamples,0);
     
     for (auto path : plane.paths) {
-      // std::cout << nsamples << " " << path.current.size() << std::endl;
       for (int k=0;k!=nsamples;k++){
 	ave_response.at(k) += path.current.at(k);
       }
@@ -308,9 +254,7 @@ Response::Schema::FieldResponse Response::average_1D(const Response::Schema::Fie
     newplanes.push_back(PlaneResponse(newpaths,
 				      plane.planeid,
 				      plane.location,
-				      plane.pitch,
-				      plane.pitchdir,
-				      plane.wiredir));
+				      plane.pitch));
   }
   return FieldResponse(newplanes, fr.axis, fr.origin, fr.tstart, fr.period, fr.speed);
 }
@@ -466,7 +410,6 @@ double Response::SimpleRC::operator()(double time) const
     }
     if (time < _offset + _tick) {	// just the first bin 
        ret += 1.0;		// delta function
-        //std::cerr<<"delta"<<std::endl;
     }
     return ret;
 }
