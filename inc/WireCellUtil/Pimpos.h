@@ -43,27 +43,30 @@ namespace WireCell {
             coordinate of the first (zero index) wire.
 
             \param maxwirepitch is the location in the pitch
-            coordinate of the last (index nwires-1) wire.
-            \fix by Hanyu: the real implementation of max/minwirepitch is (nwires/2)*m_pitch
-            this is equivalent to an extend of the wire range by half pitch on both sides.
-            So nwires instead of nwires-1.
+            coordinate of the last wire (ie, index=nwires-1).
 
 	    \param wire is a Vector which sets the direction of the
-	    wires in the plane.  
+	    wires in the plane.  If the underlying wires are not
+	    exactly parallel, this should be some representative
+	    average wire direction.
 
 	    \param pitch is a Vector which sets the direction and of
-            the pitch of the wires in the plane.  Nominal anti-drift
-            direction is thus (wire X pitch).
+            the pitch of the wires in the plane.  The pitch should be
+            such that the cross product, wire (x) pitch, points in the
+            anti-drift direction for the region this plane services.
+            If the underlying wires are not exactly parallel, this
+            pitcvector should be some representative average pitch
+            direction.
 
-	    \param origin is a Point which sets an origin of the pitch
-	    coordinate.  Ie, the vector sum of the origin and pitch
-	    vectors is at Pitch = 1.0 (assuming pitch is a unit
-	    vector).
+	    \param origin is a Point which sets an origin for all
+	    transforms.  In particular, the projection of this origin
+	    point along the drift direction to the plane of wires sets
+	    the origin for the pitch coordinate.
 
-	    \param nbins gives the number of of bins covering one wire
-	    region.
+	    \param nbins gives the number of of impact bins covering
+	    one wire region.
 
-	    The pitch range extremes and the origin must be expressed
+	    The pitch extents and the origin vector must be expressed
 	    in the WCT system of (length) units.
 	 */
 	Pimpos(int nwires, double minwirepitch, double maxwirepitch,

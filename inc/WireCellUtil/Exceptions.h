@@ -28,7 +28,9 @@
 namespace WireCell {
 
     /// The base wire cell exception.
-    struct Exception : virtual public std::exception , virtual boost::exception { };
+    struct Exception : virtual public std::exception , virtual boost::exception {
+        char const *what() const throw() { return diagnostic_information_what(*this); }
+    };
 
 
     /// Thrown when a wrong value has been encountered.

@@ -8,19 +8,28 @@ Pimpos::Pimpos(int nwires, double minwirepitch, double maxwirepitch,
                const Vector& wire,
                const Vector& pitch,
                const Point& origin,
-	       int nbins)
+	       int nbins)       // default=10
     : m_nimpbins_per_wire(nbins)
     , m_origin(origin)
     , m_axis{Vector(0,0,0), wire.norm(), pitch.norm()}
 {
-    // drift = wire X pitch = Y cross Z
+    // drift = X = wire (x) pitch = Y cross Z
     m_axis[0] = m_axis[1].cross(m_axis[2]);
 
-    // binnings:
+    // total number of impact bins:
     const int nimpstot = nwires*nbins;
-    const double pmin = minwirepitch;
-    const double pmax = maxwirepitch;
+
+    // total pitch span from first to last wire
+    const double regionsize = (maxwirepitch-minwirepitch)/(nwires-1);
+
+    // expand by 1/2 pitch on either end to get total sensitive span in pitch direction
+    const double pmin = minwirepitch - 0.5*regionsize;
+    const double pmax = maxwirepitch + 0.5*regionsize;
+
+    // Wire binning.  Wires are at bin center.
     m_regionbins.set(nwires, pmin, pmax);
+
+    // Impact binning.  Impact *positions* are bin-edges.
     m_impactbins.set(nimpstot, pmin, pmax);
 }
 
