@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     // protoDUNE
     const double pitch = 5*units::mm; 
     const double angle = 35.707*units::degree;
-    const double wire_extent = (21/2)*pitch; // integer div
+    const double wire_extent = pitch * 0.5 * (nwiresperplane - 1);
 
     std::vector<Vector> uvw_wire{Vector(0,  cos(angle),  sin(angle)), // points Y>0, Z>0
                                  Vector(0,  cos(angle), -sin(angle)), // points Y>0, Z<0

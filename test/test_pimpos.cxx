@@ -20,7 +20,7 @@ int main()
 {
     const double pitch_dist = 3*units::mm;
     const int nwires = 2001;
-    const double halfwireextent = pitch_dist * (nwires/2); // integer division
+    const double halfwireextent = pitch_dist * 0.5 * (nwires - 1);
     cerr << "Wires at extremes +/- " << halfwireextent/units::mm << "mm\n";
     Pimpos pimpos(nwires, -halfwireextent, halfwireextent);
 
