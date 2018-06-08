@@ -149,7 +149,21 @@ Store WireCell::WireSchema::load(const char* filename)
 // }
 
 
+Store::Store() : m_db(nullptr) {}
+
 Store::Store(StoreDBPtr db) : m_db(db) { }
+
+Store::Store(const Store& other)
+    : m_db(other.db())
+{
+}
+Store& Store::operator=(const Store& other)
+{
+    m_db = other.db();
+    return *this;
+}
+
+
 StoreDBPtr Store::db() const { return m_db; }
 
 const std::vector<Detector>& Store::detectors() const { return m_db->detectors; }

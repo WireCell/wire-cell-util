@@ -62,7 +62,12 @@ namespace WireCell {
         class Store {
             StoreDBPtr m_db;
         public:
+            Store();            // underlying store will be null!
             Store(StoreDBPtr db);
+            Store(const Store& other); // copy ctro
+            Store& operator=(const Store& other);
+
+            // Access underlying data store as shared pointer.
             StoreDBPtr db() const;
 
             const std::vector<Detector>& detectors() const;

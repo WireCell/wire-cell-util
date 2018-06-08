@@ -8,6 +8,8 @@ using namespace WireCell;
 
 void test_read(const char* filename)
 {
+    /// BIG FAT NOTE: don't directly load() from user code.  Use
+    /// IWireSchema component named WireSchemaFile instead.
     cerr << "Loading twice, should read but once\n";
     auto store1 = WireSchema::load(filename);
     auto store2 = WireSchema::load(filename);
