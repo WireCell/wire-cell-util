@@ -126,4 +126,11 @@ namespace WireCell {
 
 }  // WireCell
 
+inline
+std::ostream& operator<<(std::ostream& os, const WireCell::Binning& bins)
+{
+    os << bins.nbins() << "@["  << bins.min() << "," << bins.max() << "]";
+    return os;
+}
+
 #endif /* WIRECELLUTIL_BINNING_H */
