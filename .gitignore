@@ -5,3 +5,8 @@ cut
 *.orig
 *.root
 *.pyc
+*_run.py
+*.json
+*.json.bz2
+*.npz
+*.bin
