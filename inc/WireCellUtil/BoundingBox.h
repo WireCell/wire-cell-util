@@ -10,7 +10,7 @@ namespace WireCell {
      */
     class BoundingBox {
 	Ray m_bounds;
-    bool initialized = false;
+        bool m_initialized = false;
         
     public:
 	
@@ -46,7 +46,7 @@ namespace WireCell {
 	    for (auto it = begin; it != end; ++it) { (*this)(*it); }
 	}
 
-
+        bool empty() const { return !m_initialized; }
     };
 
     
