@@ -17,8 +17,6 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
     , m_tbins(tbins)
     , m_half_extent(0.0), m_pitch(0.0), m_impact(0.0)
 {
-    auto& pr = plane_response();
-
     //cerr << "PIR: " << plane_ident << " gain=" << preamp_gain/(units::mV/units::fC) << " mV/fC "
     //     << "tbins=[" << tbins.min() << ","<<tbins.max() <<"]/" << tbins.binsize() /units::us << "us\n";
 
@@ -40,9 +38,7 @@ PlaneImpactResponse::PlaneImpactResponse(const Response::Schema::FieldResponse& 
     }
 
 
-
-
-    
+    auto& pr = plane_response();
     const int npaths = pr.paths.size();
 
     // FIXME HUGE ASSUMPTIONS ABOUT ORGANIZATION OF UNDERLYING
