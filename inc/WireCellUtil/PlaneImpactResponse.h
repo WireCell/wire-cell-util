@@ -1,5 +1,5 @@
-#ifndef WIRECELLGEN_PLANEIMPACTRESPONSE
-#define WIRECELLGEN_PLANEIMPACTRESPONSE
+#ifndef WIRECELLUTIL_PLANEIMPACTRESPONSE
+#define WIRECELLUTIL_PLANEIMPACTRESPONSE
 
 #include "WireCellUtil/Response.h"
 #include "WireCellUtil/Waveform.h"
@@ -46,10 +46,13 @@ namespace WireCell {
 
             Fixme: field response should be provided by a component.
          */
-	PlaneImpactResponse(const Response::Schema::FieldResponse& fr, int plane_ident,
+	PlaneImpactResponse(const Response::Schema::FieldResponse& fr,
+                            int plane_ident,
                             Binning tbins, // fixme, only needs tick+nbins
-			    double preamp_gain=0.0, double preamp_peaking=0.0*units::us,
-                            double postamp_gain=1.0, double rc_constant=1.0*units::ms);
+			    double preamp_gain=0.0,
+                            double preamp_peaking=0.0*units::us,
+                            double postamp_gain=1.0,
+                            double rc_constant=1.0*units::ms);
 	~PlaneImpactResponse();
 
 	std::pair<int,int> closest_wire_impact(double relpitch) const;
@@ -70,11 +73,6 @@ namespace WireCell {
 	typedef std::pair<const ImpactResponse*,const ImpactResponse*> TwoImpactResponses;
 	TwoImpactResponses bounded(double relpitch) const;
 
-	typedef std::vector<int> region_indices_t;
-	typedef std::vector<region_indices_t> wire_region_indicies_t;
-
-	const wire_region_indicies_t& bywire_map() const { return m_bywire; }
-
 	const Response::Schema::FieldResponse& field_response() const { return m_fr; }
 	const Response::Schema::PlaneResponse& plane_response() const;
 
@@ -83,9 +81,15 @@ namespace WireCell {
 	double impact() const { return m_impact; }
 
 	int nwires() const { return m_bywire.size(); }
-	int nimp_per_wire() const { return m_bywire[0].size(); }
 
         Binning tbins() const { return m_tbins; }
+
+        /// Maybe not in the interface
+	int nimp_per_wire() const { return m_bywire[0].size(); }
+	typedef std::vector<int> region_indices_t;
+	typedef std::vector<region_indices_t> wire_region_indicies_t;
+	const wire_region_indicies_t& bywire_map() const { return m_bywire; }
+
 
     private:
 	const Response::Schema::FieldResponse& m_fr;
