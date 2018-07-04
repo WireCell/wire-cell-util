@@ -1,3 +1,4 @@
+#include <vector>
 #ifndef WIRECELL_NAMEDFACTORY_H
 #define WIRECELL_NAMEDFACTORY_H
 
@@ -12,7 +13,7 @@
 #include <iostream>
 #include <exception>
 #include <string>
-#include <vector>
+#include <set>
 
 namespace WireCell {
 
@@ -72,6 +73,13 @@ namespace WireCell {
 	typedef std::shared_ptr<IType> interface_ptr;
 	typedef WireCell::INamedFactory* factory_ptr;
 	typedef std::unordered_map<std::string, factory_ptr> factory_lookup;
+        typedef std::set<std::string> known_type_set;
+
+        size_t hello(const std::string& classname) {
+            m_known_types.insert(classname);
+            return m_known_types.size();
+        }
+        known_type_set known_types() const { return m_known_types; }
 
 	/// Register an existing factory by the "class" name of the instance it can create.
 	bool associate(const std::string& classname, factory_ptr factory) {
@@ -182,6 +190,7 @@ namespace WireCell {
 
     private:
 	factory_lookup m_lookup;
+        known_type_set m_known_types;
     };    
 
     /// Singleton interface
@@ -265,6 +274,14 @@ namespace WireCell {
 		nfr = WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance();
 	    return nfr.known_classes();
 	}
+	template<class IType>
+	std::vector<std::string> known_types() {
+	    NamedFactoryRegistry<IType>&
+		nfr = WireCell::Singleton< NamedFactoryRegistry<IType> >::Instance();
+            auto ktset = nfr.known_types();
+            std::vector<std::string> ret(ktset.begin(), ktset.end());
+            return ret;
+	}
     }
 
 } // namespace WireCell
@@ -288,7 +305,17 @@ void* make_named_factory_factory(std::string name) {
 }
 
 
+template<class Concrete, class... Interface>
+size_t namedfactory_hello(std::string name)
+{
+    std::vector<size_t> ret{WireCell::Singleton< WireCell::NamedFactoryRegistry<Interface> >::Instance().hello(name)...};
+    return ret.size();
+}
+
+
+
 #define WIRECELL_FACTORY(NAME, CONCRETE,...)				\
+    static size_t hello_##NAME##_me = namedfactory_hello< CONCRETE , __VA_ARGS__ >(#NAME); \
     extern "C" { void* make_##NAME##_factory() {			\
 	return make_named_factory_factory< CONCRETE , __VA_ARGS__ >(#NAME); \
     }}
