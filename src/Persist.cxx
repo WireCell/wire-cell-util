@@ -227,7 +227,6 @@ WireCell::Persist::Parser::Parser(const std::vector<std::string>& load_paths,
     for (auto path : load_paths) {
         m_jsonnet.addImportPath(path);
         m_load_paths.push_back(boost::filesystem::path(path));
-
     }
     for (auto path : get_path()) {
         m_jsonnet.addImportPath(path);
@@ -278,7 +277,7 @@ Json::Value WireCell::Persist::Parser::load(const std::string& filename)
     }
     string ext = file_extension(filename);
 
-    if (ext == ".jsonnet") {    // use libjsonnet++ file interface
+    if (ext == ".jsonnet" or ext.empty()) {    // use libjsonnet++ file interface
         std::string output;
         const bool ok = m_jsonnet.evaluateFile(fname, &output);
         if (!ok) {
