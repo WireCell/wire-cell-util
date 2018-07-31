@@ -32,8 +32,21 @@ bool WireCell::BoundingBox::inside(const Point& point) const
         return false;
     }
     for (int ind=0; ind<3; ++ind) {
-	if (point[ind] < m_bounds.first[ind]) return false;
-	if (point[ind] > m_bounds.second[ind]) return false;
+        const double p = point[ind];
+        const double b1 = m_bounds.first[ind];
+        const double b2 = m_bounds.second[ind];
+
+        if (b1 < b2) {
+            if (p<b1 or p>b2) return false;
+            continue;
+        }
+        if (b2 < b1) {
+            if (p<b2 or p>b1) return false;
+            continue;
+        }
+
+        // if equal, then zero width dimension, don't test.
+        continue;
     }
     return true;
 }
