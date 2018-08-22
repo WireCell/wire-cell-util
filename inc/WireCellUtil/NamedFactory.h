@@ -249,6 +249,13 @@ namespace WireCell {
         /// Lookup an interface by a type:name pair.
         template<class IType>
 	std::shared_ptr<IType> lookup_tn(const std::string& tn, bool create=true, bool nullok=false) {
+            if (tn.empty()) {
+                if (nullok) {
+                    return nullptr;
+                }
+                THROW(FactoryException() << errmsg{"Empty type:name string"});
+            }
+
             std::string t, n;
             std::tie(t,n) = String::parse_pair(tn);
             return lookup<IType>(t, n, create, nullok);
