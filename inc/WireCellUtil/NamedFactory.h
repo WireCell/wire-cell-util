@@ -146,18 +146,21 @@ namespace WireCell {
                 THROW(FactoryException() << errmsg{"No factory for class " + classname}); 
 	    }
 	    WireCell::Interface::pointer iptr;
+            std::string action = "";
             if (create) {
                 iptr = fac->create(instname);
+                action = "create";
             }
             else {
                 iptr = fac->find(instname);
+                action = "find";
             }
 	    if (!iptr) {
                 if (nullok) {
                     return nullptr;
                 }
-                std::string msg = "NamedFactory: Failed to create instance " + instname;
-                msg += " of class " + classname;
+                std::string msg = "NamedFactory: Failed to "+action+" instance \"" + instname;
+                msg += "\" of class \"" + classname + "\"";
 		std::cerr << msg << std::endl;
                 THROW(FactoryException() << errmsg{msg}); 
 	    }
