@@ -164,15 +164,18 @@ int main()
 
 	// Some popular choices with powers-of-two sprinkled in
 	std::vector<int> nsampleslist{128, 256,
-		400,480,	// DUNE U/V and W channels per plane
+		400,480,	// protoDUNE U/V and W channels per plane
 		512,
-		800,		// DUNE, sum of U or V channels for both faces
-		960,
-		1024,2048,
+		800,		// protoDUNE, sum of U or V channels for both faces
+		960,            // protoDUNE, sum of W channels (or wires) for both faces
+		1024,
+                1148,           // N wires in U/V plane for protodune
+                2048,
 		2400, 		// number of channels in U or V in microboone
 		2560,		// DUNE, total APA channels
 		3456, 		// number of channels in microboone's W
 		4096,
+                6000,           // one choice of nticks for protoDUNE
 		8192,
 		8256,		// total microboone channels
 		9592,9594,9595,9600,	// various microboone readout lengths
@@ -204,7 +207,7 @@ int main()
 	    }
 	    rev_time /= ntries;
 	    
-	    cerr << "DFT nsampels=" << nsamps 
+	    cerr << "DFT nsamples=" << nsamps 
 		 << "\n\tforward: " << fwd_time/1000.0 << " us, " << fwd_time/nsamps/1000.0 << " us/sample"
 		 << "\n\treverse: " << rev_time/1000.0 << " us, " << rev_time/nsamps/1000.0 << " us/sample"
 		 << "\n\taverage: " << 0.5*(fwd_time+rev_time)/1000.0 << " us"
