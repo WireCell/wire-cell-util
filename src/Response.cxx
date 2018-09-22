@@ -260,6 +260,27 @@ Response::Schema::FieldResponse Response::average_1D(const Response::Schema::Fie
 }
 
 
+Array::array_xxf Response::as_array(const Schema::PlaneResponse& pr, int set_nrows, int set_ncols)
+{
+    int nrows = pr.paths.size();
+    int ncols = pr.paths[0].current.size();
+    Array::array_xxf ret= Array::array_xxf::Zero(set_nrows, set_ncols); // warning, uninitialized
+
+    if (set_nrows< nrows || set_ncols < ncols){
+      std::cerr << "Response --> Array dimension not correct! " << std::endl;
+    }
+    
+    for (int irow = 0; irow < nrows; ++irow) {
+      if (irow < set_nrows){
+        auto& path = pr.paths[irow];
+        for (int icol = 0; icol < ncols; ++icol) {
+	  if (icol < set_ncols)
+	    ret(irow,icol) = path.current[icol]; // maybe there is a fast way to do this copy?
+        }
+      }
+    }
+    return ret;        
+}
 
 Array::array_xxf Response::as_array(const Schema::PlaneResponse& pr)
 {

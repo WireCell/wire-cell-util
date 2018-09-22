@@ -140,6 +140,7 @@ namespace WireCell {
         /// The plane response input data is taken at face value an
         /// not attempt to resolve any implicit symmetries is made.
         Array::array_xxf as_array(const Schema::PlaneResponse& pr);
+	Array::array_xxf as_array(const Schema::PlaneResponse& pr, int set_nrows, int set_ncols);
 
 	/// The cold electronics response function.
 	double coldelec(double time, double gain=7.8, double shaping=1.0*units::us);
