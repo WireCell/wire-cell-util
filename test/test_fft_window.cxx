@@ -6,7 +6,7 @@
 using namespace WireCell;
 
 int main(int argc, char** argv){
-    std::vector<std::size_t> lengths{ 128, 256,
+    std::vector<std::size_t> lengths{ 2, 4, 8, 16, 32, 64, 128, 256,
             400,480,	// protoDUNE U/V and W channels per plane
             512,
             800,		// protoDUNE, sum of U or V channels for both faces
