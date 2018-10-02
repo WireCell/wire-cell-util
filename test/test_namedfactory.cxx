@@ -19,7 +19,7 @@ public:
     virtual void chirp() { cout << "SomeConcrete::chirp() at " << (void*)this << endl; }
 };
 
-WIRECELL_FACTORY(SomeConcrete, SomeConcrete, ISomeComponent);
+WIRECELL_FACTORY(SomeConcrete, SomeConcrete, ISomeComponent)
 
 
 int main()

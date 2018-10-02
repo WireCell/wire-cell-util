@@ -10,14 +10,12 @@ using namespace WireCell;
 // flag = 1, if the window_length is odd, the returned value will be odd
 //           if the window_length is even, the returned value will be even
 
-int WireCell::cal_fft_best_length(int window_length, int flag){
-  if (window_length <=0) {
-    std::cerr << "FFT window length is smaller than zero! " << std::endl;
-    return -1;
-  }
+std::size_t WireCell::fft_best_length(std::size_t window_length,
+                                      bool keep_odd_even)
+{
 
-  std::vector<int> edges;
-  if (flag == 0){
+  std::vector<std::size_t> edges;
+  if (!keep_odd_even) {
     edges += 33, 35, 40, 42, 44, 56, 64, 66, 70, 77, 80, 96, 98, 100, 112, 121, 128, 140, 143, 160, 168, 169, 200, 224, 256, 280, 320, 400, 448, 512, 560, 640, 686, 768, 800, 847, 896, 1024, 1120, 1280, 1331, 1372, 1400, 1536, 1600, 1792, 2048, 2560, 2662, 2744, 3200, 4096, 4116, 4480, 4802, 5120, 5324, 5376, 5544, 5600, 5632, 5929, 6174, 6272, 6292, 6655, 7168, 7840, 8192, 8232, 8960, 9317, 10240, 10648, 11979, 14336, 15972, 16384; 
   }else{
     if (window_length%2==0){
@@ -39,6 +37,5 @@ int WireCell::cal_fft_best_length(int window_length, int flag){
     }
   }
   
-  std::cerr << "FFT window length is not good! " << std::endl; 
-  return -1;
+  return window_length;
 }

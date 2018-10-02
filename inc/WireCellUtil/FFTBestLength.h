@@ -1,8 +1,12 @@
 #ifndef WIRECELLUTIL_FFTBESTLENGTH_H
 #define WIRECELLUTIL_FFTBESTLENGTH_H
 
+#include <cstddef>
+
 namespace WireCell{
-  int cal_fft_best_length(int window_length, int flag=0);
+    // Return suggested number of samples for performing an FFT which
+    // should have no worse performance than the input nsamples.
+    std::size_t fft_best_length(size_t nsamples, bool keep_odd_even=false);
 }
 
 
