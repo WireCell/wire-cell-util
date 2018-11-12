@@ -436,6 +436,31 @@ double Response::SimpleRC::operator()(double time) const
 }
 
 
+// Vary field response to study systematics 
+// Currently a Gaussian function
+Response::SysResp::SysResp(double tick, double magnitude, double smear, double offset)
+  : _tick(tick), _mag(magnitude), _smear(smear), _offset(offset)
+{
+}
+Response::SysResp::~SysResp()
+{
+}
+double Response::SysResp::operator()(double time) const
+{
+    double ret = 0;
+    if(_smear > 0){
+        ret = _tick*exp(-0.5*pow((time-_offset)/_smear, 2))/_smear*0.3989422804;
+    }
+    else if(time < _tick+_offset && time >=_offset){
+        ret +=1.0;
+    }
+    else{
+        ret = 0;
+    }
+    return ret*_mag;
+}
+
+
 Response::LfFilter::LfFilter(double tau)
   : _tau(tau)
 {

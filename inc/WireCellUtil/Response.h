@@ -196,6 +196,14 @@ namespace WireCell {
 
 	};
 
+    class SysResp : public Generator{
+      const double _tick, _mag, _smear, _offset;
+    public:
+      SysResp(double tick=0.5*units::us, double magnitude=1.0, double smear=0.0*units::us, double offset=0.0*units::us);
+      virtual ~SysResp();
+      virtual double operator()(double time) const;
+    };
+
 	class LfFilter : public Generator{
 	  const double _tau;
 	public:

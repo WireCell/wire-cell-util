@@ -31,6 +31,8 @@ void draw_time_freq(TCanvas& canvas,
                 tbins.nbins(), tbins.min()/units::us, tbins.max()/units::us);
     TH1F h_wave2("response2",title.c_str(),
                  tbins.nbins(), tbins.min()/units::us, tbins.max()/units::us);
+    cout<<"tbins.min()"<<tbins.min()<<endl;
+    cout<<"tbins.max()"<<tbins.max()<<endl;
     h_wave2.SetLineColor(2);
 
     h_wave.SetXTitle("Time (microsecond)");
@@ -151,6 +153,25 @@ int main()
 	
 	auto tit = "RC Response at 1ms time constant (suppress delta)";
 	draw_time_freq(canvas, res, tit, tbins);
+    }
+
+    // Look at SysResp (Gaussian smear)
+    {
+    Response::SysResp gaus;
+    Waveform::realseq_t res = gaus.generate(tbins);
+    auto tit = "Response Gaussian smear by default";
+    draw_time_freq(canvas, res, tit, tbins); 
+    }
+    {
+    double mag = 1.0;
+    double smear = 2.0*units::us;
+    double nsigma = 5;
+        Binning ttt(nsigma*2*smear/tick, -nsigma*smear, nsigma*smear); 
+        //Binning ttt(nsigma*2*smear/tick, 0, 2*nsigma*smear); 
+    Response::SysResp gaus(tick, mag, smear);
+    Waveform::realseq_t res = gaus.generate(ttt);
+    auto tit = "Response Gaussian 2 us smear";
+    draw_time_freq(canvas, res, tit, ttt); 
     }
 
 
