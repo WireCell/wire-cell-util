@@ -64,7 +64,7 @@ void tagrules::Context::configure(const Configuration& jcfg)
         return;
     }
 
-    const size_t nrss = jcfg.size();
+    const int nrss = jcfg.size();
 
     // Note: JSON is in name-major order, C++ index-major.
     for (int ind=0; ind<nrss; ++ind) {
