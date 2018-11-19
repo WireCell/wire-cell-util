@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
         cfg = Persist::loads(jtext);
     }
     if (argc > 2) {
-        for (size_t ind=2; ind<argc; ++ind) {
+        for (int ind=2; ind<argc; ++ind) {
             tags.insert(argv[ind]);
         }
     }
