@@ -1,14 +1,17 @@
 //Copyright (C) 2011  Carl Rogers
 //Released under MIT License
 //license available in LICENSE file, or at http://www.opensource.org/licenses/mit-license.php
+// "vendored" from https://github.com/rogersce/cnpy/commit/4e8810b1a8637695171ed346ce68f6984e585ef4
 
-#include "WireCellUtil/cnpy.h"
+#include"WireCellUtil/cnpy.h"
 #include<complex>
 #include<cstdlib>
 #include<algorithm>
 #include<cstring>
 #include<iomanip>
 #include<stdint.h>
+#include<stdexcept>
+#include <regex>
 
 char cnpy::BigEndianTest() {
     int x = 1;
@@ -64,7 +67,7 @@ void cnpy::parse_npy_header(unsigned char* buffer,size_t& word_size, std::vector
     uint16_t header_len = *reinterpret_cast<uint16_t*>(buffer+8);
     std::string header(reinterpret_cast<char*>(buffer+9),header_len);
 
-    int loc1, loc2;
+    size_t loc1, loc2;
 
     //fortran order
     loc1 = header.find("fortran_order")+16;
@@ -73,15 +76,15 @@ void cnpy::parse_npy_header(unsigned char* buffer,size_t& word_size, std::vector
     //shape
     loc1 = header.find("(");
     loc2 = header.find(")");
+
+    std::regex num_regex("[0-9][0-9]*");
+    std::smatch sm;
+    shape.clear();
+
     std::string str_shape = header.substr(loc1+1,loc2-loc1-1);
-    size_t ndims;
-    if(str_shape[str_shape.size()-1] == ',') ndims = 1;
-    else ndims = std::count(str_shape.begin(),str_shape.end(),',')+1;
-    shape.resize(ndims);
-    for(size_t i = 0;i < ndims;i++) {
-        loc1 = str_shape.find(",");
-        shape[i] = atoi(str_shape.substr(0,loc1).c_str());
-        str_shape = str_shape.substr(loc1+1);
+    while(std::regex_search(str_shape, sm, num_regex)) {
+        shape.push_back(std::stoi(sm[0].str()));
+        str_shape = sm.suffix().str();
     }
 
     //endian, word size, data type
@@ -107,11 +110,11 @@ void cnpy::parse_npy_header(FILE* fp, size_t& word_size, std::vector<size_t>& sh
     std::string header = fgets(buffer,256,fp);
     assert(header[header.size()-1] == '\n');
 
-    int loc1, loc2;
+    size_t loc1, loc2;
 
     //fortran order
     loc1 = header.find("fortran_order");
-    if (loc1 < 0)
+    if (loc1 == std::string::npos)
         throw std::runtime_error("parse_npy_header: failed to find header keyword: 'fortran_order'");
     loc1 += 16;
     fortran_order = (header.substr(loc1,4) == "True" ? true : false);
@@ -119,25 +122,24 @@ void cnpy::parse_npy_header(FILE* fp, size_t& word_size, std::vector<size_t>& sh
     //shape
     loc1 = header.find("(");
     loc2 = header.find(")");
-    if (loc1 < 0 || loc2 < 0)
+    if (loc1 == std::string::npos || loc2 == std::string::npos)
         throw std::runtime_error("parse_npy_header: failed to find header keyword: '(' or ')'");
-    
+
+    std::regex num_regex("[0-9][0-9]*");
+    std::smatch sm;
+    shape.clear();
+
     std::string str_shape = header.substr(loc1+1,loc2-loc1-1);
-    size_t ndims;
-    if(str_shape[str_shape.size()-1] == ',') ndims = 1;
-    else ndims = std::count(str_shape.begin(),str_shape.end(),',')+1;
-    shape.resize(ndims);
-    for(size_t i = 0;i < ndims;i++) {
-        loc1 = str_shape.find(",");
-        shape[i] = atoi(str_shape.substr(0,loc1).c_str());
-        str_shape = str_shape.substr(loc1+1);
+    while(std::regex_search(str_shape, sm, num_regex)) {
+        shape.push_back(std::stoi(sm[0].str()));
+        str_shape = sm.suffix().str();
     }
 
     //endian, word size, data type
     //byte order code | stands for not applicable. 
     //not sure when this applies except for byte array
     loc1 = header.find("descr");
-    if (loc1 < 0)
+    if (loc1 == std::string::npos)
         throw std::runtime_error("parse_npy_header: failed to find header keyword: 'descr'");
     loc1 += 9;
     bool littleEndian = (header[loc1] == '<' || header[loc1] == '|' ? true : false);
@@ -195,7 +197,6 @@ cnpy::NpyArray load_the_npz_array(FILE* fp, uint32_t compr_bytes, uint32_t uncom
     if(nread != compr_bytes)
         throw std::runtime_error("load_the_npy_file: failed fread");
 
-    //int err;
     z_stream d_stream;
 
     d_stream.zalloc = Z_NULL;
@@ -203,15 +204,15 @@ cnpy::NpyArray load_the_npz_array(FILE* fp, uint32_t compr_bytes, uint32_t uncom
     d_stream.opaque = Z_NULL;
     d_stream.avail_in = 0;
     d_stream.next_in = Z_NULL;
-    /*err =*/ inflateInit2(&d_stream, -MAX_WBITS);
+    inflateInit2(&d_stream, -MAX_WBITS);
 
     d_stream.avail_in = compr_bytes;
     d_stream.next_in = &buffer_compr[0];
     d_stream.avail_out = uncompr_bytes;
     d_stream.next_out = &buffer_uncompr[0];
 
-    /*err =*/ inflate(&d_stream, Z_FINISH);
-    /*err =*/ inflateEnd(&d_stream);
+    inflate(&d_stream, Z_FINISH);
+    inflateEnd(&d_stream);
 
     std::vector<size_t> shape;
     size_t word_size;
@@ -229,8 +230,9 @@ cnpy::NpyArray load_the_npz_array(FILE* fp, uint32_t compr_bytes, uint32_t uncom
 cnpy::npz_t cnpy::npz_load(std::string fname) {
     FILE* fp = fopen(fname.c_str(),"rb");
 
-    if(!fp) printf("npz_load: Error! Unable to open file %s!\n",fname.c_str());
-    assert(fp);
+    if(!fp) {
+        throw std::runtime_error("npz_load: Error! Unable to open file "+fname+"!");
+    }
 
     cnpy::npz_t arrays;  
 
@@ -277,10 +279,7 @@ cnpy::npz_t cnpy::npz_load(std::string fname) {
 cnpy::NpyArray cnpy::npz_load(std::string fname, std::string varname) {
     FILE* fp = fopen(fname.c_str(),"rb");
 
-    if(!fp) {
-        printf("npz_load: Error! Unable to open file %s!\n",fname.c_str());
-        abort();
-    }       
+    if(!fp) throw std::runtime_error("npz_load: Unable to open file "+fname);
 
     while(1) {
         std::vector<char> local_header(30);
@@ -314,24 +313,22 @@ cnpy::NpyArray cnpy::npz_load(std::string fname, std::string varname) {
         }
         else {
             //skip past the data
-            size_t size = *(uint32_t*) &local_header[22];
+            uint32_t size = *(uint32_t*) &local_header[22];
             fseek(fp,size,SEEK_CUR);
         }
     }
 
     fclose(fp);
-    printf("npz_load: Error! Variable name %s not found in %s!\n",varname.c_str(),fname.c_str());
-    abort();
+
+    //if we get here, we haven't found the variable in the file
+    throw std::runtime_error("npz_load: Variable name "+varname+" not found in "+fname);
 }
 
 cnpy::NpyArray cnpy::npy_load(std::string fname) {
 
     FILE* fp = fopen(fname.c_str(), "rb");
 
-    if(!fp) {
-        printf("npy_load: Error! Unable to open file %s!\n",fname.c_str());
-        abort();  
-    }
+    if(!fp) throw std::runtime_error("npy_load: Unable to open file "+fname);
 
     NpyArray arr = load_the_npy_file(fp);
 

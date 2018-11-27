@@ -1,7 +1,8 @@
 #ifndef WIRECELLUTIL_TESTING
 #define WIRECELLUTIL_TESTING
 
-
+// Reject this dumbness https://en.cppreference.com/w/c/error/assert
+#undef NDEBUG
 #include <boost/assert.hpp>
 
 #define Assert BOOST_ASSERT
