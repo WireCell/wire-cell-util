@@ -13,9 +13,6 @@
 #include<cstdio>
 #include<typeinfo>
 #include<iostream>
-// reject this behavior https://en.cppreference.com/w/c/error/assert
-#undef NDEBUG
-#include<cassert>
 #include<zlib.h>
 #include<map>
 #include<memory>
@@ -99,21 +96,26 @@ namespace cnpy {
             size_t word_size;
             bool fortran_order;
             parse_npy_header(fp,word_size,true_data_shape,fortran_order);
-            assert(!fortran_order);
+            if (fortran_order) {
+                throw std::runtime_error("npy_save: unexpected fortran order");
+            }
 
             if(word_size != sizeof(T)) {
                 std::cout<<"libnpy error: "<<fname<<" has word size "<<word_size<<" but npy_save appending data sized "<<sizeof(T)<<"\n";
-                assert( word_size == sizeof(T) );
+                if( word_size != sizeof(T) ) {
+                    throw std::runtime_error("npy_save: illegal word size");
+                }
             }
             if(true_data_shape.size() != shape.size()) {
                 std::cout<<"libnpy error: npy_save attempting to append misdimensioned data to "<<fname<<"\n";
-                assert(true_data_shape.size() != shape.size());
+                throw std::runtime_error("npy_save: misdimensioned data");
+                // original assert() had a bug, I think.
             }
 
             for(size_t i = 1; i < shape.size(); i++) {
                 if(shape[i] != true_data_shape[i]) {
                     std::cout<<"libnpy error: npy_save attempting to append misshaped data to "<<fname<<"\n";
-                    assert(shape[i] == true_data_shape[i]);
+                    throw std::runtime_error("npy_save: misdimensioned data");
                 }
             }
             true_data_shape[0] += shape[0];

@@ -36,6 +36,9 @@ namespace WireCell {
     /// Thrown when a wrong value has been encountered.
     struct ValueError : virtual public Exception { } ;
 
+    /// Thrown when a wrong index is used.
+    struct IndexError : virtual public Exception { } ;
+
     /// Thrown when a wrong key or has been encountered.
     struct KeyError : virtual public Exception { } ;
 
@@ -44,6 +47,9 @@ namespace WireCell {
 
     /// Thrown when an error occurs during the data processing
     class RuntimeError : virtual public Exception { } ;
+
+    /// Thrown when an assertion fails
+    class AssertionError : virtual public Exception { } ;
 
     typedef boost::error_info<struct tag_errmsg, std::string> errmsg;
 

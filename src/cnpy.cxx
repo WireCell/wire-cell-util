@@ -92,7 +92,9 @@ void cnpy::parse_npy_header(unsigned char* buffer,size_t& word_size, std::vector
     //not sure when this applies except for byte array
     loc1 = header.find("descr")+9;
     bool littleEndian = (header[loc1] == '<' || header[loc1] == '|' ? true : false);
-    assert(littleEndian);
+    if (!littleEndian) {
+        throw std::runtime_error("parse_npy_header: header is not little endian");
+    }
 
     //char type = header[loc1+1];
     //assert(type == map_type(T));
@@ -108,7 +110,9 @@ void cnpy::parse_npy_header(FILE* fp, size_t& word_size, std::vector<size_t>& sh
     if(res != 11)
         throw std::runtime_error("parse_npy_header: failed fread");
     std::string header = fgets(buffer,256,fp);
-    assert(header[header.size()-1] == '\n');
+    if (header[header.size()-1] != '\n') {
+        throw std::runtime_error("parse_npy_header: header is not newline terminated");
+    }
 
     size_t loc1, loc2;
 
@@ -143,7 +147,9 @@ void cnpy::parse_npy_header(FILE* fp, size_t& word_size, std::vector<size_t>& sh
         throw std::runtime_error("parse_npy_header: failed to find header keyword: 'descr'");
     loc1 += 9;
     bool littleEndian = (header[loc1] == '<' || header[loc1] == '|' ? true : false);
-    assert(littleEndian);
+    if (!littleEndian) {
+        throw std::runtime_error("parse_npy_header: header is not little endian");
+    }
 
     //char type = header[loc1+1];
     //assert(type == map_type(T));
@@ -170,10 +176,20 @@ void cnpy::parse_zip_footer(FILE* fp, uint16_t& nrecs, size_t& global_header_siz
     global_header_offset = *(uint32_t*) &footer[16];
     comment_len = *(uint16_t*) &footer[20];
 
-    assert(disk_no == 0);
-    assert(disk_start == 0);
-    assert(nrecs_on_disk == nrecs);
-    assert(comment_len == 0);
+    if (disk_no != 0) {
+        throw std::runtime_error("parse_zip_footer: non-zero disk number");
+    }
+
+    if (disk_start != 0) {
+        throw std::runtime_error("parse_zip_footer: non-zero disk start");
+    }
+        
+    if (nrecs_on_disk != nrecs) {
+        throw std::runtime_error("parse_zip_footer: number of recrods do not match");
+    }
+    if (comment_len != 0) {
+        throw std::runtime_error("parse_zip_footer: unexepcted comment");
+    }
 }
 
 cnpy::NpyArray load_the_npy_file(FILE* fp) {
