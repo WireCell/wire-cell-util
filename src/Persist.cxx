@@ -225,13 +225,16 @@ WireCell::Persist::Parser::Parser(const std::vector<std::string>& load_paths,
     // Loading: 1) cwd, 2) passed in paths 3) environment
     m_load_paths.push_back(boost::filesystem::current_path());
     for (auto path : load_paths) {
-        m_jsonnet.addImportPath(path);
         m_load_paths.push_back(boost::filesystem::path(path));
     }
     for (auto path : get_path()) {
-        m_jsonnet.addImportPath(path);
         m_load_paths.push_back(boost::filesystem::path(path));
     }
+    // load paths into jsonnet backwards to counteract its reverse ordering
+    for (auto pit = m_load_paths.rbegin(); pit != m_load_paths.rend(); ++pit) {
+        m_jsonnet.addImportPath(boost::filesystem::canonical(*pit).string());
+    }
+
 
     // external variables
     for (auto& vv : extvar) {
