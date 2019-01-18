@@ -82,4 +82,16 @@ int main()
     BoundingBox bb(pset.begin(), pset.end());
     bb.inside(Point());
     
+    {
+        Point p(1,2,3);
+        Assert(p);
+        cerr << "  valid: " << p << endl;
+        p.invalidate();
+        Assert(!p);
+        //cerr << "invalid: " << p << endl;
+        p.set();
+        Assert(p);
+        cerr << "revalid: " << p << endl;
+    }
+
 }

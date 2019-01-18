@@ -47,6 +47,7 @@ namespace WireCell {
 
 	/// Set vector from elements;
 	void set(const T& a=0, const T& b=0, const T& c=0) {
+            m_v.resize(3);
 	    m_v[0] = a;
 	    m_v[1] = b;
 	    m_v[2] = c;
@@ -72,8 +73,7 @@ namespace WireCell {
 
 	/// Access elements by reference.
 	T& operator[](std::size_t index) {
-	    m_v.at(index);	// call just to throw possible out of bounds exception
-	    return m_v[index];
+	    return m_v.at(index);	// throw if out of bounds
 	}
 	    
 	/// Return the dot product of this vector and the other.
@@ -126,6 +126,17 @@ namespace WireCell {
 	    return *this;
 	}
 
+        bool operator!() const {
+            return m_v.size() != 3;
+        }
+        operator bool() const {
+            return m_v.size() == 3;
+        }
+        // can call set(x,y,z) to revalidate.
+        void invalidate() {
+            m_v.clear();
+            m_v.shrink_to_fit();
+        }
 
     } ;
  
