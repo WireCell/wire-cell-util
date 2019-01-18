@@ -41,5 +41,22 @@ int main()
     Assert(l_size == ar3.shape()[0]);
     Assert(t_size == ar3.shape()[1]);
 
+
+    int nx=3, ny=4, nz=5;
+
+    typedef boost::multi_array<double, 3> array_type3;
+
+    array_type3 B(boost::extents[nx][ny][nz]);
+    typedef array_type3::index index3;
+    for (index3 i=0; i<nx; ++i) {
+        for (index3 j=0; j<ny; ++j) {
+            for (index3 k=0; k<nz; ++k) {
+                const double foo = i*j*k;
+
+                B[i][j][k] = foo;
+            }
+        }
+    }
+
     return 0;
 }
