@@ -7,8 +7,8 @@
  * Each RCCS is defined by an ordered pair of parallel rays where each
  * ray is defined in terms of its 3D Cartesian endpoints in some
  * shared global coordinate system.  The two orthogonal axes of a RCCS
- * are called its "pitch" and its "point".  The origin of the RCSS is
- * the center point of its first ray.
+ * are called its "pitch" and its "point".  The origin of the RCCS is
+ * the center point of its first ray (the "pitch" ray).
  *
  * The "pitch" axis is along a mutually perpendicular line from the
  * first to the second ray.  The distance along this axis between the
@@ -19,12 +19,12 @@
  * direction for a single RCCS in isolation.  (But see below about
  * combining a pair of RCCSes).
  *
- * Rays in a RCSS are indexed by integer numbers.  The first ray of the
+ * Rays in a RCCS are indexed by integer numbers.  The first ray of the
  * ordered pair has index 0 and the second ray has index 1.
  * Additional parallel rays may be considred to exist at uniformly
  * separated points on a grid along the pitch direction.
  *
- * A pair of RCSSes with differing rotations lead to intersecting
+ * A pair of RCCSes with differing rotations lead to intersecting
  * rays.  Their crossing points define a uniform but non-orthongonal
  * coordinate system (NOCS).  Given the uniformity, these crossing
  * points may be calculated as a function of the indices of each ray
@@ -52,7 +52,9 @@ namespace WireCell {
         // Index a ray Cartesian coordinate system
         typedef size_t rccs_index_t;
 
-        // Index a point on a uniform linear grid
+        // Index a point on a uniform linear grid.  Despite the
+        // allowance of being signed, negative grid indices are
+        // typically out of bounds.
         typedef int grid_index_t;
 
         // A ray may be located knowing the indices into its defining RCCS and its grid index.
