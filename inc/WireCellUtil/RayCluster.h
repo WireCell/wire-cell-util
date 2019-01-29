@@ -74,9 +74,13 @@ namespace WireCell {
             activity_iterator begin() const { return focus.first; }
             activity_iterator end() const { return focus.second; }
 
+            bool empty() const {
+                return begin() == end();
+            }
+
             // lil helpers
             
-            size_t index(const activity_iterator& it) const {
+            int index(const activity_iterator& it) const {
                 return it-origin;
             }
             Strip make_strip(const activity_range_t& r) const {

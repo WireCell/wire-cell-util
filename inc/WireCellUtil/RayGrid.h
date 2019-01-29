@@ -50,7 +50,7 @@ namespace WireCell {
     class RayGrid {
     public:
         // Index a ray Cartesian coordinate system
-        typedef size_t rccs_index_t;
+        typedef int rccs_index_t;
 
         // Index a point on a uniform linear grid.  Despite the
         // allowance of being signed, negative grid indices are
@@ -82,7 +82,7 @@ namespace WireCell {
         typedef ObjectArray2d<Vector> vector_array2d_t;
 
         // Create a ray grid by specifying the axis of projection.
-        RayGrid(const ray_pair_vector_t& rays, size_t normal_axis=0);
+        RayGrid(const ray_pair_vector_t& rays, int normal_axis=0);
         
         // Return the crossing point of the index=0 rays for two rccs.
         Vector zero_crossing(rccs_index_t one, rccs_index_t two) const;
@@ -94,7 +94,7 @@ namespace WireCell {
         double pitch_location(const ray_address_t& one, const ray_address_t& two, rccs_index_t other) const;
 
 
-        size_t nrccs() const { return m_nrccs; }
+        int nrccs() const { return m_nrccs; }
         const std::vector<double>& pitch_mags() const { return m_pitch_mag; }
         const vector_array1d_t& pitch_dirs() const { return m_pitch_dir; }
         const vector_array1d_t& centers() const { return m_center; }
@@ -103,7 +103,7 @@ namespace WireCell {
 
     private:
 
-        size_t m_nrccs;
+        int m_nrccs;
 
         // Pitch magnitude for each RCCS
         std::vector<double> m_pitch_mag;

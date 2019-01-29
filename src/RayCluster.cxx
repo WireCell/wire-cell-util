@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include <iostream>             // debug
+
 using namespace WireCell;
 
 static
@@ -106,6 +108,9 @@ RayClustering::Activity RayClustering::projection(const Cluster& cluster, const 
         const double p = m_rg.pitch_location(c.first, c.second, activity.layer);
         pitches.push_back(p);
     }
+    if (pitches.empty()) {
+        return Activity{};
+    }
 
     const double first_pitch = pitch_mag * activity.index(activity.begin());
     const double last_pitch = pitch_mag * activity.index(activity.end()); // inclusive
@@ -116,8 +121,8 @@ RayClustering::Activity RayClustering::projection(const Cluster& cluster, const 
     end = std::partition(beg, end, [&](const double& x){
             return x >= first_pitch and x <= last_pitch;});
     sort(beg, end);
-    const size_t offset1 = *beg/pitch_mag;
-    const size_t offset2 = *end/pitch_mag;
+    const int offset1 = *beg/pitch_mag;
+    const int offset2 = *end/pitch_mag;
     return Activity{activity.layer, activity.origin,
             make_pair(activity.origin+offset1, activity.origin+offset2)};
 }
@@ -128,7 +133,16 @@ RayClustering::clustering_t RayClustering::cluster(const clustering_t& prior,
     clustering_t ret;
 
     for (const auto& clus : prior) {
+        if (clus.corners().empty()) {
+            std::cerr << "cluster with " << clus.strips().size() << " strips has no corners\n";
+            continue;
+        }
         Activity proj = projection(clus, activity);
+        if (proj.empty()) {
+            std::cerr << "cluster with " << clus.strips().size()
+                      << " has overlap with activity in layer " << activity.layer << std::endl;
+            continue;
+        }
         for (auto strip : proj.make_strips()) {
             auto newclus = clus; // copy
             newclus.add(m_rg, strip);

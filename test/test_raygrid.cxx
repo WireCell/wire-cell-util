@@ -6,6 +6,7 @@
 #include "TMarker.h"
 #include "TText.h"
 #include "TLine.h"
+#include "TH1F.h"
 
 #include <iostream>
 #include <string>
@@ -70,30 +71,38 @@ void draw_pairs(const RayGrid::ray_pair_vector_t& raypairs)
     }
 }
 
+TH1F* draw_frame(TCanvas& canvas, std::string title)
+{
+    auto* frame = canvas.DrawFrame(-110,-110,110,110);
+    frame->SetTitle(title.c_str());
+    return frame;
+}
+
 void draw(std::string fname, const RayGrid& rg, const RayGrid::ray_pair_vector_t& raypairs)
 {
 
     TCanvas canvas("test_raygrid","Ray Grid", 500, 500);
     auto draw_print = [&](std::string extra="") { canvas.Print((fname + extra).c_str(), "pdf"); };
 
-    auto draw_frame = [&]() { canvas.DrawFrame(-10,-10,110,110);};
-    
     draw_print("[");
 
     const size_t nbounds = raypairs.size();
     for (RayGrid::rccs_index_t il=0; il < nbounds; ++il) {
         for (RayGrid::rccs_index_t im=0; im < nbounds; ++im) {
             if (il < im) {
-                draw_frame();
+                draw_frame(canvas, Form("RCCS (%d,%d)", (int)il, (int)im));
                 draw_pairs(raypairs);
                 draw_zero_crossing(rg, il, im);
 
-                for (RayGrid::grid_index_t ip = 0; ip < 10; ++ip) {
-                    for (RayGrid::grid_index_t jp = 0; jp < 10; ++jp) {
+                for (RayGrid::grid_index_t ip = 0; ip < 100; ++ip) {
+                    for (RayGrid::grid_index_t jp = 0; jp < 100; ++jp) {
                         RayGrid::ray_address_t one{il, ip}, two{im, jp};
                         auto p = rg.ray_crossing(one, two);
+                        // cheat about knowing the bounds
+                        if (p.z() < 0.0 or p.z() > 100.0) continue;
+                        if (p.y() < 0.0 or p.y() > 100.0) continue;
                         draw_point(p, 1, 7);
-                        cout << p<< " " << one.rccs << ":" << one.grid << " , " << two.rccs << ":" << two.grid <<  endl;
+                        //cout << p<< " " << one.rccs << ":" << one.grid << " , " << two.rccs << ":" << two.grid <<  endl;
                     }
                 }
 
@@ -118,7 +127,7 @@ int main(int argc, char *argv[])
 
     Assert(rg.nrccs() == raypairs.size());
     
-    for (size_t ind=0; ind<rg.nrccs(); ++ind) {
+    for (int ind=0; ind<rg.nrccs(); ++ind) {
         cout << ind
              << " r1=" << raypairs[ind].first
              << " r2=" << raypairs[ind].second

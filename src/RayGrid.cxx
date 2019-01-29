@@ -5,7 +5,7 @@
 using namespace WireCell;
 
 
-RayGrid::RayGrid(const ray_pair_vector_t& rays, size_t normal_axis)
+RayGrid::RayGrid(const ray_pair_vector_t& rays, int normal_axis)
     : m_nrccs(rays.size())
     , m_pitch_mag(m_nrccs, 0.0)
     , m_pitch_dir(m_nrccs)
