@@ -78,7 +78,8 @@ namespace WireCell {
 
             // Create an activity from a range of some vector starting
             // at given offset in the enumeration of pitch indices.
-            Activity(layer_t layer, const range_t& span, int offset=0);
+            Activity(layer_t layer, const range_t& span,
+                     int offset=0, double threshold=0.0);
             
             // Produce a subspan activity between pitch indices [pi1, pi2)
             Activity subspan(int pi_begin, int pi_end) const;
@@ -99,15 +100,16 @@ namespace WireCell {
 
             // Return strips bounding contiguous positive activity
             // subspans.
-            strips_t make_strips(value_t threshold = 0.0) const;
+            strips_t make_strips() const;
 
             // Return all subspans with activities
-            ranges_t active_ranges(value_t threshold = 0.0) const;
+            ranges_t active_ranges() const;
 
         private:
             vector_t m_span;
             layer_t m_layer;
             int m_offset;
+            double m_threshold;
         };
 
 

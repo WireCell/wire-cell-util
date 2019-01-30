@@ -22,7 +22,7 @@ using namespace std;
 
 void dump(const RayClustering::clustering_t& clusters)
 {
-    cerr << clusters.size() << " clusters:\n";
+    cerr << "-----dumping " << clusters.size() << " clusters:\n";
     for (const auto& c : clusters) {
         const auto& strips = c.strips();
         cerr << "\tvalid:" << c.valid() << ", " << strips.size() << " strips:";
@@ -45,6 +45,7 @@ void dump(const RayClustering::clustering_t& clusters)
         }
         cerr << endl;
     }
+    cerr << "------\n";
 }
 
 void draw_point(const Point& p, float size=1, int style=20, int color=1);
@@ -256,6 +257,7 @@ int main(int argc, char* argv[])
     print();
 
     for (int ilayer = 0; ilayer<nlayers; ++ilayer) {
+        cerr << "Clustering layer " << ilayer << endl;
         const auto& activity = activities[ilayer];
         if (clusters.empty()) {
             clusters = rc.cluster(activity);

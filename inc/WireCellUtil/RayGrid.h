@@ -101,6 +101,10 @@ namespace WireCell {
 
         const vector_array2d_t& ray_jumps() const { return m_ray_jump; }
 
+        const tensor_t a() const { return m_a; }
+        const tensor_t b() const { return m_b; }
+        const tensor_t c() const { return m_c; }
+
     private:
 
         int m_nrccs;

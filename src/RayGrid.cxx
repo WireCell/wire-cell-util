@@ -139,5 +139,6 @@ Vector RayGrid::ray_crossing(const ray_address_t& one, const ray_address_t& two)
 double RayGrid::pitch_location(const ray_address_t& one, const ray_address_t& two, rccs_index_t other) const
 {
     const tensor_t::index il=one.rccs, im=two.rccs, in=other;
-    return m_c[il][im][in] + m_a[il][im][in]*two.grid + m_b[il][im][in]*one.grid;
+    const tensor_t::index i=one.grid, j=two.grid;
+    return m_c[il][im][in] + m_a[il][im][in]*j + m_b[im][il][in]*i;
 }

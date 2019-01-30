@@ -185,8 +185,6 @@ void draw(std::string fname, const RayGrid& rg, const RayGrid::ray_pair_vector_t
 
                 draw_print();
             }
-
-
         }
     }
 
@@ -194,13 +192,58 @@ void draw(std::string fname, const RayGrid& rg, const RayGrid::ray_pair_vector_t
 }
 
 
+void dump(std::string msg, const RayGrid::tensor_t& ar)
+{
+    cerr << msg << endl;
+    cerr << "Dimensions: " << ar.dimensionality << endl;
+
+    auto shape = ar.shape();
+    cerr << "Dimension 0 is size " << shape[0] << endl;
+    cerr << "Dimension 1 is size " << shape[1] << endl;
+    cerr << "Dimension 2 is size " << shape[2] << endl;
+
+    for (size_t i = 0; i < shape[0]; ++i) {
+        for (size_t j = 0; j < shape[1]; ++j) {
+            for (size_t k = 0; k < shape[2]; ++k) {
+                cerr << "\t" << Form("%.1f", ar[i][j][k]);
+            }
+            cerr << "\n";
+        }
+        cerr << "\n";
+    }
+}
+
+void test_012(const RayGrid& rg)
+{
+    dump("a", rg.a());
+    dump("b", rg.b());
+    dump("c", rg.c());
+
+    std::vector<double> ps;
+    for (int a=0; a<2; ++a) {
+        for (int b=0; b<2; ++b) {
+            const double p = rg.pitch_location({0,a}, {1,b}, 2);
+            std::cerr << "a=" << a << " b=" << b << " p=" << p << "\n";
+            ps.push_back(p);
+        }
+    }
+
+    Assert(ps.front() != ps.back());
+
+}
+
+
 #include "raygrid.h"
+
+
 
 int main(int argc, char *argv[])
 {
     RayGrid::ray_pair_vector_t raypairs = make_raypairs();
 
     RayGrid rg(raypairs);
+
+    test_012(rg);
 
     Assert(rg.nrccs() == (int)raypairs.size());
     

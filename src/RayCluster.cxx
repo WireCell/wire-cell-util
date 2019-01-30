@@ -10,13 +10,26 @@ RayClustering::Activity::Activity(layer_t layer)
     : m_span()
     , m_layer(layer)
     , m_offset(0)
+    , m_threshold(0)
 {
 }
-RayClustering::Activity::Activity(layer_t layer, const range_t& span, int offset)
-    : m_span(span.first, span.second) // copy
+RayClustering::Activity::Activity(layer_t layer, const range_t& span, int offset,
+                                  double threshold)
+    : m_span()
     , m_layer(layer)
     , m_offset(offset)
+    , m_threshold(threshold)
 {
+    iterator_t b = span.first;
+    while (*b <= m_threshold and b != span.second) {
+        ++b;
+        ++m_offset;
+    }
+    iterator_t e = span.second;
+    while (e != b and *(e-1) <= m_threshold) {
+        --e;
+    }
+    m_span.insert(m_span.begin(), b,e);
 }
 
 RayClustering::Activity::iterator_t RayClustering::Activity::begin() const
@@ -62,24 +75,24 @@ RayClustering::Activity::make_strip(const RayClustering::Activity::range_t& r) c
                            pitch_index(r.second))};
 }
 
-RayClustering::strips_t RayClustering::Activity::make_strips(value_t threshold) const 
+RayClustering::strips_t RayClustering::Activity::make_strips() const 
 {
     strips_t ret;
-    for (const auto& ar : active_ranges(threshold)) {
+    for (const auto& ar : active_ranges()) {
         ret.push_back(make_strip(ar));
     }
     return ret;
 }
 
 
-RayClustering::Activity::ranges_t RayClustering::Activity::active_ranges(value_t threshold) const
+RayClustering::Activity::ranges_t RayClustering::Activity::active_ranges() const
 {
     ranges_t ret;
     range_t current{end(), end()};
 
     for (auto it = begin(); it != end(); ++it) {
         // entering active range
-        if (current.first == end() and *it > threshold) {
+        if (current.first == end() and *it > m_threshold) {
             current.first = it;
             continue;
         }
@@ -212,6 +225,9 @@ RayClustering::Activity RayClustering::projection(const Cluster& cluster, const 
     for (const auto& c : cluster.corners()) {
         const double p = m_rg.pitch_location(c.first, c.second, activity.layer());
         pitches.push_back(p);
+        std::cerr << "cluster corner: L" << activity.layer()
+                  << " [{" << c.first.rccs << "," << c.first.grid << "},"
+                  << "{" << c.second.rccs << "," << c.second.grid << "}] p=" << p << "\n";
     }
     if (pitches.empty()) {
         std::cerr << "projection: got not pitches\n";
@@ -221,14 +237,22 @@ RayClustering::Activity RayClustering::projection(const Cluster& cluster, const 
     const double first_pitch = pitch_mag * activity.pitch_index(activity.begin());
     const double last_pitch = pitch_mag * activity.pitch_index(activity.end()); // inclusive
 
-    auto beg = pitches.begin();
-    auto end = pitches.end();
+    auto pbeg = pitches.begin();
+    auto pend = pitches.end();
 
-    end = std::partition(beg, end, [&](const double& x){
+    std::cerr << "Checking activity projection over "
+              << activity.end() - activity.begin() << " activity bins:\n";
+    std::cerr << "\tactivity pitches: [" << first_pitch << "," << last_pitch <<"]\n";
+    std::cerr << "\tcluster pitches: ";
+    for (auto pit=pbeg; pit!=pend; ++pit) {
+        std::cerr << " " << *pit;
+    }
+    std::cerr << "\n";
+    pend = std::partition(pbeg, pend, [&](const double& x){
             return x >= first_pitch and x <= last_pitch;});
-    sort(beg, end);             // fixme: minmax is probably faster
-    const int offset1 = *beg/pitch_mag;
-    const int offset2 = *end/pitch_mag;
+    const auto mm = std::minmax_element(pbeg, pend);
+    const int offset1 = std::floor((*mm.first)/pitch_mag);
+    const int offset2 = std::ceil((*mm.second)/pitch_mag);
     return activity.subspan(offset1, offset2);
 }
 
