@@ -1,4 +1,4 @@
-// include me in tests
+// This is NOT a real header file but may be includeded in tests as code
 
 RayGrid::ray_pair_vector_t make_raypairs(double width=100, double height=100, double pitch_mag = 5);
 RayGrid::ray_pair_vector_t make_raypairs(double width, double height, double pitch_mag)

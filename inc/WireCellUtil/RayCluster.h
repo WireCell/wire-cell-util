@@ -61,65 +61,53 @@ namespace WireCell {
         };
 
         typedef std::vector<Strip> strips_t;
-        typedef std::vector<float>::const_iterator activity_iterator;
-        typedef std::pair<activity_iterator,activity_iterator> activity_range_t;
-        typedef std::vector<activity_range_t> activity_ranges_t;
 
-        // activity in one layer limited to some region in pitch
-        struct Activity {
-            layer_t layer;
-            const activity_iterator origin;
-            activity_range_t focus;
+        // Activity represents an absolutly positioned span of pitch
+        // indices which may contain some measure of positive
+        // activity.  The activity may be indexed by pitch index.
+        class Activity {
+        public:
+            typedef double value_t;
+            typedef std::vector<value_t> vector_t;
+            typedef vector_t::const_iterator iterator_t;
+            typedef std::pair<iterator_t,iterator_t> range_t;
+            typedef std::vector<range_t> ranges_t;
+
+            // Create empty activity
+            Activity(layer_t layer);
+
+            // Create an activity from a range of some vector starting
+            // at given offset in the enumeration of pitch indices.
+            Activity(layer_t layer, const range_t& span, int offset=0);
             
-            activity_iterator begin() const { return focus.first; }
-            activity_iterator end() const { return focus.second; }
+            // Produce a subspan activity between pitch indices [pi1, pi2)
+            Activity subspan(int pi_begin, int pi_end) const;
 
-            bool empty() const {
-                return begin() == end();
-            }
+            layer_t layer() const { return m_layer; }
+
+            iterator_t begin() const;
+            iterator_t end() const;
+
+            bool empty() const;
 
             // lil helpers
             
-            int index(const activity_iterator& it) const {
-                return it-origin;
-            }
-            Strip make_strip(const activity_range_t& r) const {
-                return Strip{layer, std::make_pair(index(r.first), index(r.second))};
-            }
+            int pitch_index(const iterator_t& it) const;
 
-            strips_t make_strips() const {
-                strips_t ret;
-                for (const auto& ar : active_ranges()) {
-                    ret.push_back(make_strip(ar));
-                }
-                return ret;
-            }
+            // Make a strip from a sub span of the current activity.
+            Strip make_strip(const range_t& subspan) const;
 
+            // Return strips bounding contiguous positive activity
+            // subspans.
+            strips_t make_strips(value_t threshold = 0.0) const;
 
-            activity_ranges_t active_ranges() const {
-                activity_ranges_t ret;
-                activity_range_t current{end(), end()};
+            // Return all subspans with activities
+            ranges_t active_ranges(value_t threshold = 0.0) const;
 
-                for (auto it = begin(); it != end(); ++it) {
-                    // entering active range
-                    if (current.first == end() and *it > 0.0) {
-                        current.first = it;
-                        continue;
-                    }
-                    // exiting active range
-                    if (current.first != end() and *it <= 0.0) {
-                        current.second = it;
-                        ret.push_back(current);
-                        current.first = end();
-                    }
-                }
-                if (current.first != end()) {
-                    current.second = end();
-                    ret.push_back(current);
-                }
-                return ret;
-            }
-
+        private:
+            vector_t m_span;
+            layer_t m_layer;
+            int m_offset;
         };
 
 
@@ -132,6 +120,13 @@ namespace WireCell {
             // Cluster corners are pair-wise ray crossing points which
             // are contained by all strips.
             const corners_t& corners() const;
+
+            bool valid() const {
+                size_t nstrips = m_strips.size();
+                if (nstrips == 0) { return false; } // empty
+                if (nstrips == 1) { return true; }  // no corners expected
+                return corners().size() > 0;
+            }
 
         private:
             strips_t m_strips;

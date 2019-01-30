@@ -117,6 +117,7 @@ void draw(std::string fname, const RayGrid& rg, const RayGrid::ray_pair_vector_t
     draw_print("]");
 }
 
+
 #include "raygrid.h"
 
 int main(int argc, char *argv[])
