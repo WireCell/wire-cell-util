@@ -5,9 +5,13 @@
 #include "TMarker.h"
 #include "TText.h"
 #include "TLine.h"
+#include "TPolyLine.h"
 #include "TArrow.h"
 #include "TH1F.h"
 
+#include <math.h> 
+
+#include <random>
 #include <iostream>
 
 using namespace WireCell;
@@ -116,6 +120,36 @@ void draw_strips(RayGrid& rg, const RayClustering::strips_t& strips)
 }
 
 
+void draw_cluster(RayGrid& rg, const RayClustering::Cluster& clus, int color=1)
+{
+    std::vector<Point> points;
+    Point center;
+    for (const auto& corn : clus.corners()) {
+        const auto p = rg.ray_crossing(corn.first, corn.second);
+        center += p;
+        points.push_back(p);
+    }
+    center = center * (1.0/points.size());
+    sort(points.begin(), points.end(),
+         [&](const Point& a, const Point&b) {
+             const Point ac = a-center;
+             const Point bc = b-center;
+             const double anga = atan2(ac.y(), ac.z());
+             const double angb = atan2(bc.y(), bc.z());
+             return anga > angb;
+         });
+
+    TPolyLine* pl = new TPolyLine; // like a sieve
+    pl->SetLineColor(color);
+    for (const auto& p : points) {
+        pl->SetNextPoint(p.z(), p.y());
+    }
+    pl->SetNextPoint(points.front().z(), points.front().y());
+    pl->Draw();
+}
+
+
+
 struct Printer {
     TCanvas canvas;
     std::string fname;
@@ -144,7 +178,19 @@ int main(int argc, char* argv[])
 
     std::vector< std::vector<RayClustering::Activity::value_t> > measures(nlayers);
 
-    const std::vector<Point> points{ Point(0, 10, 10), Point(0, 10, 11), Point(0, 20, 20) };
+    std::default_random_engine generator;
+    std::uniform_real_distribution<double> position(0,100);
+    std::normal_distribution<double> spread(0.0, 1.0);
+    const int ndepos = 10;
+    const int neles = 10;
+    std::vector<Point> points;
+    for (int idepo=0;idepo<ndepos;++idepo) {
+        Point cp(0, position(generator), position(generator));
+        for (int iele=0; iele<neles; ++iele) {
+            Point delta(0, spread(generator), spread(generator));
+            points.push_back(cp+delta);
+        }
+    }
 
     draw_frame(print.canvas, "Points and Activity");
     for (size_t ipt=0; ipt<points.size(); ++ipt ) {
@@ -207,7 +253,8 @@ int main(int argc, char* argv[])
              << " activity=" << tot
              << " in: " << strips.size() << " strips"  << endl;
     }
-    
+    print();
+
     for (int ilayer = 0; ilayer<nlayers; ++ilayer) {
         const auto& activity = activities[ilayer];
         if (clusters.empty()) {
@@ -217,6 +264,15 @@ int main(int argc, char* argv[])
             clusters = rc.cluster(clusters, activity);
         }
         dump(clusters);
+    }
+    draw_frame(print.canvas, "Points and Cluster");
+    for (size_t ipt=0; ipt<points.size(); ++ipt ) {
+        const auto& p = points[ipt];
+        draw_point(p, 1, 24, ipt+1);
+    }
+    
+    for (size_t ic = 0; ic<clusters.size(); ++ic) {
+        draw_cluster(rg, clusters[ic],ic+1);
     }
     print();
 

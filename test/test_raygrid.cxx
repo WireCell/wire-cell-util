@@ -62,6 +62,75 @@ void draw_zero_crossing(const RayGrid& rg, RayGrid::rccs_index_t il, RayGrid::rc
     draw_text(p, ss.str());
 }
 
+void draw_segments(const RayGrid& rg)
+{
+    const auto c0 = rg.centers()[0];
+    const auto c1 = rg.centers()[1];
+    const auto p0 = rg.pitch_dirs()[0];
+    const auto p1 = rg.pitch_dirs()[1];
+    const auto pm0 = rg.pitch_mags()[0];
+    const auto pm1 = rg.pitch_mags()[1];
+
+    const Vector ecks(1,0,0);
+
+    for (int lind=2; lind < rg.nrccs(); ++lind) {
+        const auto& center = rg.centers()[lind];
+        const auto& pdir = rg.pitch_dirs()[lind];
+        const double pmag = rg.pitch_mags()[lind];
+        const auto rdir = pdir.cross(ecks);
+
+        Point next_center = center; 
+
+        int pind = -1;
+        while (true) {
+            ++pind;
+
+            const auto pc = next_center;
+            const double d0 = p0.dot(pc-c0);
+            const double d1 = p1.dot(pc-c1);
+            if (d0 < 0 or d0 > pm0) { break; }
+            if (d1 < 0 or d1 > pm1) { break; }
+            //std::cerr << "L"<<lind << ":" << d0 << ","<<d1<<","<<pm0<<","<<pm1 <<"\n";
+            //std::cerr << "L"<<lind << ", P" << pind << ":" << pc << std::endl;
+            // handle anyt parallel layers special.
+
+            Point pa, pb;
+            if (1.0-p0.dot(pdir) < 0.001) { // layer 0 is parallel
+                pa = rg.ray_crossing({1,0}, {lind,pind} );
+                pb = rg.ray_crossing({1,1}, {lind,pind} );
+            }
+            else if (1.0-p1.dot(pdir) < 0.001) {// layer 1 is parallel
+                pa = rg.ray_crossing({0,0}, {lind,pind} );
+                pb = rg.ray_crossing({0,1}, {lind,pind} );
+            }
+            else {
+                // normally, center is inside the "box" so sorting by
+                // dot product of a vector from center to crossing
+                // point and the ray direction means middle two are
+                // closest.
+                std::vector<Vector> crossings {
+                    rg.ray_crossing({0,0}, {lind,pind} ),
+                        rg.ray_crossing({0,1}, {lind,pind} ),
+                        rg.ray_crossing({1,0}, {lind,pind} ),
+                        rg.ray_crossing({1,1}, {lind,pind} )};
+
+                sort(crossings.begin(), crossings.end(),
+                     [&](const Vector&a, const Vector&b) {
+                         return rdir.dot(a-pc) < rdir.dot(b-pc);
+                     });
+                pa = crossings[1];
+                pb = crossings[2];
+            }
+
+            draw_ray(Ray(pa,pb));
+
+            // recenter and move by one pitch
+            next_center = 0.5*(pa+pb) + pmag * pdir; // this builds up errors
+
+
+        }
+    }
+}
 
 void draw_pairs(const RayGrid::ray_pair_vector_t& raypairs)
 {
@@ -71,9 +140,11 @@ void draw_pairs(const RayGrid::ray_pair_vector_t& raypairs)
     }
 }
 
-TH1F* draw_frame(TCanvas& canvas, std::string title)
+TH1F* draw_frame(TCanvas& canvas, std::string title,
+                 double xmin=-110, double ymin=-110,
+                 double xmax=+110, double ymax=+110)
 {
-    auto* frame = canvas.DrawFrame(-110,-110,110,110);
+    auto* frame = canvas.DrawFrame(xmin,ymin,xmax,ymax);
     frame->SetTitle(title.c_str());
     return frame;
 }
@@ -86,7 +157,13 @@ void draw(std::string fname, const RayGrid& rg, const RayGrid::ray_pair_vector_t
 
     draw_print("[");
 
-    const size_t nbounds = raypairs.size();
+    draw_frame(canvas, "rays", -10, -10);
+    draw_segments(rg);
+    draw_print();
+
+    const int nbounds = raypairs.size();
+
+
     for (RayGrid::rccs_index_t il=0; il < nbounds; ++il) {
         for (RayGrid::rccs_index_t im=0; im < nbounds; ++im) {
             if (il < im) {
@@ -109,8 +186,7 @@ void draw(std::string fname, const RayGrid& rg, const RayGrid::ray_pair_vector_t
                 draw_print();
             }
 
-            for (size_t in=0; in < nbounds; ++in) {
-            }
+
         }
     }
 
@@ -126,7 +202,7 @@ int main(int argc, char *argv[])
 
     RayGrid rg(raypairs);
 
-    Assert(rg.nrccs() == raypairs.size());
+    Assert(rg.nrccs() == (int)raypairs.size());
     
     for (int ind=0; ind<rg.nrccs(); ++ind) {
         cout << ind

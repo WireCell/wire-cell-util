@@ -1,7 +1,9 @@
 // This is NOT a real header file but may be includeded in tests as code
 
-RayGrid::ray_pair_vector_t make_raypairs(double width=100, double height=100, double pitch_mag = 5);
-RayGrid::ray_pair_vector_t make_raypairs(double width, double height, double pitch_mag)
+RayGrid::ray_pair_vector_t make_raypairs(double width=100, double height=100,
+                                         double pitch_mag = 3, double angle=60.0*M_PI/180.0);
+RayGrid::ray_pair_vector_t make_raypairs(double width, double height, double pitch_mag,
+                                         double angle)
 {
     RayGrid::ray_pair_vector_t raypairs;
 
@@ -14,30 +16,38 @@ RayGrid::ray_pair_vector_t make_raypairs(double width, double height, double pit
     const Vector zee(0,0,1);
 
     // /-wires
-    const Vector du = (ur - ll).norm();
-    const Vector pu = eckx.cross(du); 
-    cerr << "pu=" << pu << endl;
-    const Ray rayu0(ul + why*(why.dot(0.5*pitch_mag*pu)),
-                    ul + zee*(zee.dot(0.5*pitch_mag*pu)));
-    const Ray rayu1(ul + why*(why.dot(1.5*pitch_mag*pu)),
-                    ul + zee*(zee.dot(1.5*pitch_mag*pu)));
-    
+    const Vector du(0, cos(angle), sin(angle));
+    const Vector pu = eckx.cross(du).norm();
+    Vector pjumpu = 0.5*pitch_mag*pu;
+    double mjumpu2 = pjumpu.dot(pjumpu);
+    const Ray rayu0(ul + why*mjumpu2/(why.dot(pjumpu)),
+                    ul + zee*mjumpu2/(zee.dot(pjumpu)));
+    pjumpu = 1.5*pitch_mag*pu;
+    mjumpu2 = pjumpu.dot(pjumpu);
+    const Ray rayu1(ul + why*mjumpu2/(why.dot(pjumpu)),
+                    ul + zee*mjumpu2/(zee.dot(pjumpu)));
+
     // \-wires
-    const Vector dv = (ul - lr).norm();    
-    const Vector pv = eckx.cross(dv);
-    cerr << "pv=" << pv << endl;
-    const Ray rayv0(ll + why*(why.dot(0.5*pitch_mag*pv)),
-                    ll + zee*(zee.dot(0.5*pitch_mag*pv)));
-    const Ray rayv1(ll + why*(why.dot(1.5*pitch_mag*pv)),
-                    ll + zee*(zee.dot(1.5*pitch_mag*pv)));
+    const Vector dv(0, cos(angle), -sin(angle));
+    const Vector pv = eckx.cross(dv).norm();
+    Vector pjumpv = 0.5*pitch_mag*pv;
+    double mjumpv2 = pjumpv.dot(pjumpv);
+    const Ray rayv0(ll + why*mjumpv2/(why.dot(pjumpv)),
+                    ll + zee*mjumpv2/(zee.dot(pjumpv)));
+    pjumpv = 1.5*pitch_mag*pv;
+    mjumpv2 = pjumpv.dot(pjumpv);
+    const Ray rayv1(ll + why*mjumpv2/(why.dot(pjumpv)),
+                    ll + zee*mjumpv2/(zee.dot(pjumpv)));
+
 
 
     // |-wires
     const Vector dw = why;
     const Vector pw = zee;
-    const Vector cw = 0.5*(ul + ll);
-    const Ray rayw0(ll, ul);
-    const Ray rayw1(ll + pitch_mag*pw, ul+pitch_mag*pw);    
+    const Vector pjumpw = pitch_mag*pw;
+    const Ray rayw0(ll + 0.0*pjumpw, ul + 0.0*pjumpw);
+    const Ray rayw1(ll + 1.0*pjumpw, ul + 1.0*pjumpw);
+
 
 
     // horizontal bounds
