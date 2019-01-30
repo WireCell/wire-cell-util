@@ -103,7 +103,6 @@ namespace WireCell {
 
         const tensor_t a() const { return m_a; }
         const tensor_t b() const { return m_b; }
-        const tensor_t c() const { return m_c; }
 
     private:
 
@@ -129,7 +128,7 @@ namespace WireCell {
 
         // Coefficients for fast pitch location calculation.  These
         // are scalar values indexed by three different RCCS indicies.
-        tensor_t m_a, m_b, m_c;
+        tensor_t m_a, m_b;
 
     };
 

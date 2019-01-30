@@ -105,6 +105,8 @@ namespace WireCell {
             // Return all subspans with activities
             ranges_t active_ranges() const;
 
+            int offset() const { return m_offset; }
+
         private:
             vector_t m_span;
             layer_t m_layer;

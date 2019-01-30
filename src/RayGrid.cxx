@@ -14,7 +14,6 @@ RayGrid::RayGrid(const ray_pair_vector_t& rays, int normal_axis)
     , m_ray_jump(m_nrccs, m_nrccs)
     , m_a(boost::extents[m_nrccs][m_nrccs][m_nrccs])
     , m_b(boost::extents[m_nrccs][m_nrccs][m_nrccs])
-    , m_c(boost::extents[m_nrccs][m_nrccs][m_nrccs])
 {
 
     // really we are working in 2D space, so project all vectors into the plane.
@@ -99,16 +98,22 @@ RayGrid::RayGrid(const ray_pair_vector_t& rays, int normal_axis)
         for (rccs_index_t il=0; il<m_nrccs; ++il) {
             if (il == in) { continue; }
             
-            for (rccs_index_t im=0; im<m_nrccs; ++im) {
-                if (im == in or im == il) { continue; }
+            // triangle iteration
+            for (rccs_index_t im=0; im<il; ++im) { 
+                if (im == in) { continue; }
 
                 const double rlmpn = m_zero_crossing(il,im).dot(pn);
-                const double wlmpn = m_zero_crossing(im,il).dot(pn);
-                const double wmlpn = m_zero_crossing(il,im).dot(pn);
+
+                const double wlmpn = m_ray_jump(il,im).dot(pn);
+                const double wmlpn = m_ray_jump(im,il).dot(pn);
 
                 m_a[il][im][in] = wlmpn;
-                m_b[il][im][in] = wmlpn;
-                m_c[il][im][in] = rlmpn - cp;
+                m_a[im][il][in] = wmlpn;
+                // b is symmetric.
+                m_b[il][im][in] = rlmpn - cp;
+                m_b[im][il][in] = rlmpn - cp;
+
+                // j*a{lmn} + i*a{mln} + b{lmn}
             }
         }
     }
@@ -140,5 +145,5 @@ double RayGrid::pitch_location(const ray_address_t& one, const ray_address_t& tw
 {
     const tensor_t::index il=one.rccs, im=two.rccs, in=other;
     const tensor_t::index i=one.grid, j=two.grid;
-    return m_c[il][im][in] + m_a[il][im][in]*j + m_b[im][il][in]*i;
+    return  j*m_a[il][im][in] + i*m_a[im][il][in] + m_b[il][im][in];
 }

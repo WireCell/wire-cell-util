@@ -217,7 +217,6 @@ void test_012(const RayGrid& rg)
 {
     dump("a", rg.a());
     dump("b", rg.b());
-    dump("c", rg.c());
 
     std::vector<double> ps;
     for (int a=0; a<2; ++a) {

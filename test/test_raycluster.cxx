@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
 {
     Printer print(argv[0]);
 
-    const double width=100, height=100, pitch_mag = 5;
+    const double width=100, height=100, pitch_mag = 3;
     auto raypairs = make_raypairs(width, height, pitch_mag);
     const int nlayers = raypairs.size();
 
@@ -257,7 +257,7 @@ int main(int argc, char* argv[])
     print();
 
     for (int ilayer = 0; ilayer<nlayers; ++ilayer) {
-        cerr << "Clustering layer " << ilayer << endl;
+        cerr << "Clustering layer " << ilayer << " with " << clusters.size() << " clusters\n";
         const auto& activity = activities[ilayer];
         if (clusters.empty()) {
             clusters = rc.cluster(activity);
