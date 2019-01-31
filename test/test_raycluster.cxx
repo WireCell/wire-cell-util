@@ -24,26 +24,7 @@ void dump(const RayClustering::clustering_t& clusters)
 {
     cerr << "-----dumping " << clusters.size() << " clusters:\n";
     for (const auto& c : clusters) {
-        const auto& strips = c.strips();
-        cerr << "\tvalid:" << c.valid() << ", " << strips.size() << " strips:";
-        for (const auto& s : strips) {
-            cerr << " L" << s.layer << " [" << s.bounds.first << "," << s.bounds.second << "]";
-        }
-        cerr << endl;
-        const auto corners = c.corners();
-        cerr << "\t" << corners.size() << " corners:";
-        for (const auto& cor : corners) {
-            cerr << " (["
-                 << cor.first.rccs
-                 << ","
-                 << cor.first.grid
-                 << "],["
-                 << cor.second.rccs
-                 << ","
-                 << cor.second.grid
-                 << "])";
-        }
-        cerr << endl;
+        c.dump();
     }
     cerr << "------\n";
 }
@@ -65,14 +46,48 @@ void draw_ray(const Ray& ray, int color=1)
                ray.second.z(), ray.second.y());
 }
 
+const int ndepos = 10;
+const int neles = 10;
+const double pitch_magnitude = 5;
+const double gaussian = 3;
+const double border = 10;
+const double width = 100;
+const double height = 100;
+
 TH1F* draw_frame(TCanvas& canvas, std::string title)
 {
-    auto* frame = canvas.DrawFrame(-10,-10,110,110);
+    auto* frame = canvas.DrawFrame(-1.0*border, -1.0*border, width+border, height+border);
     frame->SetTitle(title.c_str());
     return frame;
 }
 
 const std::vector<int> layer_colors{1,1,2,3,4};
+
+void draw_strip(const Point& head, const Point& tail,
+                const Vector& raydir, int color, bool outline=false);
+void draw_strip(const Point& head, const Point& tail,
+                const Vector& raydir, int color, bool outline)
+{
+    const double shoot = 2*std::max(width,height);
+    std::vector<Point> points {
+        tail+raydir*shoot,
+        tail-raydir*shoot,
+        head-raydir*shoot,
+        head+raydir*shoot
+    };
+
+    TPolyLine* pl = new TPolyLine; // like a sieve
+    pl->SetLineColor(color);
+    pl->SetFillColorAlpha(color, 0.1);
+    for (const auto& p : points) {
+        pl->SetNextPoint(p.z(), p.y());
+    }
+    pl->SetNextPoint(points.front().z(), points.front().y());
+    pl->Draw("f");
+    if (outline) {
+        pl->Draw("");
+    }
+}
 
 void draw_layer(RayGrid& rg, int ilayer,
                 double pitch_mag,
@@ -89,13 +104,13 @@ void draw_layer(RayGrid& rg, int ilayer,
         if (measure[ind] <= 0.0) { continue; }
         const auto tail = center + ind*pitch_mag*pitch;
         const auto head = center + (ind+1)*pitch_mag*pitch;
-        draw_ray(Ray(tail, head), color);
-        draw_ray(Ray(tail, tail+raydir*pitch_mag), color);
-        draw_ray(Ray(head, head+raydir*pitch_mag), color);
+        draw_strip(tail, head, raydir, color);
     }
 }
 
-void draw_strips(RayGrid& rg, const RayClustering::strips_t& strips)
+
+void draw_strips(RayGrid& rg, const RayClustering::strips_t& strips, bool outline=true);
+void draw_strips(RayGrid& rg, const RayClustering::strips_t& strips, bool outline)
 {
     const Vector ecks(1,0,0);
 
@@ -113,19 +128,21 @@ void draw_strips(RayGrid& rg, const RayClustering::strips_t& strips)
 
         const auto tail = center + pind1*pitch_mag*pitch;
         const auto head = tail + pitch_dist*pitch;
-        draw_ray(Ray(tail, head), color);
-        draw_ray(Ray(tail, tail+raydir*5.0), color);
-        draw_ray(Ray(head, head+raydir*5.0), color);
-
+        draw_strip(tail, head, raydir, color, outline);
     }
 }
 
 
 void draw_cluster(RayGrid& rg, const RayClustering::Cluster& clus, int color=1)
 {
+    const auto& corners = clus.corners();
+    if (corners.empty()) {
+        return;
+    }
+
     std::vector<Point> points;
     Point center;
-    for (const auto& corn : clus.corners()) {
+    for (const auto& corn : corners) {
         const auto p = rg.ray_crossing(corn.first, corn.second);
         center += p;
         points.push_back(p);
@@ -161,12 +178,43 @@ struct Printer {
     void operator()() { canvas.Print((fname+".pdf").c_str(), "pdf"); }
 };
 
+
+void draw_points_clusters(RayGrid& rg, Printer& print,
+                          const std::vector<Point>& points,
+                          const RayClustering::clustering_t& clusters)
+{
+    int nstrips = 0;
+    for (const auto& c : clusters) {
+        nstrips += c.strips().size();
+    }
+
+    draw_frame(print.canvas, Form("%d points, %d clusters, %d strips",
+                                  (int)points.size(), (int)clusters.size(), nstrips));
+    for (size_t ipt=0; ipt<points.size(); ++ipt ) {
+        const auto& p = points[ipt];
+        draw_point(p, 1, 24, ipt+1);
+    }
+    for (size_t ic = 0; ic<clusters.size(); ++ic) {
+        draw_cluster(rg, clusters[ic],1);
+    }
+}
+
+size_t drop_empty(RayClustering::clustering_t& clusters)
+{
+    auto end = std::partition(clusters.begin(), clusters.end(),
+                              [](const RayClustering::Cluster& c) { return c.valid(); });
+    size_t dropped = clusters.end() - end;
+    clusters.resize(end - clusters.begin());
+    cerr << "Dropped " << dropped << " clusters\n";
+    return dropped;
+}
+
+
 int main(int argc, char* argv[])
 {
     Printer print(argv[0]);
 
-    const double width=100, height=100, pitch_mag = 3;
-    auto raypairs = make_raypairs(width, height, pitch_mag);
+    auto raypairs = make_raypairs(width, height, pitch_magnitude);
     const int nlayers = raypairs.size();
 
     RayGrid rg(raypairs);
@@ -180,10 +228,8 @@ int main(int argc, char* argv[])
     std::vector< std::vector<RayClustering::Activity::value_t> > measures(nlayers);
 
     std::default_random_engine generator;
-    std::uniform_real_distribution<double> position(0,100);
-    std::normal_distribution<double> spread(0.0, 1.0);
-    const int ndepos = 10;
-    const int neles = 10;
+    std::uniform_real_distribution<double> position(0,std::max(width,height));
+    std::normal_distribution<double> spread(0.0, gaussian);
     std::vector<Point> points;
     for (int idepo=0;idepo<ndepos;++idepo) {
         Point cp(0, position(generator), position(generator));
@@ -257,24 +303,29 @@ int main(int argc, char* argv[])
     print();
 
     for (int ilayer = 0; ilayer<nlayers; ++ilayer) {
-        cerr << "Clustering layer " << ilayer << " with " << clusters.size() << " clusters\n";
         const auto& activity = activities[ilayer];
+        cerr << "Clustering layer " << ilayer << " with " << clusters.size() << " clusters\n";
+        activity.dump();
         if (clusters.empty()) {
             clusters = rc.cluster(activity);
         }
         else {
             clusters = rc.cluster(clusters, activity);
+            if (clusters.empty()) {
+                cerr << "lost m'clusters!\n";
+                return -1;
+            }
         }
+        drop_empty(clusters);
         dump(clusters);
+        draw_points_clusters(rg, print, points, clusters);
+        print();
     }
-    draw_frame(print.canvas, "Points and Cluster");
-    for (size_t ipt=0; ipt<points.size(); ++ipt ) {
-        const auto& p = points[ipt];
-        draw_point(p, 1, 24, ipt+1);
-    }
-    
-    for (size_t ic = 0; ic<clusters.size(); ++ic) {
-        draw_cluster(rg, clusters[ic],ic+1);
+
+    draw_points_clusters(rg, print, points, clusters);
+    for (const auto&  activity: activities) {
+        auto strips = activity.make_strips();
+        draw_strips(rg, strips, false);
     }
     print();
 

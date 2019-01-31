@@ -44,11 +44,13 @@
 
 #include <vector>
 #include <map>
+#include <iostream>
 
 namespace WireCell {
 
     class RayGrid {
     public:
+        // fixme: rename this "layer", rccs is too awkward
         // Index a ray Cartesian coordinate system
         typedef int rccs_index_t;
 
@@ -93,6 +95,9 @@ namespace WireCell {
         // Return the pitch location measured in an other RCCS give of the crossing point of two rays
         double pitch_location(const ray_address_t& one, const ray_address_t& two, rccs_index_t other) const;
 
+        int pitch_index(double pitch, rccs_index_t layer) const {
+            return std::floor(pitch/m_pitch_mag[layer]);
+        }
 
         int nrccs() const { return m_nrccs; }
         const std::vector<double>& pitch_mags() const { return m_pitch_mag; }
@@ -132,6 +137,15 @@ namespace WireCell {
 
     };
 
+
+inline
+std::ostream& operator<<(std::ostream& os, const WireCell::RayGrid::ray_address_t& ra)
+{
+    os << "<rayaddr {L" << ra.rccs << ",G" << ra.grid <<"}>";
+    return os;
 }
+
+} // WireCell namespace
+
 
 #endif

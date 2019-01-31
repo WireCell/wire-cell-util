@@ -30,9 +30,9 @@ RayClustering::Activity::Activity(layer_t layer, const range_t& span, int offset
         --e;
     }
     m_span.insert(m_span.begin(), b,e);
-    std::cerr << "Activity(" << layer << " dropped: ["
-              << b-span.first << "," << span.second-e
-              << "]\n";
+    std::cerr << "Activity(L" << layer << ") droping pre/post bins: "
+              << b-span.first << "/" << span.second-e
+              << "\n";
 }
 
 RayClustering::Activity::iterator_t RayClustering::Activity::begin() const
@@ -55,24 +55,19 @@ int RayClustering::Activity::pitch_index(const iterator_t& it) const
     return m_offset + it-m_span.begin();
 }
 // Produce a subspan activity between pitch indices [pi1, pi2)
-RayClustering::Activity RayClustering::Activity::subspan(int pi_begin, int pi_end) const
+RayClustering::Activity RayClustering::Activity::subspan(int abs_beg, int abs_end) const
 {
-    const int beg = pi_begin-m_offset;
-    const int end = pi_end-m_offset;
-    if (beg < m_offset or beg > end or beg-end >= (int)m_span.size()) {
+    const int rel_beg = abs_beg-m_offset;
+    const int rel_end = abs_end-m_offset;
+    if (rel_beg < 0 or rel_beg >= rel_end or rel_end > (int)m_span.size()) {
         std::cerr
-            << "activity::subspan bogus pi_begin="<<pi_begin<<" pi_end="<<pi_end
+            << "activity::subspan bogus absolute:["<<abs_beg<<","<<abs_end<<"]"
             << " m_offset="<<m_offset << " span.size=" << m_span.size()
             << std::endl;
         return Activity(m_layer);
     }
-    std::cerr << "subspan(" << pi_begin << "," <<pi_end << ") "
-              << "m_offset=" << m_offset << " beg=" << beg << ", end=" << end << "\n";
-    auto ret = Activity(m_layer, {begin()+beg, begin()+end}, pi_begin);
-    std::cerr << "return offset=" << ret.offset() << " index=["
-              << ret.pitch_index(ret.begin()) << ","
-              << ret.pitch_index(ret.end()) << "]\n";
-    return ret;
+    
+    return Activity(m_layer, {begin()+rel_beg, begin()+rel_end}, abs_beg);
 }
 
 
@@ -141,9 +136,6 @@ RayClustering::corners_t find_corners(const RayClustering::Strip& one,
 
 void RayClustering::Cluster::add(const RayGrid& rg, const Strip& strip)
 {
-    // fixme: something here isn't right
-
-
     const size_t nstrips = m_strips.size();
 
     if (nstrips == 0) {         // special case
@@ -161,10 +153,16 @@ void RayClustering::Cluster::add(const RayGrid& rg, const Strip& strip)
 
     // See what old corners are inside the new strip
     for (const auto& c : m_corners) {
-        double pitch = rg.pitch_location(c.first, c.second, strip.layer);
+        const double pitch = rg.pitch_location(c.first, c.second, strip.layer);
+        const int pind = rg.pitch_index(pitch, strip.layer);
 
-        // caution, this is probably sensitive to roundoff error.
-        if (strip.bounds.first <= pitch and pitch <= strip.bounds.second) { 
+
+        if (strip.in(pind)) {
+            std::cerr << "retaining old corner of cluster with " << nstrips
+                      << " strips: pind=" << pind <<  " pitch=" << pitch
+                      << " for strip L" << strip.layer
+                      << " bounds=[" << strip.bounds.first << "," << strip.bounds.second << "]\n";
+
             surviving.push_back(c);
         }
     }
@@ -173,17 +171,29 @@ void RayClustering::Cluster::add(const RayGrid& rg, const Strip& strip)
     for (size_t si1 = 0; si1 < nstrips; ++si1) {
         auto corners = find_corners(m_strips[si1], strip);
         for (const auto& c : corners) {
+
+            // check each corner if inside all other strips
             bool miss = false;
             for (size_t si2 = 0; si2 < nstrips; ++si2) {
                 if (si1 == si2) { continue; }
                 const auto& s2 = m_strips[si2];
                 double pitch = rg.pitch_location(c.first, c.second, s2.layer);
-                if (pitch < s2.bounds.first or pitch > s2.bounds.second) {
-                    miss = true;
-                    break;
+                const int pind = rg.pitch_index(pitch, s2.layer);
+                if (s2.in(pind)) {
+                    // std::cerr << "maybe adding new corner at pitch=" << pitch << ", pind=" << pind << "  in strip\n"
+                    //           << "\t" << c << "\n"
+                    //           << "\t" << s2 << "\n";
+                    continue;
                 }
+                // std::cerr << "miss adding new corner at pitch=" << pitch << ", pind=" << pind << "  in strip\n"
+                //           << "\t" << c << "\n"
+                //           << "\t" << s2 << "\n";
+
+                miss = true;
+                break;
             }
             if (!miss) {
+                std::cerr << "Adding new corner "<< c << std::endl;
                 surviving.push_back(c);
             }
         }
@@ -228,6 +238,7 @@ RayClustering::Activity RayClustering::projection(const Cluster& cluster, const 
 
     const double pitch_mag = m_rg.pitch_mags()[activity.layer()];
 
+    // find extreme pitches
     std::vector<double> pitches;
     const auto corners = cluster.corners();
     if (corners.empty()) {
@@ -237,71 +248,80 @@ RayClustering::Activity RayClustering::projection(const Cluster& cluster, const 
     for (const auto& c : cluster.corners()) {
         const double p = m_rg.pitch_location(c.first, c.second, activity.layer());
         pitches.push_back(p);
-        std::cerr << "cluster corner: L" << activity.layer()
-                  << " [{" << c.first.rccs << "," << c.first.grid << "},"
-                  << "{" << c.second.rccs << "," << c.second.grid << "}] "
-                  << "p=" << p << " pi=" << std::floor(p/pitch_mag) << "\n";
+        std::cerr << "projection include corner in: L" << activity.layer()
+                  << " at p=" << p << " pi=" << std::floor(p/pitch_mag) 
+                  << " " << c << "\n";
     }
     if (pitches.empty()) {
-        std::cerr << "projection: got not pitches\n";
+        std::cerr << "projection: got no cluster corners\n";
         return Activity(activity.layer());
     }
-
-    const double first_pitch = pitch_mag * activity.pitch_index(activity.begin());
-    const double last_pitch = pitch_mag * activity.pitch_index(activity.end()); // inclusive
 
     auto pbeg = pitches.begin();
     auto pend = pitches.end();
 
-    std::cerr << "Checking activity projection over "
-              << activity.end() - activity.begin() << " activity bins:\n";
-    std::cerr << "\tactivity pitches: [" << first_pitch << "," << last_pitch <<"]\n";
-    std::cerr << "\tcluster pitches: ";
-    for (auto pit=pbeg; pit!=pend; ++pit) {
-        std::cerr << " " << *pit;
-    }
-    std::cerr << "\n";
-    pend = std::partition(pbeg, pend, [&](const double& x){
-            return x >= first_pitch and x <= last_pitch;});
-    std::cerr << "\tcluster pitches selected: ";
-    for (auto pit=pbeg; pit!=pend; ++pit) {
-        std::cerr << " " << *pit;
-    }
-    std::cerr << "\n";
     const auto mm = std::minmax_element(pbeg, pend);
-    const int offset1 = std::floor((*mm.first)/pitch_mag);
-    const int offset2 = std::ceil((*mm.second)/pitch_mag);
-    std::cerr << "\toff1=" << offset1 << "(" << (*mm.first) << "), off2=" << offset2 << "(" << (*mm.second) << ")\n";
-    auto ret = activity.subspan(offset1, offset2);
-    std::cerr << "\tactivity returning with: " << ret.end()-ret.begin() << "\n";
+    int pind1 = std::floor((*mm.first)/pitch_mag);
+    int pind2 = std::ceil((*mm.second)/pitch_mag);
+
+    pind1 = std::max(pind1, activity.pitch_index(activity.begin()));
+    pind2 = std::min(pind2, activity.pitch_index(activity.end()));
+    
+    auto ret = activity.subspan(pind1, pind2);
+    std::cerr << "\tsubspan activity: " << ret << std::endl;
     return ret;
 }
 
 
-RayClustering::clustering_t RayClustering::cluster(const clustering_t& prior,
+void RayClustering::Cluster::dump() const
+{
+    std::cerr << *this << std::endl;
+    const auto& strips = this->strips();
+    std::cerr << "\tstrips (" << strips.size() << "):\n";
+    for (const auto& s : strips) {
+        std::cerr << "\t\t" << s << std::endl;
+    }
+    const auto corners = this->corners();
+    std::cerr << "\tcorners (" << corners.size() << "):\n";
+    for (const auto& c : corners) {
+        std::cerr << "\t\t" << c << std::endl;
+    }
+}
+void RayClustering::Activity::dump() const
+{
+    std::cerr << *this << std::endl;
+    for (auto strip: make_strips()) {
+        std::cerr << "\t" << strip << std::endl;
+    }
+
+}
+
+RayClustering::clustering_t RayClustering::cluster(const clustering_t& prior_clusters,
                                                    const Activity& activity)
 {
     clustering_t ret;
 
-    for (const auto& clus : prior) {
-        size_t nstrips = clus.strips().size();
+    for (const auto& clus : prior_clusters) {
         Activity proj = projection(clus, activity);
         if (proj.empty()) {
-            std::cerr << "cluster with " << nstrips
-                      << " strips has no overlap with activity in layer "
-                      << activity.layer() << std::endl;
+            std::cerr << "projection empty:\n";
+            clus.dump();
+            activity.dump();
             continue;
         }
+        std::cerr << "projecting:\n";
+        clus.dump();
+        proj.dump();
         auto strips = proj.make_strips();
         for (auto strip : strips) {
-            std::cerr << "\tstrip: L" << strip.layer
-                      << " [" << strip.bounds.first << "," << strip.bounds.second << "]\n";
+            std::cerr << strip << std::endl;
             Cluster newclus = clus; // copy
             newclus.add(m_rg, strip);
             if (newclus.corners().empty()) {
-                std::cerr << "\tnew cluster no corners with "
-                          << newclus.strips().size() << " strips"
-                          << " old cluster with " << clus.strips().size() << " strips\n";
+                std::cerr << "new cluster empty:\n"
+                          << "\t" << clus << std::endl
+                          << "\t" << strip << std::endl
+                          << "\t" << newclus << std::endl;
                 continue;
             }
             ret.push_back(newclus);

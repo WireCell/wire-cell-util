@@ -20,6 +20,7 @@
 
 #include <map>
 #include <vector>
+#include <iostream>
 
 #include "WireCellUtil/RayGrid.h"
 
@@ -58,6 +59,11 @@ namespace WireCell {
                 return std::make_pair(ray_address_t{layer, bounds.first},
                                       ray_address_t{layer, bounds.second});
             }
+
+            bool in(RayGrid::grid_index_t pitch_index) const {
+                return bounds.first <= pitch_index and pitch_index < bounds.second;
+            }
+                
         };
 
         typedef std::vector<Strip> strips_t;
@@ -65,6 +71,8 @@ namespace WireCell {
         // Activity represents an absolutly positioned span of pitch
         // indices which may contain some measure of positive
         // activity.  The activity may be indexed by pitch index.
+        // Each index n is considered to contain the activity from its
+        // pitch up to but not including the pitch of the n+1 bin.
         class Activity {
         public:
             typedef double value_t;
@@ -106,6 +114,7 @@ namespace WireCell {
             ranges_t active_ranges() const;
 
             int offset() const { return m_offset; }
+            void dump() const;
 
         private:
             vector_t m_span;
@@ -132,6 +141,8 @@ namespace WireCell {
                 return corners().size() > 0;
             }
 
+            void dump() const;
+
         private:
             strips_t m_strips;
             corners_t m_corners;
@@ -155,9 +166,40 @@ namespace WireCell {
     private:
         const RayGrid& m_rg;
     };
+
+
+inline
+std::ostream& operator<<(std::ostream& os, const WireCell::RayClustering::Strip& s)
+{
+    os << "<strip L" << s.layer << " pind:["  << s.bounds.first << "," << s.bounds.second << "]>";
+    return os;
 }
 
+inline
+std::ostream& operator<<(std::ostream& os, const WireCell::RayClustering::Activity& a)
+{
+    int b = a.pitch_index(a.begin()), e = a.pitch_index(a.end());
+    auto strips = a.make_strips();
+    os << "<activity L" << a.layer() << " " << strips.size() << " strips over pind:["  << b << "," << e << "]>";
+    return os;
+}
 
+inline
+std::ostream& operator<<(std::ostream& os, const WireCell::RayClustering::Cluster& c)
+{
+    os << "<cluster " << c.strips().size() << " strips, " << c.corners().size() << " corners>";
+    return os;
+}
+
+inline
+std::ostream& operator<<(std::ostream& os, const WireCell::RayClustering::corner_t& c)
+{
+    os << "<corner [{L" << c.first.rccs << ",G" << c.first.grid << "},"
+       << "{L" << c.second.rccs << ",G" << c.second.grid << "}]>";
+    return os;
+}
+
+} // WireCell namespace
 
 #endif
 
