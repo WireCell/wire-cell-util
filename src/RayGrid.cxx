@@ -3,17 +3,18 @@
 #include <iostream>             // debug
 
 using namespace WireCell;
+using namespace WireCell::RayGrid;
 
 
-RayGrid::RayGrid(const ray_pair_vector_t& rays, int normal_axis)
-    : m_nrccs(rays.size())
-    , m_pitch_mag(m_nrccs, 0.0)
-    , m_pitch_dir(m_nrccs)
-    , m_center(m_nrccs)
-    , m_zero_crossing(m_nrccs, m_nrccs)
-    , m_ray_jump(m_nrccs, m_nrccs)
-    , m_a(boost::extents[m_nrccs][m_nrccs][m_nrccs])
-    , m_b(boost::extents[m_nrccs][m_nrccs][m_nrccs])
+Coordinates::Coordinates(const ray_pair_vector_t& rays, int normal_axis)
+    : m_nlayers(rays.size())
+    , m_pitch_mag(m_nlayers, 0.0)
+    , m_pitch_dir(m_nlayers)
+    , m_center(m_nlayers)
+    , m_zero_crossing(m_nlayers, m_nlayers)
+    , m_ray_jump(m_nlayers, m_nlayers)
+    , m_a(boost::extents[m_nlayers][m_nlayers][m_nlayers])
+    , m_b(boost::extents[m_nlayers][m_nlayers][m_nlayers])
 {
 
     // really we are working in 2D space, so project all vectors into the plane.
@@ -21,9 +22,9 @@ RayGrid::RayGrid(const ray_pair_vector_t& rays, int normal_axis)
 
     // must go through 1, 2 and 3 combonations
 
-    // First, find the per-rccs things
-    for (rccs_index_t irccs=0; irccs<m_nrccs; ++irccs) {
-        const auto& rpair = rays[irccs];
+    // First, find the per-layer things
+    for (layer_index_t ilayer=0; ilayer<m_nlayers; ++ilayer) {
+        const auto& rpair = rays[ilayer];
         const auto& r0 = rpair.first;
         const auto& r1 = rpair.second;
 
@@ -33,18 +34,18 @@ RayGrid::RayGrid(const ray_pair_vector_t& rays, int normal_axis)
         // relative pitch vector
         auto rpv = project(rpitch.second - rpitch.first);
 
-        m_pitch_mag[irccs] = rpv.magnitude();
-        m_pitch_dir[irccs] = rpv.norm();
+        m_pitch_mag[ilayer] = rpv.magnitude();
+        m_pitch_dir[ilayer] = rpv.norm();
 
         // center point of ray 0
-        m_center[irccs] = 0.5*(project(r0.first + r0.second));
+        m_center[ilayer] = 0.5*(project(r0.first + r0.second));
     }
 
-    // Next find cross-rccs things
-    for (rccs_index_t il=0; il<m_nrccs; ++il) {
-        for (rccs_index_t im=0; im<m_nrccs; ++im) {
+    // Next find cross-layer things
+    for (layer_index_t il=0; il<m_nlayers; ++il) {
+        for (layer_index_t im=0; im<m_nlayers; ++im) {
 
-            // ray pairs for rccs l and m
+            // ray pairs for layer l and m
             const auto& rpl = rays[il];
             const auto& rpm = rays[im];
 
@@ -63,7 +64,7 @@ RayGrid::RayGrid(const ray_pair_vector_t& rays, int normal_axis)
                 m_zero_crossing(il,im) = project(pl0); 
                 m_zero_crossing(im,il) = project(pm0);
 
-                // along l-rccs ray 0, crossing of m-rccs ray 1.
+                // along l-layer ray 0, crossing of m-layer ray 1.
                 {
                     const auto ray = ray_pitch(rl0, rm1);
                     const auto jump = project(ray.first - pl0);
@@ -74,7 +75,7 @@ RayGrid::RayGrid(const ray_pair_vector_t& rays, int normal_axis)
                     //           << " m_ray_array=" << m_ray_jump(il, im)
                     //           << std::endl;
                 }
-                // along m-rccs ray 0, crossing of l-rccs ray 1.
+                // along m-layer ray 0, crossing of l-layer ray 1.
                 {
                     const auto ray = ray_pitch(rm0, rl1);
                     const auto jump = project(ray.first - pm0);
@@ -89,17 +90,17 @@ RayGrid::RayGrid(const ray_pair_vector_t& rays, int normal_axis)
         }
     }
 
-    // Finally, find triple-rccs things (coefficients for
+    // Finally, find triple-layer things (coefficients for
     // P^{lmn}_{ij}).  Needs some of the above completed.
-    for (rccs_index_t in=0; in<m_nrccs; ++in) {
+    for (layer_index_t in=0; in<m_nlayers; ++in) {
         const auto& pn = m_pitch_dir[in];
         const double cp = m_center[in].dot(pn);
 
-        for (rccs_index_t il=0; il<m_nrccs; ++il) {
+        for (layer_index_t il=0; il<m_nlayers; ++il) {
             if (il == in) { continue; }
             
             // triangle iteration
-            for (rccs_index_t im=0; im<il; ++im) { 
+            for (layer_index_t im=0; im<il; ++im) { 
                 if (im == in) { continue; }
 
                 const double rlmpn = m_zero_crossing(il,im).dot(pn);
@@ -119,14 +120,14 @@ RayGrid::RayGrid(const ray_pair_vector_t& rays, int normal_axis)
     }
 }
 
-Vector RayGrid::zero_crossing(rccs_index_t one, rccs_index_t two) const
+Vector Coordinates::zero_crossing(layer_index_t one, layer_index_t two) const
 {
     return m_zero_crossing(one, two);
 }
 
-Vector RayGrid::ray_crossing(const ray_address_t& one, const ray_address_t& two) const
+Vector Coordinates::ray_crossing(const coordinate_t& one, const coordinate_t& two) const
 {
-    const rccs_index_t l = one.rccs, m = two.rccs;
+    const layer_index_t l = one.layer, m = two.layer;
     const auto r00 = m_zero_crossing(l,m);
     const auto& wlm = m_ray_jump(l,m);
     const auto& wml = m_ray_jump(m,l);
@@ -141,9 +142,9 @@ Vector RayGrid::ray_crossing(const ray_address_t& one, const ray_address_t& two)
     return res;
 }
 
-double RayGrid::pitch_location(const ray_address_t& one, const ray_address_t& two, rccs_index_t other) const
+double Coordinates::pitch_location(const coordinate_t& one, const coordinate_t& two, layer_index_t other) const
 {
-    const tensor_t::index il=one.rccs, im=two.rccs, in=other;
+    const tensor_t::index il=one.layer, im=two.layer, in=other;
     const tensor_t::index i=one.grid, j=two.grid;
     return  j*m_a[il][im][in] + i*m_a[im][il][in] + m_b[il][im][in];
 }

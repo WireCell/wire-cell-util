@@ -1,11 +1,11 @@
 // This is NOT a real header file but may be includeded in tests as code
 
-RayGrid::ray_pair_vector_t make_raypairs(double width=100, double height=100,
-                                         double pitch_mag = 3, double angle=60.0*M_PI/180.0);
-RayGrid::ray_pair_vector_t make_raypairs(double width, double height, double pitch_mag,
-                                         double angle)
+ray_pair_vector_t make_raypairs(double width=100, double height=100,
+                                double pitch_mag = 3, double angle=60.0*M_PI/180.0);
+ray_pair_vector_t make_raypairs(double width, double height, double pitch_mag,
+                                double angle)
 {
-    RayGrid::ray_pair_vector_t raypairs;
+    ray_pair_vector_t raypairs;
 
     // corners
     const Vector ll(0,0,0), lr(0,0,width), ul(0,height,0), ur(0,height,width);

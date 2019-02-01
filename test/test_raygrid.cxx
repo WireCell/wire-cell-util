@@ -12,6 +12,7 @@
 #include <string>
 
 using namespace WireCell;
+using namespace WireCell::RayGrid;
 using namespace std;
 
 void draw_ray(const Ray& ray, int color=1)
@@ -38,7 +39,7 @@ void draw_text(const Point&p, std::string text)
     t.SetTextSize(0.03);
     t.DrawText(p.z(), p.y(), text.c_str());
 }
-void draw_zero_crossing(const RayGrid& rg, RayGrid::rccs_index_t il, RayGrid::rccs_index_t im)
+void draw_zero_crossing(const Coordinates& rg, layer_index_t il, layer_index_t im)
 {
     auto p = rg.zero_crossing(il, im);
     draw_point(p, 1, 24);
@@ -62,7 +63,7 @@ void draw_zero_crossing(const RayGrid& rg, RayGrid::rccs_index_t il, RayGrid::rc
     draw_text(p, ss.str());
 }
 
-void draw_segments(const RayGrid& rg)
+void draw_segments(const Coordinates& rg)
 {
     const auto c0 = rg.centers()[0];
     const auto c1 = rg.centers()[1];
@@ -73,7 +74,7 @@ void draw_segments(const RayGrid& rg)
 
     const Vector ecks(1,0,0);
 
-    for (int lind=2; lind < rg.nrccs(); ++lind) {
+    for (int lind=2; lind < rg.nlayers(); ++lind) {
         const auto& center = rg.centers()[lind];
         const auto& pdir = rg.pitch_dirs()[lind];
         const double pmag = rg.pitch_mags()[lind];
@@ -132,7 +133,7 @@ void draw_segments(const RayGrid& rg)
     }
 }
 
-void draw_pairs(const RayGrid::ray_pair_vector_t& raypairs)
+void draw_pairs(const ray_pair_vector_t& raypairs)
 {
     for (const auto& rp : raypairs) {
         draw_ray(rp.first);
@@ -149,7 +150,7 @@ TH1F* draw_frame(TCanvas& canvas, std::string title,
     return frame;
 }
 
-void draw(std::string fname, const RayGrid& rg, const RayGrid::ray_pair_vector_t& raypairs)
+void draw(std::string fname, const Coordinates& rg, const ray_pair_vector_t& raypairs)
 {
 
     TCanvas canvas("test_raygrid","Ray Grid", 500, 500);
@@ -164,22 +165,22 @@ void draw(std::string fname, const RayGrid& rg, const RayGrid::ray_pair_vector_t
     const int nbounds = raypairs.size();
 
 
-    for (RayGrid::rccs_index_t il=0; il < nbounds; ++il) {
-        for (RayGrid::rccs_index_t im=0; im < nbounds; ++im) {
+    for (layer_index_t il=0; il < nbounds; ++il) {
+        for (layer_index_t im=0; im < nbounds; ++im) {
             if (il < im) {
-                draw_frame(canvas, Form("RCCS (%d,%d)", (int)il, (int)im));
+                draw_frame(canvas, Form("LAYER (%d,%d)", (int)il, (int)im));
                 draw_pairs(raypairs);
                 draw_zero_crossing(rg, il, im);
 
-                for (RayGrid::grid_index_t ip = 0; ip < 100; ++ip) {
-                    for (RayGrid::grid_index_t jp = 0; jp < 100; ++jp) {
-                        RayGrid::ray_address_t one{il, ip}, two{im, jp};
+                for (grid_index_t ip = 0; ip < 100; ++ip) {
+                    for (grid_index_t jp = 0; jp < 100; ++jp) {
+                        coordinate_t one{il, ip}, two{im, jp};
                         auto p = rg.ray_crossing(one, two);
                         // cheat about knowing the bounds
                         if (p.z() < 0.0 or p.z() > 100.0) continue;
                         if (p.y() < 0.0 or p.y() > 100.0) continue;
                         draw_point(p, 1, 7);
-                        //cout << p<< " " << one.rccs << ":" << one.grid << " , " << two.rccs << ":" << two.grid <<  endl;
+                        //cout << p<< " " << one.layer << ":" << one.grid << " , " << two.layer << ":" << two.grid <<  endl;
                     }
                 }
 
@@ -192,7 +193,7 @@ void draw(std::string fname, const RayGrid& rg, const RayGrid::ray_pair_vector_t
 }
 
 
-void dump(std::string msg, const RayGrid::tensor_t& ar)
+void dump(std::string msg, const tensor_t& ar)
 {
     cerr << msg << endl;
     cerr << "Dimensions: " << ar.dimensionality << endl;
@@ -213,7 +214,7 @@ void dump(std::string msg, const RayGrid::tensor_t& ar)
     }
 }
 
-void test_012(const RayGrid& rg)
+void test_012(const Coordinates& rg)
 {
     dump("a", rg.a());
     dump("b", rg.b());
@@ -238,15 +239,15 @@ void test_012(const RayGrid& rg)
 
 int main(int argc, char *argv[])
 {
-    RayGrid::ray_pair_vector_t raypairs = make_raypairs();
+    ray_pair_vector_t raypairs = make_raypairs();
 
-    RayGrid rg(raypairs);
+    Coordinates rg(raypairs);
 
     test_012(rg);
 
-    Assert(rg.nrccs() == (int)raypairs.size());
+    Assert(rg.nlayers() == (int)raypairs.size());
     
-    for (int ind=0; ind<rg.nrccs(); ++ind) {
+    for (int ind=0; ind<rg.nlayers(); ++ind) {
         cout << ind
              << " r1=" << raypairs[ind].first
              << " r2=" << raypairs[ind].second

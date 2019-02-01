@@ -20,6 +20,12 @@ namespace WireCell {
     /// A line segment running from a first (tail) to a second (head) point.
     typedef std::pair<Point, Point> Ray;
 
+    // Pair of rays.
+    typedef std::pair<Ray,Ray> ray_pair_t;
+
+    // A collection of ray pairs;
+    typedef std::vector<ray_pair_t> ray_pair_vector_t;
+
     /// PointVector - a collection of Points
     typedef std::vector<Point> PointVector;
 

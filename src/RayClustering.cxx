@@ -1,20 +1,21 @@
-#include "WireCellUtil/RayCluster.h"
+#include "WireCellUtil/RayClustering.h"
 
 #include <algorithm>
 
 #include <iostream>             // debug
 
 using namespace WireCell;
+using namespace WireCell::RayGrid;
 
-RayClustering::Activity::Activity(layer_t layer)
+Activity::Activity(layer_index_t layer)
     : m_span()
     , m_layer(layer)
     , m_offset(0)
     , m_threshold(0)
 {
 }
-RayClustering::Activity::Activity(layer_t layer, const range_t& span, int offset,
-                                  double threshold)
+Activity::Activity(layer_index_t layer, const range_t& span, int offset,
+                   double threshold)
     : m_span()
     , m_layer(layer)
     , m_offset(offset)
@@ -35,27 +36,27 @@ RayClustering::Activity::Activity(layer_t layer, const range_t& span, int offset
               << "\n";
 }
 
-RayClustering::Activity::iterator_t RayClustering::Activity::begin() const
+Activity::iterator_t Activity::begin() const
 {
     return m_span.begin();
 }
 
-RayClustering::Activity::iterator_t RayClustering::Activity::end() const
+Activity::iterator_t Activity::end() const
 {
     return m_span.end();
 }
 
-bool RayClustering::Activity::empty() const 
+bool Activity::empty() const 
 {
     return m_span.empty();
 }
 
-int RayClustering::Activity::pitch_index(const iterator_t& it) const
+int Activity::pitch_index(const iterator_t& it) const
 {
     return m_offset + it-m_span.begin();
 }
 // Produce a subspan activity between pitch indices [pi1, pi2)
-RayClustering::Activity RayClustering::Activity::subspan(int abs_beg, int abs_end) const
+Activity Activity::subspan(int abs_beg, int abs_end) const
 {
     const int rel_beg = abs_beg-m_offset;
     const int rel_end = abs_end-m_offset;
@@ -71,15 +72,14 @@ RayClustering::Activity RayClustering::Activity::subspan(int abs_beg, int abs_en
 }
 
 
-RayClustering::Strip
-RayClustering::Activity::make_strip(const RayClustering::Activity::range_t& r) const
+Strip
+Activity::make_strip(const Activity::range_t& r) const
 {
-    return RayClustering::Strip{m_layer,
-            std::make_pair(pitch_index(r.first),
-                           pitch_index(r.second))};
+    return Strip{m_layer, std::make_pair(pitch_index(r.first),
+                                         pitch_index(r.second))};
 }
 
-RayClustering::strips_t RayClustering::Activity::make_strips() const 
+strips_t Activity::make_strips() const 
 {
     strips_t ret;
     for (const auto& ar : active_ranges()) {
@@ -89,7 +89,7 @@ RayClustering::strips_t RayClustering::Activity::make_strips() const
 }
 
 
-RayClustering::Activity::ranges_t RayClustering::Activity::active_ranges() const
+Activity::ranges_t Activity::active_ranges() const
 {
     ranges_t ret;
     range_t current{end(), end()};
@@ -117,10 +117,9 @@ RayClustering::Activity::ranges_t RayClustering::Activity::active_ranges() const
 /*********************************/
 
 static
-RayClustering::corners_t find_corners(const RayClustering::Strip& one,
-                                      const RayClustering::Strip& two)
+crossings_t find_corners(const Strip& one, const Strip& two)
 {
-    RayClustering::corners_t ret;
+    crossings_t ret;
 
     const auto a = one.addresses(), b = two.addresses();
 
@@ -134,7 +133,7 @@ RayClustering::corners_t find_corners(const RayClustering::Strip& one,
 
 
 
-void RayClustering::Cluster::add(const RayGrid& rg, const Strip& strip)
+void Cluster::add(const Coordinates& rg, const Strip& strip)
 {
     const size_t nstrips = m_strips.size();
 
@@ -149,7 +148,7 @@ void RayClustering::Cluster::add(const RayGrid& rg, const Strip& strip)
         return;
     }
 
-    corners_t surviving;
+    crossings_t surviving;
 
     // See what old corners are inside the new strip
     for (const auto& c : m_corners) {
@@ -202,21 +201,21 @@ void RayClustering::Cluster::add(const RayGrid& rg, const Strip& strip)
     m_strips.push_back(strip);
 }
 
-const RayClustering::corners_t& RayClustering::Cluster::corners() const
+const crossings_t& Cluster::corners() const
 {
     return m_corners;
 }
 
 
 
-RayClustering::RayClustering(const RayGrid& rg)
+Clustering::Clustering(const Coordinates& rg)
     : m_rg(rg)
 {
 }
 
 
 
-RayClustering::clustering_t RayClustering::cluster(const Activity& activity)
+clustering_t Clustering::cluster(const Activity& activity)
 {
     auto strips = activity.make_strips();
     const size_t nstrips = strips.size();
@@ -227,7 +226,7 @@ RayClustering::clustering_t RayClustering::cluster(const Activity& activity)
     return ret;
 }
 
-RayClustering::Activity RayClustering::projection(const Cluster& cluster, const Activity& activity)
+Activity Clustering::projection(const Cluster& cluster, const Activity& activity)
 {
     // special case.  A single layer cluster effectively extends to
     // infinity along the ray direction so any possible activity
@@ -273,7 +272,7 @@ RayClustering::Activity RayClustering::projection(const Cluster& cluster, const 
 }
 
 
-void RayClustering::Cluster::dump() const
+void Cluster::dump() const
 {
     std::cerr << *this << std::endl;
     const auto& strips = this->strips();
@@ -287,7 +286,8 @@ void RayClustering::Cluster::dump() const
         std::cerr << "\t\t" << c << std::endl;
     }
 }
-void RayClustering::Activity::dump() const
+
+void Activity::dump() const
 {
     std::cerr << *this << std::endl;
     for (auto strip: make_strips()) {
@@ -296,8 +296,8 @@ void RayClustering::Activity::dump() const
 
 }
 
-RayClustering::clustering_t RayClustering::cluster(const clustering_t& prior_clusters,
-                                                   const Activity& activity)
+clustering_t Clustering::cluster(const clustering_t& prior_clusters,
+                                 const Activity& activity)
 {
     clustering_t ret;
 
