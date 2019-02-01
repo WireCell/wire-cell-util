@@ -94,7 +94,7 @@ namespace WireCell {
             int m_offset;
             double m_threshold;
         };
-
+        typedef std::vector<Activity> activities_t;
 
         class Cluster {
         public:
@@ -144,37 +144,46 @@ namespace WireCell {
         };
 
 
-inline
-std::ostream& operator<<(std::ostream& os, const WireCell::RayGrid::Strip& s)
-{
-    os << "<strip L" << s.layer << " pind:["  << s.bounds.first << "," << s.bounds.second << "]>";
-    return os;
-}
+        /// free functions
 
-inline
-std::ostream& operator<<(std::ostream& os, const WireCell::RayGrid::Activity& a)
-{
-    int b = a.pitch_index(a.begin()), e = a.pitch_index(a.end());
-    auto strips = a.make_strips();
-    os << "<activity L" << a.layer() << " " << strips.size() << " strips over pind:["  << b << "," << e << "]>";
-    return os;
-}
+        // Remove any invalid clusers, return number removed.
+        size_t drop_invalid(clustering_t& clusters);
 
-inline
-std::ostream& operator<<(std::ostream& os, const WireCell::RayGrid::Cluster& c)
-{
-    os << "<cluster " << c.strips().size() << " strips, " << c.corners().size() << " corners>";
-    return os;
-}
+        // One stop shopping to generate clusters from activity
+        clustering_t cluster(const Coordinates& rg, const activities_t& activities);
 
-inline
-std::ostream& operator<<(std::ostream& os, const WireCell::RayGrid::crossing_t& c)
-{
-    os << "<corner [{L" << c.first.layer << ",G" << c.first.grid << "},"
-       << "{L" << c.second.layer << ",G" << c.second.grid << "}]>";
-    return os;
-}
-}
+
+        inline
+        std::ostream& operator<<(std::ostream& os, const WireCell::RayGrid::Strip& s)
+        {
+            os << "<strip L" << s.layer << " pind:["  << s.bounds.first << "," << s.bounds.second << "]>";
+            return os;
+        }
+
+        inline
+        std::ostream& operator<<(std::ostream& os, const WireCell::RayGrid::Activity& a)
+        {
+            int b = a.pitch_index(a.begin()), e = a.pitch_index(a.end());
+            auto strips = a.make_strips();
+            os << "<activity L" << a.layer() << " " << strips.size() << " strips over pind:["  << b << "," << e << "]>";
+            return os;
+        }
+
+        inline
+        std::ostream& operator<<(std::ostream& os, const WireCell::RayGrid::Cluster& c)
+        {
+            os << "<cluster " << c.strips().size() << " strips, " << c.corners().size() << " corners>";
+            return os;
+        }
+
+        inline
+        std::ostream& operator<<(std::ostream& os, const WireCell::RayGrid::crossing_t& c)
+        {
+            os << "<corner [{L" << c.first.layer << ",G" << c.first.grid << "},"
+               << "{L" << c.second.layer << ",G" << c.second.grid << "}]>";
+            return os;
+        }
+    }
 } // WireCell namespace
 
 #endif

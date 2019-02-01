@@ -8,7 +8,7 @@ using namespace WireCell;
 using namespace WireCell::RayGrid;
 
 Activity::Activity(layer_index_t layer)
-    : m_span()
+    : m_span{}
     , m_layer(layer)
     , m_offset(0)
     , m_threshold(0)
@@ -16,24 +16,27 @@ Activity::Activity(layer_index_t layer)
 }
 Activity::Activity(layer_index_t layer, const range_t& span, int offset,
                    double threshold)
-    : m_span()
+    : m_span{}
     , m_layer(layer)
     , m_offset(offset)
     , m_threshold(threshold)
 {
+    if (span.first == span.second) {
+        return;
+    }
     iterator_t b = span.first;
-    while (*b <= m_threshold and b != span.second) {
+    while (b != span.second and *b <= m_threshold) {
         ++b;
         ++m_offset;
     }
     iterator_t e = span.second;
-    while (e != b and *(e-1) <= m_threshold) {
+    while (e > b and *(e-1) <= m_threshold) {
         --e;
     }
     m_span.insert(m_span.begin(), b,e);
-    std::cerr << "Activity(L" << layer << ") droping pre/post bins: "
-              << b-span.first << "/" << span.second-e
-              << "\n";
+    // std::cerr << "Activity(L" << layer << ") droping pre/post bins: "
+    //           << b-span.first << "/" << span.second-e
+    //           << "\n";
 }
 
 Activity::iterator_t Activity::begin() const
@@ -60,6 +63,7 @@ Activity Activity::subspan(int abs_beg, int abs_end) const
 {
     const int rel_beg = abs_beg-m_offset;
     const int rel_end = abs_end-m_offset;
+
     if (rel_beg < 0 or rel_beg >= rel_end or rel_end > (int)m_span.size()) {
         std::cerr
             << "activity::subspan bogus absolute:["<<abs_beg<<","<<abs_end<<"]"
@@ -157,10 +161,10 @@ void Cluster::add(const Coordinates& rg, const Strip& strip)
 
 
         if (strip.in(pind)) {
-            std::cerr << "retaining old corner of cluster with " << nstrips
-                      << " strips: pind=" << pind <<  " pitch=" << pitch
-                      << " for strip L" << strip.layer
-                      << " bounds=[" << strip.bounds.first << "," << strip.bounds.second << "]\n";
+            // std::cerr << "retaining old corner of cluster with " << nstrips
+            //           << " strips: pind=" << pind <<  " pitch=" << pitch
+            //           << " for strip L" << strip.layer
+            //           << " bounds=[" << strip.bounds.first << "," << strip.bounds.second << "]\n";
 
             surviving.push_back(c);
         }
@@ -192,7 +196,7 @@ void Cluster::add(const Coordinates& rg, const Strip& strip)
                 break;
             }
             if (!miss) {
-                std::cerr << "Adding new corner "<< c << std::endl;
+                // std::cerr << "Adding new corner "<< c << std::endl;
                 surviving.push_back(c);
             }
         }
@@ -241,18 +245,18 @@ Activity Clustering::projection(const Cluster& cluster, const Activity& activity
     std::vector<double> pitches;
     const auto corners = cluster.corners();
     if (corners.empty()) {
-        std::cerr << "projection: got empty cluster\n";
+        // std::cerr << "projection: got empty cluster\n";
         return Activity(activity.layer());
     }
     for (const auto& c : cluster.corners()) {
         const double p = m_rg.pitch_location(c.first, c.second, activity.layer());
         pitches.push_back(p);
-        std::cerr << "projection include corner in: L" << activity.layer()
-                  << " at p=" << p << " pi=" << std::floor(p/pitch_mag) 
-                  << " " << c << "\n";
+        // std::cerr << "projection include corner in: L" << activity.layer()
+        //           << " at p=" << p << " pi=" << std::floor(p/pitch_mag) 
+        //           << " " << c << "\n";
     }
     if (pitches.empty()) {
-        std::cerr << "projection: got no cluster corners\n";
+        //std::cerr << "projection: got no cluster corners\n";
         return Activity(activity.layer());
     }
 
@@ -263,11 +267,21 @@ Activity Clustering::projection(const Cluster& cluster, const Activity& activity
     int pind1 = std::floor((*mm.first)/pitch_mag);
     int pind2 = std::ceil((*mm.second)/pitch_mag);
 
+    const int apind1 = activity.pitch_index(activity.begin());
+    const int apind2 = activity.pitch_index(activity.end());
+
+    if (pind2 <= apind1 or pind1 >= apind2) {
+        // std::cerr << "projection: cluster fully outside activity: "
+        //           << "c:[" << pind1 << "," << pind2 << "], "
+        //           << "a:[" << apind1<< "," << apind2 << "]\n";
+        return Activity(activity.layer());
+    }
+
     pind1 = std::max(pind1, activity.pitch_index(activity.begin()));
     pind2 = std::min(pind2, activity.pitch_index(activity.end()));
     
-    auto ret = activity.subspan(pind1, pind2);
-    std::cerr << "\tsubspan activity: " << ret << std::endl;
+    Activity ret = activity.subspan(pind1, pind2);
+    // std::cerr << "\tsubspan activity: " << ret << std::endl;
     return ret;
 }
 
@@ -304,24 +318,24 @@ clustering_t Clustering::cluster(const clustering_t& prior_clusters,
     for (const auto& clus : prior_clusters) {
         Activity proj = projection(clus, activity);
         if (proj.empty()) {
-            std::cerr << "projection empty:\n";
-            clus.dump();
-            activity.dump();
+            // std::cerr << "projection empty:\n";
+            // clus.dump();
+            // activity.dump();
             continue;
         }
-        std::cerr << "projecting:\n";
-        clus.dump();
-        proj.dump();
+        // std::cerr << "projecting:\n";
+        // clus.dump();
+        // proj.dump();
         auto strips = proj.make_strips();
         for (auto strip : strips) {
-            std::cerr << strip << std::endl;
+            //std::cerr << strip << std::endl;
             Cluster newclus = clus; // copy
             newclus.add(m_rg, strip);
             if (newclus.corners().empty()) {
-                std::cerr << "new cluster empty:\n"
-                          << "\t" << clus << std::endl
-                          << "\t" << strip << std::endl
-                          << "\t" << newclus << std::endl;
+                // std::cerr << "new cluster empty:\n"
+                //           << "\t" << clus << std::endl
+                //           << "\t" << strip << std::endl
+                //           << "\t" << newclus << std::endl;
                 continue;
             }
             ret.push_back(newclus);
@@ -331,3 +345,31 @@ clustering_t Clustering::cluster(const clustering_t& prior_clusters,
     return ret;
 }
 
+size_t WireCell::RayGrid::drop_invalid(clustering_t& clusters)
+{
+    const auto end = std::partition(clusters.begin(), clusters.end(),
+                                    [](const Cluster& c) { return c.valid(); });
+    const size_t dropped = clusters.end() - end;
+    clusters.resize(end - clusters.begin());
+    return dropped;
+}
+
+clustering_t WireCell::RayGrid::cluster(const Coordinates& rg, const activities_t& activities)
+{
+    Clustering rc(rg);
+    clustering_t clusters;
+
+    for (const auto& activity : activities) {
+        if (clusters.empty()) {
+            clusters = rc.cluster(activity);
+        }
+        else {
+            clusters = rc.cluster(clusters, activity);
+            if (clusters.empty()) {
+                return clustering_t{};
+            }
+        }
+        drop_invalid(clusters);
+    }
+    return clusters;
+}
