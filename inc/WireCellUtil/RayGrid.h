@@ -18,22 +18,7 @@
 #include <map>
 #include <iostream>
 
-/*
-  Refactor 
 
- - everything in RayGrid namespace
-
- - Ray pair and vector moved to Point.h, should be able to stay same in use.
-
- - "rccs" -> "layer"
-
- - "ray_address_t" -> "RayGrid::coordinate_t"
-
- - RayGrid class renamed RayGrid::Coordinates
-
- - TODO All RayCluster.h moved likewise
-
- */
 
 namespace WireCell {
 
