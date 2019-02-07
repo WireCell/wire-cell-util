@@ -1,4 +1,4 @@
-#include "WireCellUtil/RayClustering.h"
+#include "WireCellUtil/RayTiling.h"
 #include "WireCellUtil/Testing.h"
 #include "WireCellUtil/ExecMon.h"
 
@@ -44,10 +44,10 @@ int main()
 
     std::vector<Point> points = random_points();
 
-    Coordinates rg(raypairs);
-    const auto& pitches = rg.pitch_dirs();
-    const auto& centers = rg.centers();
-    const auto& pitch_mags = rg.pitch_mags();
+    Coordinates coords(raypairs);
+    const auto& pitches = coords.pitch_dirs();
+    const auto& centers = coords.centers();
+    const auto& pitch_mags = coords.pitch_mags();
 
     em("make coordinates");
 
@@ -86,12 +86,12 @@ int main()
 
     em("filled activity");
 
-    clustering_t clusters;
+    blobs_t blobs;
     for (int i=0; i<100; ++i) {
-        clusters = cluster(rg, activities);
+        blobs = make_blobs(coords, activities);
     }
     em("made clusers 100 times");
-    std::cerr << clusters.size() << " clusters\n";
+    std::cerr << blobs.size() << " blobs\n";
 
     std::cerr << em.summary() << std::endl;
     return 0;

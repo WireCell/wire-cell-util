@@ -1,4 +1,4 @@
-#include "WireCellUtil/RayClustering.h"
+#include "WireCellUtil/RayTiling.h"
 #include "WireCellUtil/Waveform.h"
 
 #include "TCanvas.h"
@@ -21,11 +21,11 @@ using namespace std;
 
 #include "raygrid.h"
 
-void dump(const clustering_t& clusters)
+void dump(const blobs_t& blobs)
 {
-    cerr << "-----dumping " << clusters.size() << " clusters:\n";
-    for (const auto& c : clusters) {
-        c.dump();
+    cerr << "-----dumping " << blobs.size() << " blobs:\n";
+    for (const auto& b : blobs) {
+        b.dump();
     }
     cerr << "------\n";
 }
@@ -90,7 +90,7 @@ void draw_strip(const Point& head, const Point& tail,
     }
 }
 
-void draw_layer(Coordinates& rg, int ilayer,
+void draw_layer(Coordinates& coords, int ilayer,
                 double pitch_mag,
                 const Point& pitch,
                 const Point& center,
@@ -110,18 +110,18 @@ void draw_layer(Coordinates& rg, int ilayer,
 }
 
 
-void draw_strips(Coordinates& rg, const strips_t& strips, bool outline=true);
-void draw_strips(Coordinates& rg, const strips_t& strips, bool outline)
+void draw_strips(Coordinates& coords, const strips_t& strips, bool outline=true);
+void draw_strips(Coordinates& coords, const strips_t& strips, bool outline)
 {
     const Vector ecks(1,0,0);
 
     for (const auto& strip : strips) {
         int color = layer_colors[strip.layer];
-        const auto& pitch = rg.pitch_dirs()[strip.layer];
+        const auto& pitch = coords.pitch_dirs()[strip.layer];
         const auto raydir = ecks.cross(pitch);
-        const auto& center = rg.centers()[strip.layer];
+        const auto& center = coords.centers()[strip.layer];
 
-        const double pitch_mag = rg.pitch_mags()[strip.layer];
+        const double pitch_mag = coords.pitch_mags()[strip.layer];
 
         const auto pind1 = strip.bounds.first;
         const auto pind2 = strip.bounds.second;
@@ -134,9 +134,9 @@ void draw_strips(Coordinates& rg, const strips_t& strips, bool outline)
 }
 
 
-void draw_cluster(Coordinates& rg, const Cluster& clus, int color=1)
+void draw_blob(Coordinates& coords, const Blob& blob, int color=1)
 {
-    const auto& corners = clus.corners();
+    const auto& corners = blob.corners();
     if (corners.empty()) {
         return;
     }
@@ -144,7 +144,7 @@ void draw_cluster(Coordinates& rg, const Cluster& clus, int color=1)
     std::vector<Point> points;
     Point center;
     for (const auto& corn : corners) {
-        const auto p = rg.ray_crossing(corn.first, corn.second);
+        const auto p = coords.ray_crossing(corn.first, corn.second);
         center += p;
         points.push_back(p);
     }
@@ -174,7 +174,7 @@ struct Printer {
     std::string fname;
     int count;
     Printer(std::string fn)
-        : canvas("test_rayclustering", "Ray Cluster", 500, 500)
+        : canvas("test_raytiling", "Ray Tiling", 500, 500)
         , fname(fn)
         , count(0)
         { canvas.Print((fname + ".pdf[").c_str(), "pdf"); }
@@ -188,23 +188,23 @@ struct Printer {
 };
 
 
-void draw_points_clusters(Coordinates& rg, Printer& print,
+void draw_points_blobs(Coordinates& coords, Printer& print,
                           const std::vector<Point>& points,
-                          const clustering_t& clusters)
+                          const blobs_t& blobs)
 {
     int nstrips = 0;
-    for (const auto& c : clusters) {
-        nstrips += c.strips().size();
+    for (const auto& b : blobs) {
+        nstrips += b.strips().size();
     }
 
-    draw_frame(print.canvas, Form("%d points, %d clusters, %d strips",
-                                  (int)points.size(), (int)clusters.size(), nstrips));
+    draw_frame(print.canvas, Form("%d points, %d blobs, %d strips",
+                                  (int)points.size(), (int)blobs.size(), nstrips));
     for (size_t ipt=0; ipt<points.size(); ++ipt ) {
         const auto& p = points[ipt];
         draw_point(p, 1, 24, ipt+1);
     }
-    for (size_t ic = 0; ic<clusters.size(); ++ic) {
-        draw_cluster(rg, clusters[ic],1);
+    for (size_t ib = 0; ib<blobs.size(); ++ib) {
+        draw_blob(coords, blobs[ib],1);
     }
 }
 
@@ -216,13 +216,13 @@ int main(int argc, char* argv[])
     auto raypairs = make_raypairs(width, height, pitch_magnitude);
     const int nlayers = raypairs.size();
 
-    Coordinates rg(raypairs);
+    Coordinates coords(raypairs);
 
-    const auto& pitches = rg.pitch_dirs();
-    const auto& centers = rg.centers();
-    const auto& pitch_mags = rg.pitch_mags();
+    const auto& pitches = coord.pitch_dirs();
+    const auto& centers = coords.centers();
+    const auto& pitch_mags = coords.pitch_mags();
 
-    Clustering rc(rg);
+    Tiling tiling(coords);
 
     std::vector< std::vector<Activity::value_t> > measures(nlayers);
 
@@ -267,12 +267,12 @@ int main(int argc, char* argv[])
         }
     }
     for (int ilayer=0; ilayer<nlayers; ++ilayer) {
-        draw_layer(rg, ilayer, pitch_mags[ilayer],
+        draw_layer(coords, ilayer, pitch_mags[ilayer],
                    pitches[ilayer], centers[ilayer], measures[ilayer]);
     }
     print();
         
-    clustering_t clusters;
+    blobs_t blobs;
 
     draw_frame(print.canvas, "Points and Strips");
     for (size_t ipt=0; ipt<points.size(); ++ipt ) {
@@ -291,7 +291,7 @@ int main(int argc, char* argv[])
         Activity activity(ilayer, {m.begin(), m.end()});
 
         auto strips = activity.make_strips();
-        draw_strips(rg, strips);
+        draw_strips(coords, strips);
         activities.push_back(activity);
 
         auto tot = std::accumulate(m.begin(), m.end(), 0.0);
@@ -303,28 +303,28 @@ int main(int argc, char* argv[])
 
     for (int ilayer = 0; ilayer<nlayers; ++ilayer) {
         const auto& activity = activities[ilayer];
-        cerr << "Clustering layer " << ilayer << " with " << clusters.size() << " clusters\n";
+        cerr << "Tiling layer " << ilayer << " with " << blobs.size() << " blobs\n";
         activity.dump();
-        if (clusters.empty()) {
-            clusters = rc.cluster(activity);
+        if (blobs.empty()) {
+            blobs = tiling(activity);
         }
         else {
-            clusters = rc.cluster(clusters, activity);
-            if (clusters.empty()) {
-                cerr << "lost m'clusters!\n";
+            blobs = tiling(blobs, activity);
+            if (blobs.empty()) {
+                cerr << "lost m'blobs!\n";
                 return -1;
             }
         }
-        drop_invalid(clusters);
-        dump(clusters);
-        draw_points_clusters(rg, print, points, clusters);
+        drop_invalid(blobs);
+        dump(blobs);
+        draw_points_blobs(coords, print, points, blobs);
         print();
     }
 
-    draw_points_clusters(rg, print, points, clusters);
+    draw_points_blobs(coords, print, points, blobs);
     for (const auto&  activity: activities) {
         auto strips = activity.make_strips();
-        draw_strips(rg, strips, false);
+        draw_strips(coords, strips, false);
     }
     print();
 

@@ -1,4 +1,4 @@
-#include "WireCellUtil/RayClustering.h"
+#include "WireCellUtil/RayTiling.h"
 
 #include <algorithm>
 
@@ -137,7 +137,7 @@ crossings_t find_corners(const Strip& one, const Strip& two)
 
 
 
-void Cluster::add(const Coordinates& rg, const Strip& strip)
+void Blob::add(const Coordinates& coords, const Strip& strip)
 {
     const size_t nstrips = m_strips.size();
 
@@ -156,12 +156,12 @@ void Cluster::add(const Coordinates& rg, const Strip& strip)
 
     // See what old corners are inside the new strip
     for (const auto& c : m_corners) {
-        const double pitch = rg.pitch_location(c.first, c.second, strip.layer);
-        const int pind = rg.pitch_index(pitch, strip.layer);
+        const double pitch = coords.pitch_location(c.first, c.second, strip.layer);
+        const int pind = coords.pitch_index(pitch, strip.layer);
 
 
         if (strip.in(pind)) {
-            // std::cerr << "retaining old corner of cluster with " << nstrips
+            // std::cerr << "retaining old corner of blob with " << nstrips
             //           << " strips: pind=" << pind <<  " pitch=" << pitch
             //           << " for strip L" << strip.layer
             //           << " bounds=[" << strip.bounds.first << "," << strip.bounds.second << "]\n";
@@ -180,8 +180,8 @@ void Cluster::add(const Coordinates& rg, const Strip& strip)
             for (size_t si2 = 0; si2 < nstrips; ++si2) {
                 if (si1 == si2) { continue; }
                 const auto& s2 = m_strips[si2];
-                double pitch = rg.pitch_location(c.first, c.second, s2.layer);
-                const int pind = rg.pitch_index(pitch, s2.layer);
+                double pitch = coords.pitch_location(c.first, c.second, s2.layer);
+                const int pind = coords.pitch_index(pitch, s2.layer);
                 if (s2.in(pind)) {
                     // std::cerr << "maybe adding new corner at pitch=" << pitch << ", pind=" << pind << "  in strip\n"
                     //           << "\t" << c << "\n"
@@ -205,58 +205,58 @@ void Cluster::add(const Coordinates& rg, const Strip& strip)
     m_strips.push_back(strip);
 }
 
-const crossings_t& Cluster::corners() const
+const crossings_t& Blob::corners() const
 {
     return m_corners;
 }
 
 
 
-Clustering::Clustering(const Coordinates& rg)
-    : m_rg(rg)
+Tiling::Tiling(const Coordinates& coords)
+    : m_coords(coords)
 {
 }
 
 
 
-clustering_t Clustering::cluster(const Activity& activity)
+blobs_t Tiling::operator()(const Activity& activity)
 {
     auto strips = activity.make_strips();
     const size_t nstrips = strips.size();
-    clustering_t ret(nstrips);
+    blobs_t ret(nstrips);
     for (size_t ind=0; ind<nstrips; ++ind) {
-        ret[ind].add(m_rg, strips[ind]);
+        ret[ind].add(m_coords, strips[ind]);
     }
     return ret;
 }
 
-Activity Clustering::projection(const Cluster& cluster, const Activity& activity)
+Activity Tiling::projection(const Blob& blob, const Activity& activity)
 {
-    // special case.  A single layer cluster effectively extends to
+    // special case.  A single layer blob effectively extends to
     // infinity along the ray direction so any possible activity
     // projects.
-    if (cluster.strips().size() == 1) {
+    if (blob.strips().size() == 1) {
         return activity;
     }
 
-    const double pitch_mag = m_rg.pitch_mags()[activity.layer()];
+    const double pitch_mag = m_coords.pitch_mags()[activity.layer()];
 
     // find extreme pitches
     std::vector<double> pitches;
-    const auto corners = cluster.corners();
+    const auto corners = blob.corners();
     if (corners.empty()) {
-        // std::cerr << "projection: got empty cluster\n";
+        // std::cerr << "projection: got empty blob\n";
         return Activity(activity.layer());
     }
-    for (const auto& c : cluster.corners()) {
-        const double p = m_rg.pitch_location(c.first, c.second, activity.layer());
+    for (const auto& c : blob.corners()) {
+        const double p = m_coords.pitch_location(c.first, c.second, activity.layer());
         pitches.push_back(p);
         // std::cerr << "projection include corner in: L" << activity.layer()
         //           << " at p=" << p << " pi=" << std::floor(p/pitch_mag) 
         //           << " " << c << "\n";
     }
     if (pitches.empty()) {
-        //std::cerr << "projection: got no cluster corners\n";
+        //std::cerr << "projection: got no blob corners\n";
         return Activity(activity.layer());
     }
 
@@ -271,7 +271,7 @@ Activity Clustering::projection(const Cluster& cluster, const Activity& activity
     const int apind2 = activity.pitch_index(activity.end());
 
     if (pind2 <= apind1 or pind1 >= apind2) {
-        // std::cerr << "projection: cluster fully outside activity: "
+        // std::cerr << "projection: blob fully outside activity: "
         //           << "c:[" << pind1 << "," << pind2 << "], "
         //           << "a:[" << apind1<< "," << apind2 << "]\n";
         return Activity(activity.layer());
@@ -286,7 +286,7 @@ Activity Clustering::projection(const Cluster& cluster, const Activity& activity
 }
 
 
-void Cluster::dump() const
+void Blob::dump() const
 {
     std::cerr << *this << std::endl;
     const auto& strips = this->strips();
@@ -310,66 +310,66 @@ void Activity::dump() const
 
 }
 
-clustering_t Clustering::cluster(const clustering_t& prior_clusters,
-                                 const Activity& activity)
+blobs_t Tiling::operator()(const blobs_t& prior_blobs,
+                           const Activity& activity)
 {
-    clustering_t ret;
+    blobs_t ret;
 
-    for (const auto& clus : prior_clusters) {
-        Activity proj = projection(clus, activity);
+    for (const auto& blob : prior_blobs) {
+        Activity proj = projection(blob, activity);
         if (proj.empty()) {
             // std::cerr << "projection empty:\n";
-            // clus.dump();
+            // blob.dump();
             // activity.dump();
             continue;
         }
         // std::cerr << "projecting:\n";
-        // clus.dump();
+        // blob.dump();
         // proj.dump();
         auto strips = proj.make_strips();
         for (auto strip : strips) {
             //std::cerr << strip << std::endl;
-            Cluster newclus = clus; // copy
-            newclus.add(m_rg, strip);
-            if (newclus.corners().empty()) {
-                // std::cerr << "new cluster empty:\n"
-                //           << "\t" << clus << std::endl
+            Blob newblob = blob; // copy
+            newblob.add(m_coords, strip);
+            if (newblob.corners().empty()) {
+                // std::cerr << "new blob empty:\n"
+                //           << "\t" << blob << std::endl
                 //           << "\t" << strip << std::endl
-                //           << "\t" << newclus << std::endl;
+                //           << "\t" << newblob << std::endl;
                 continue;
             }
-            ret.push_back(newclus);
+            ret.push_back(newblob);
         }
     }
 
     return ret;
 }
 
-size_t WireCell::RayGrid::drop_invalid(clustering_t& clusters)
+size_t WireCell::RayGrid::drop_invalid(blobs_t& blobs)
 {
-    const auto end = std::partition(clusters.begin(), clusters.end(),
-                                    [](const Cluster& c) { return c.valid(); });
-    const size_t dropped = clusters.end() - end;
-    clusters.resize(end - clusters.begin());
+    const auto end = std::partition(blobs.begin(), blobs.end(),
+                                    [](const Blob& b) { return b.valid(); });
+    const size_t dropped = blobs.end() - end;
+    blobs.resize(end - blobs.begin());
     return dropped;
 }
 
-clustering_t WireCell::RayGrid::cluster(const Coordinates& rg, const activities_t& activities)
+blobs_t WireCell::RayGrid::make_blobs(const Coordinates& coords, const activities_t& activities)
 {
-    Clustering rc(rg);
-    clustering_t clusters;
+    Tiling rc(coords);
+    blobs_t blobs;
 
     for (const auto& activity : activities) {
-        if (clusters.empty()) {
-            clusters = rc.cluster(activity);
+        if (blobs.empty()) {
+            blobs = rc(activity);
         }
         else {
-            clusters = rc.cluster(clusters, activity);
-            if (clusters.empty()) {
-                return clustering_t{};
+            blobs = rc(blobs, activity);
+            if (blobs.empty()) {
+                return blobs_t{};
             }
         }
-        drop_invalid(clusters);
+        drop_invalid(blobs);
     }
-    return clusters;
+    return blobs;
 }

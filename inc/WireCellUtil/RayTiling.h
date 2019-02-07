@@ -1,12 +1,12 @@
-/** Define a clustering of overlapping sets rays.
+/** Define a tiling of overlapping sets rays.
 
     This is part of Ray Grid.
 
     See the WCT manual for details.
  */
 
-#ifndef WIRECELL_RAYCLUSTERING
-#define WIRECELL_RAYCLUSTERING
+#ifndef WIRECELL_RAYTILING
+#define WIRECELL_RAYTILING
 
 #include <map>
 #include <vector>
@@ -96,13 +96,13 @@ namespace WireCell {
         };
         typedef std::vector<Activity> activities_t;
 
-        class Cluster {
+        class Blob {
         public:
-            void add(const Coordinates& rg, const Strip& strip); 
+            void add(const Coordinates& coords, const Strip& strip); 
 
             const strips_t& strips() const { return m_strips; }
 
-            // Cluster corners are pair-wise ray crossing points which
+            // Blob corners are pair-wise ray crossing points which
             // are contained by all strips.
             const crossings_t& corners() const;
 
@@ -121,36 +121,36 @@ namespace WireCell {
         };
 
 
-        // A clustering is a collection of clusters.
-        typedef std::vector<Cluster> clustering_t;
+        // A collection of blobs.
+        typedef std::vector<Blob> blobs_t;
 
-        class Clustering {
+        class Tiling {
         public:
 
-            Clustering(const Coordinates& rg);
+            Tiling(const Coordinates& coords);
 
-            // Return a new activity which is shrunk to fall into the shadow of the cluster.
-            Activity projection(const Cluster& cluster, const Activity& activity);
+            // Return a new activity which is shrunk to fall into the shadow of the blob.
+            Activity projection(const Blob& blob, const Activity& activity);
 
-            // Cluster activity in one layer.
-            clustering_t cluster(const Activity& activity);
+            // Tile activity from initial layer into blobs.
+            blobs_t operator()(const Activity& activity);
 
-            // Refine existing clusters with activity in one new layer.
-            clustering_t cluster(const clustering_t& prior,
+            // Refine existing blobs with the activity in a new layer.
+            blobs_t operator()(const blobs_t& prior,
                                  const Activity& activity);
 
         private:
-            const Coordinates& m_rg;
+            const Coordinates& m_coords;
         };
 
 
         /// free functions
 
-        // Remove any invalid clusers, return number removed.
-        size_t drop_invalid(clustering_t& clusters);
+        // Remove any invalid blobs, return number removed.
+        size_t drop_invalid(blobs_t& blobs);
 
-        // One stop shopping to generate clusters from activity
-        clustering_t cluster(const Coordinates& rg, const activities_t& activities);
+        // One stop shopping to generate blobs from activity
+        blobs_t make_blobs(const Coordinates& coords, const activities_t& activities);
 
 
         inline
@@ -170,9 +170,9 @@ namespace WireCell {
         }
 
         inline
-        std::ostream& operator<<(std::ostream& os, const WireCell::RayGrid::Cluster& c)
+        std::ostream& operator<<(std::ostream& os, const WireCell::RayGrid::Blob& b)
         {
-            os << "<cluster " << c.strips().size() << " strips, " << c.corners().size() << " corners>";
+            os << "<blob " << b.strips().size() << " strips, " << b.corners().size() << " corners>";
             return os;
         }
 
