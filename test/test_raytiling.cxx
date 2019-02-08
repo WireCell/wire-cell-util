@@ -4,6 +4,7 @@
 #include "TCanvas.h"
 #include "TMarker.h"
 #include "TText.h"
+#include "TLatex.h"
 #include "TLine.h"
 #include "TPolyLine.h"
 #include "TArrow.h"
@@ -19,195 +20,9 @@ using namespace WireCell::Waveform;
 using namespace WireCell::RayGrid;
 using namespace std;
 
+// local helper codes
 #include "raygrid.h"
-
-void dump(const blobs_t& blobs)
-{
-    cerr << "-----dumping " << blobs.size() << " blobs:\n";
-    for (const auto& b : blobs) {
-        b.dump();
-    }
-    cerr << "------\n";
-}
-
-void draw_point(const Point& p, float size=1, int style=20, int color=1);
-void draw_point(const Point& p, float size, int style, int color)
-{
-    TMarker m;
-    m.SetMarkerColor(color);
-    m.SetMarkerSize(size);
-    m.SetMarkerStyle(style);
-    m.DrawMarker(p.z(), p.y());
-}
-void draw_ray(const Ray& ray, int color=1)
-{
-    TArrow l;
-    l.SetLineColor(color);
-    l.DrawLine(ray.first.z(), ray.first.y(),
-               ray.second.z(), ray.second.y());
-}
-
-const int ndepos = 10;
-const int neles = 10;
-const double pitch_magnitude = 5;
-const double gaussian = 3;
-const double border = 10;
-const double width = 100;
-const double height = 100;
-
-TH1F* draw_frame(TCanvas& canvas, std::string title)
-{
-    auto* frame = canvas.DrawFrame(-1.0*border, -1.0*border, width+border, height+border);
-    frame->SetTitle(title.c_str());
-    return frame;
-}
-
-const std::vector<int> layer_colors{1,1,2,3,4};
-
-void draw_strip(const Point& head, const Point& tail,
-                const Vector& raydir, int color, bool outline=true);
-void draw_strip(const Point& head, const Point& tail,
-                const Vector& raydir, int color, bool outline)
-{
-    const double shoot = 2*std::max(width,height);
-    std::vector<Point> points {
-        tail+raydir*shoot,
-        tail-raydir*shoot,
-        head-raydir*shoot,
-        head+raydir*shoot
-    };
-
-    TPolyLine* pl = new TPolyLine; // like a sieve
-    pl->SetLineColor(color);
-    pl->SetFillColorAlpha(color, 0.1);
-    for (const auto& p : points) {
-        pl->SetNextPoint(p.z(), p.y());
-    }
-    pl->SetNextPoint(points.front().z(), points.front().y());
-    pl->Draw("f");
-    if (outline) {
-        pl->Draw("");
-    }
-}
-
-void draw_layer(Coordinates& coords, int ilayer,
-                double pitch_mag,
-                const Point& pitch,
-                const Point& center,
-                const std::vector<double>& measure)
-{
-    const Vector ecks(1,0,0);
-    const auto raydir = ecks.cross(pitch);
-
-
-    for (size_t ind=0; ind<measure.size(); ++ind) {
-        int color = layer_colors[ilayer];
-        if (measure[ind] <= 0.0) { continue; }
-        const auto tail = center + ind*pitch_mag*pitch;
-        const auto head = center + (ind+1)*pitch_mag*pitch;
-        draw_strip(tail, head, raydir, color);
-    }
-}
-
-
-void draw_strips(Coordinates& coords, const strips_t& strips, bool outline=true);
-void draw_strips(Coordinates& coords, const strips_t& strips, bool outline)
-{
-    const Vector ecks(1,0,0);
-
-    for (const auto& strip : strips) {
-        int color = layer_colors[strip.layer];
-        const auto& pitch = coords.pitch_dirs()[strip.layer];
-        const auto raydir = ecks.cross(pitch);
-        const auto& center = coords.centers()[strip.layer];
-
-        const double pitch_mag = coords.pitch_mags()[strip.layer];
-
-        const auto pind1 = strip.bounds.first;
-        const auto pind2 = strip.bounds.second;
-        const double pitch_dist = std::abs(pind1-pind2)*pitch_mag;
-
-        const auto tail = center + pind1*pitch_mag*pitch;
-        const auto head = tail + pitch_dist*pitch;
-        draw_strip(tail, head, raydir, color, outline);
-    }
-}
-
-
-void draw_blob(Coordinates& coords, const Blob& blob, int color=1)
-{
-    const auto& corners = blob.corners();
-    if (corners.empty()) {
-        return;
-    }
-
-    std::vector<Point> points;
-    Point center;
-    for (const auto& corn : corners) {
-        const auto p = coords.ray_crossing(corn.first, corn.second);
-        center += p;
-        points.push_back(p);
-    }
-    center = center * (1.0/points.size());
-    sort(points.begin(), points.end(),
-         [&](const Point& a, const Point&b) {
-             const Point ac = a-center;
-             const Point bc = b-center;
-             const double anga = atan2(ac.y(), ac.z());
-             const double angb = atan2(bc.y(), bc.z());
-             return anga > angb;
-         });
-
-    TPolyLine* pl = new TPolyLine; // like a sieve
-    pl->SetLineColor(color);
-    for (const auto& p : points) {
-        pl->SetNextPoint(p.z(), p.y());
-    }
-    pl->SetNextPoint(points.front().z(), points.front().y());
-    pl->Draw();
-}
-
-
-
-struct Printer {
-    TCanvas canvas;
-    std::string fname;
-    int count;
-    Printer(std::string fn)
-        : canvas("test_raytiling", "Ray Tiling", 500, 500)
-        , fname(fn)
-        , count(0)
-        { canvas.Print((fname + ".pdf[").c_str(), "pdf"); }
-    ~Printer() { canvas.Print((fname+".pdf]").c_str(), "pdf"); }
-    void operator()() {
-        canvas.Print((fname+".pdf").c_str(), "pdf");
-        canvas.Print(Form("%s-%02d.png", fname.c_str(), count), "png");
-        canvas.Print(Form("%s-%02d.svg", fname.c_str(), count), "svg");
-        ++count;
-    }
-};
-
-
-void draw_points_blobs(Coordinates& coords, Printer& print,
-                          const std::vector<Point>& points,
-                          const blobs_t& blobs)
-{
-    int nstrips = 0;
-    for (const auto& b : blobs) {
-        nstrips += b.strips().size();
-    }
-
-    draw_frame(print.canvas, Form("%d points, %d blobs, %d strips",
-                                  (int)points.size(), (int)blobs.size(), nstrips));
-    for (size_t ipt=0; ipt<points.size(); ++ipt ) {
-        const auto& p = points[ipt];
-        draw_point(p, 1, 24, ipt+1);
-    }
-    for (size_t ib = 0; ib<blobs.size(); ++ib) {
-        draw_blob(coords, blobs[ib],1);
-    }
-}
-
+#include "raygrid_draw.h"
 
 int main(int argc, char* argv[])
 {
@@ -218,7 +33,9 @@ int main(int argc, char* argv[])
 
     Coordinates coords(raypairs);
 
-    const auto& pitches = coord.pitch_dirs();
+    draw_raygrid(print, coords, raypairs);
+
+    const auto& pitches = coords.pitch_dirs();
     const auto& centers = coords.centers();
     const auto& pitch_mags = coords.pitch_mags();
 
