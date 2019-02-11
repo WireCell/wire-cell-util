@@ -6,7 +6,8 @@ using namespace WireCell;
 using namespace WireCell::RayGrid;
 
 
-Coordinates::Coordinates(const ray_pair_vector_t& rays, int normal_axis)
+Coordinates::Coordinates(const ray_pair_vector_t& rays,
+                         int normal_axis, double normal_location)
     : m_nlayers(rays.size())
     , m_pitch_mag(m_nlayers, 0.0)
     , m_pitch_dir(m_nlayers)
@@ -18,7 +19,7 @@ Coordinates::Coordinates(const ray_pair_vector_t& rays, int normal_axis)
 {
 
     // really we are working in 2D space, so project all vectors into the plane.
-    auto project = [normal_axis](Vector v) { v[normal_axis]=0.0; return v; };
+    auto project = [&](Vector v) { v[normal_axis]=normal_location; return v; };
 
     // must go through 1, 2 and 3 combonations
 
@@ -132,7 +133,7 @@ Vector Coordinates::ray_crossing(const coordinate_t& one, const coordinate_t& tw
     const auto& wlm = m_ray_jump(l,m);
     const auto& wml = m_ray_jump(m,l);
     const double i = one.grid, j = two.grid;
-    const auto res = r00 + j*wlm + i*wml;
+    Vector res = r00 + j*wlm + i*wml;
     // std::cerr << "l="<<l << " m="<<m
     //           << " i="<<i<< " j=" << j
     //           << " wlm=" << wlm

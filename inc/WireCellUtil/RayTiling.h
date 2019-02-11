@@ -32,7 +32,7 @@ namespace WireCell {
             }
 
             bool in(grid_index_t pitch_index) const {
-                return bounds.first <= pitch_index and pitch_index < bounds.second;
+                return (bounds.first <= pitch_index) and (pitch_index < bounds.second);
             }
                 
         };
@@ -101,6 +101,7 @@ namespace WireCell {
             void add(const Coordinates& coords, const Strip& strip); 
 
             const strips_t& strips() const { return m_strips; }
+            strips_t& strips() { return m_strips; }
 
             // Blob corners are pair-wise ray crossing points which
             // are contained by all strips.
@@ -183,6 +184,7 @@ namespace WireCell {
                << "{L" << c.second.layer << ",G" << c.second.grid << "}]>";
             return os;
         }
+
     }
 } // WireCell namespace
 

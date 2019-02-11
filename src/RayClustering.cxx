@@ -34,9 +34,13 @@ WireCell::RayGrid::blobvec_t WireCell::RayGrid::overlap(const blobref_t& blob, c
 {
     const auto& strip = blob->strips()[layer];
     auto blobs = select(proj, strip.bounds);
+    if (blobs.empty()) {
+        return blobs;
+    }
     if (layer == 0) {
         return blobs;
     }
+    
     --layer;
     auto newproj = projection(blobs, layer);
     return overlap(blob, newproj, layer);
@@ -59,7 +63,7 @@ void WireCell::RayGrid::associate(const blobs_t& one, const blobs_t& two, associ
     const size_t ilayer = nlayers-1;
     const auto proj = projection(references(two), ilayer);
     for (blobref_t blob = one.begin(); blob != one.end(); ++blob) {
-        auto assoc = overlap(blob, proj, ilayer);
+        auto assoc = overlap(blob, proj, ilayer); // recursive call
         for (blobref_t other : assoc) {
             func(blob, other);
         }

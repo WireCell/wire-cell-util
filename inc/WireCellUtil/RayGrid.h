@@ -69,7 +69,8 @@ namespace WireCell {
         public:
 
             // Create a ray grid by specifying the axis of projection.
-            Coordinates(const ray_pair_vector_t& rays, int normal_axis=0);
+            Coordinates(const ray_pair_vector_t& rays,
+                        int normal_axis=0, double normal_location = 0.0);
         
             // Return the crossing point of the index=0 rays for two layers.
             Vector zero_crossing(layer_index_t one, layer_index_t two) const;

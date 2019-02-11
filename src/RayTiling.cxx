@@ -373,3 +373,4 @@ blobs_t WireCell::RayGrid::make_blobs(const Coordinates& coords, const activitie
     }
     return blobs;
 }
+
