@@ -13,8 +13,8 @@ using namespace WireCell::RayGrid;
 const double pitch_magnitude = 5;
 const double gaussian = 3;
 const double border = 10;
-const double width = 10000;
-const double height = 1000;
+const double width = 5000;
+const double height = 5000;
 
 
 std::vector<Point> random_points(int ndepos = 1000, int neles = 10)

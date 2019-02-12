@@ -1,5 +1,7 @@
 #include "WireCellUtil/RayClustering.h"
 
+#include <iostream>             // debug
+
 using namespace WireCell;
 using namespace WireCell::RayGrid;
 
@@ -56,6 +58,36 @@ WireCell::RayGrid::blobvec_t WireCell::RayGrid::references(const blobs_t& blobs)
     }
     return ret;
 }
+
+bool WireCell::RayGrid::surrounding(const blobref_t& a, const blobref_t& b)
+{
+    const auto& astrips = a->strips();
+    const auto& bstrips = b->strips();
+    const int nlayers = astrips.size();
+
+    int ainb = 0, bina = 0;
+    for (int ilayer=0; ilayer<nlayers; ++ilayer) {
+        const auto& astrip = astrips[ilayer];
+        const auto& bstrip = bstrips[ilayer];
+        const auto& abounds = astrip.bounds;
+        const auto& bbounds = bstrip.bounds;
+        if (abounds.first <= bbounds.first and bbounds.second <= abounds.second) {
+            ++bina;
+        }
+        if (bbounds.first <= abounds.first and abounds.second <= bbounds.second) {
+            ++ainb;
+        }
+        std::cerr << "L" << ilayer
+                  << "\ta:" << astrip
+                  << "\tb:" << bstrip << "\t[ainb="<<ainb<<", bina="<<bina<<"]\n";
+    }
+    if (ainb == nlayers or bina == nlayers) {
+        std::cerr << "^surrounding\n";
+        return true;
+    }
+    return false;
+}
+
 
 void WireCell::RayGrid::associate(const blobs_t& one, const blobs_t& two, associator_t func)
 {

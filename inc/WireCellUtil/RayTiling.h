@@ -34,6 +34,9 @@ namespace WireCell {
             bool in(grid_index_t pitch_index) const {
                 return (bounds.first <= pitch_index) and (pitch_index < bounds.second);
             }
+            bool on(grid_index_t pitch_index) const {
+                return (bounds.first <= pitch_index) and (pitch_index <= bounds.second);
+            }
                 
         };
         typedef std::vector<Strip> strips_t;
@@ -149,6 +152,12 @@ namespace WireCell {
 
         // Remove any invalid blobs, return number removed.
         size_t drop_invalid(blobs_t& blobs);
+
+        // Visit each blob and prune away any portions of strips which
+        // are outside the corners.  These vestigle strip portions can
+        // result when another layer provides a corner inside the
+        // strip in question.
+        void prune(const Coordinates& coords, blobs_t& blobs);
 
         // One stop shopping to generate blobs from activity
         blobs_t make_blobs(const Coordinates& coords, const activities_t& activities);

@@ -86,7 +86,7 @@ int main(int argc, char** argv)
   {
     cout<<endl<<" nSamples, fwd_time, fwd_time per sample, rev_time, rev_time per sample, average time of (fwd and rev)"<<endl<<endl;
     
-    ofstream output(TString::Format("info_%02d.txt", id), ios::out|ios::trunc);
+    ofstream output(TString::Format("%s_%02d.txt", argv[0], id), ios::out|ios::trunc);
     
     std::vector<int> nsampleslist;
 

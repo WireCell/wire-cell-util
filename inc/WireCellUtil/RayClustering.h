@@ -33,6 +33,9 @@ namespace WireCell {
         // ray lines of given layer and all lower layers.
         blobvec_t overlap(const blobref_t& blob, const blobproj_t& proj, layer_index_t layer);
 
+        // Return true if a's strips are all inside b's strips or vice versa.
+        bool surrounding(const blobref_t& a, const blobref_t& b);
+
         // Helper to make a vector of references from the backing vector.
         blobvec_t references(const blobs_t& blobs);
 

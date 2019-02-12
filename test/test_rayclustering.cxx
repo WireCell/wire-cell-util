@@ -122,32 +122,14 @@ struct Chirp {
         {}
 
     bool in(const blobref_t& a, const blobref_t& b) {
+        if (surrounding(a, b)) {
+            cerr << "surrounding\n";
+            return true;
+        }
+
         const auto& astrips = a->strips();
-        const auto& bstrips = b->strips();
+        //const auto& bstrips = b->strips();
         const int nlayers = astrips.size();
-
-        // If all a strips are fully inside b strips, layer by layer,
-        // or vice versa, don't need to check corners.
-        int ainb = 0, bina = 0;
-        for (int ilayer=0; ilayer<nlayers; ++ilayer) {
-            const auto& abounds = astrips[ilayer].bounds;
-            const auto& bbounds = bstrips[ilayer].bounds;
-            if (abounds.first <= bbounds.first and bbounds.second <= abounds.second) {
-                ++bina;
-            }
-            if (bbounds.first <= abounds.first and abounds.second <= bbounds.second) {
-                ++ainb;
-            }
-        }
-        if (ainb == nlayers) {
-            cerr << "Fully contained: " << *a << " in " << *b << "\n";
-            return true;
-        }
-        if (bina == nlayers) {
-            cerr << "Fully contained: " << *b << " in " << *a << "\n";
-            return true;
-        }
-
 
         // if at least one corner of b is in side a, return true
         for (const auto& c : b->corners()) {
@@ -157,22 +139,22 @@ struct Chirp {
                 const auto& astrip = astrips[layer];
                 if (layer == c.first.layer) {
                     cerr << "L" << layer << " A: " << astrip << " " << c << endl;
-                    if (astrip.in(c.first.grid)) {
-                        cerr << "\tin with found="<<found<<" nlayers="<<nlayers<<"\n";
+                    if (astrip.on(c.first.grid)) {
+                        cerr << "\ton with found="<<found<<" nlayers="<<nlayers<<"\n";
                         ++found;
                         continue;
                     }
-                    cerr << "\tout with found="<<found<<" nlayers="<<nlayers<<"\n";
+                    cerr << "\toff with found="<<found<<" nlayers="<<nlayers<<"\n";
                     break;
                 }
                 if (layer == c.second.layer) {
                     cerr << "L" << layer << " A: " << astrip << " " << c << endl;
-                    if (astrip.in(c.second.grid)) {
-                        cerr << "\tin with found="<<found<<" nlayers="<<nlayers<<"\n";
+                    if (astrip.on(c.second.grid)) {
+                        cerr << "\ton with found="<<found<<" nlayers="<<nlayers<<"\n";
                         ++found;
                         continue;
                     }
-                    cerr << "\tout with found="<<found<<" nlayers="<<nlayers<<"\n";
+                    cerr << "\toff with found="<<found<<" nlayers="<<nlayers<<"\n";
                     break;
                 }
                 const double ploc = coords.pitch_location(c.first, c.second, layer);
@@ -209,8 +191,8 @@ struct Chirp {
         b->dump();
 
         if (!this->in(a,b)) {
-            cerr << "\tNO OVERLAP^\n";
-            return;
+            cerr << "NO CONTAINED CORNERS\n";
+            //Assert(this->in(a,b));
         }
 
         sel1->insert(d1);

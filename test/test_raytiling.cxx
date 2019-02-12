@@ -20,6 +20,14 @@ using namespace WireCell::Waveform;
 using namespace WireCell::RayGrid;
 using namespace std;
 
+const int ndepos = 10;
+const int neles = 10;
+const double pitch_magnitude = 5;
+const double gaussian = 3;
+const double border = 10;
+const double width = 100;
+const double height = 100;
+
 // local helper codes
 #include "raygrid.h"
 #include "raygrid_draw.h"
@@ -147,3 +155,5 @@ int main(int argc, char* argv[])
 
     return 0;
 }
+
+
