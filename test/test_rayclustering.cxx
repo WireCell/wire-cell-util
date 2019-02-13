@@ -270,6 +270,7 @@ int main(int argc, char* argv[])
     associate(blobs1, blobs2, chirpf);
 
     chirp.dump(dumper);
+
     std::string fout = argv[0];
     fout += ".json";
     dumper.dump(fout);

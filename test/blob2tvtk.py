@@ -6,6 +6,7 @@ A tvtk based converter for JSON file dumped from tests
 import math
 import json
 import numpy
+from collections import defaultdict
 from tvtk.api import tvtk, write_data
 from tvtk.common import configure_input
 
@@ -52,7 +53,49 @@ def extrude(pts, dx):
         
 
 
-def ugrid_blobs(blobs):
+def render_points(jdat):
+    '''
+    Given a data strucutre which lists point data as list of objects like:
+    {
+      point= [x,y,z],
+      values=dict(name1=val1, name2=val2, ...)
+    }
+    '''
+    datasetnames = set()
+    for one in jdat:
+        for n in one['values'].keys():
+            datasetnames.add(n)
+
+    values = defaultdict(list)
+    points = list()
+    indices = list()
+
+    for count,one in enumerate(jdat):
+        for name in datasetnames:
+            values[name].append(one['values'].get(name, 0.0))
+        pt = one['point']
+        print (count,pt)
+        points.append(pt)
+        indices.append(count)
+    points = numpy.array(points, 'f')
+    npoints = len(points)
+    print (points.shape)
+    ret = tvtk.PolyData(points=points)
+    verts = numpy.arange(0, npoints, 1)
+    verts.shape = (npoints,1)
+    ret.verts = verts
+    ret.point_data.scalars = indices[:npoints]
+    ret.point_data.scalars.name = 'indices'
+    for count, datasetname in enumerate(sorted(datasetnames)):
+        count += 1
+        arr = [p["values"].get(datasetname, 0.0) for p in jdat]
+        ret.point_data.add_array(numpy.array(arr, 'f'))
+        ret.point_data.get_array(count).name = datasetname
+
+    return ret
+    
+
+def render_blobs(blobs):
     '''
     Given a data structure which is a list of blobs, each blob is a dict:
 
@@ -101,13 +144,34 @@ def ugrid_blobs(blobs):
 
     return ugrid
 
-def main(infile, outfile):
-    jblobs = json.loads(open(infile).read())
-    #print (jblobs)
-    ugrid = ugrid_blobs(jblobs)
-    w = tvtk.UnstructuredGridWriter(file_name=outfile)
-    configure_input(w, ugrid)
-    w.write()
+def main(infile, outname):
+
+    jdat = json.loads(open(infile).read())
+
+    blobdata = render_blobs(jdat["blobs"])
+    #w = tvtk.XMLUnstructuredGridWriter(file_name=outfile)
+    #w = tvtk.UnstructuredGridWriter(file_name=outfile)
+    #configure_input(w, ugrid)
+    #w.write()
+    ofile = outname + '-blobs.vtu'
+    print (ofile)
+    write_data(blobdata, ofile)
+
+    pointdata = render_points(jdat["points"])
+    ofile = outname + "-points.vtp"
+    print(ofile)
+    write_data(pointdata, ofile)
+    #visualize_blobs(blobdata)
+
+def visualize_blobs(blobdata):
+    '''
+    Make a mayavi pipeline to produce an immediate display.
+    '''
+    print ("visualize")
+    from mayavi import mlab
+    #s = mlab.points3d(x,y,z)
+    mlab.pipeline.surface(blobdata)
+    mlab.show()
     
 
 def test(filename = "blob2tvtk_test.vtk"):

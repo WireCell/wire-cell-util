@@ -15,7 +15,7 @@ public:
         jpt[2] = pt.z();
         Json::Value jpv;
         jpv["point"] = jpt;
-        jpv["charge"] = charge;
+        jpv["values"]["charge"] = charge;
         points.append(jpv);
     }
 
@@ -50,8 +50,10 @@ public:
     }
     
     void dump(const std::string& filename) {
-
+        Json::Value top;
+        top["points"] = points;
+        top["blobs"] = blobs;
         ofstream fstr(filename);
-        fstr << blobs;
+        fstr << top;
     }
 };
