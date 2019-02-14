@@ -14,6 +14,16 @@ Activity::Activity(layer_index_t layer)
     , m_threshold(0)
 {
 }
+
+Activity::Activity(layer_index_t layer, size_t span, double value,
+                   int offset, double threshold)
+    : m_span(span, value)
+    , m_layer(layer)
+    , m_offset(offset)
+    , m_threshold(threshold)
+{
+}
+
 Activity::Activity(layer_index_t layer, const range_t& span, int offset,
                    double threshold)
     : m_span{}

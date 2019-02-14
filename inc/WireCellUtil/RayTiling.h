@@ -64,6 +64,11 @@ namespace WireCell {
             Activity(layer_index_t layer, const range_t& span,
                      int offset=0, double threshold=0.0);
             
+            // Create an activity starting at offset and with each
+            // subsequent span elements set to value.
+            Activity(layer_index_t layer, size_t span, double value,
+                     int offset=0, double threshold=0.0);
+
             // Produce a subspan activity between pitch indices [pi1, pi2)
             Activity subspan(int pi_begin, int pi_end) const;
 
