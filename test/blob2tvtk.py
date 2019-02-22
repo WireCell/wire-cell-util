@@ -2,7 +2,12 @@
 '''
 A tvtk based converter for JSON file dumped from tests
 
+Convert a bunch of individual blobs JSON files into one:
+
+jq -s .  test-pdsp-*.json|jq '{blobs:[.[]|.blobs|.[0]]}' > test-pdsp.json
+
 '''
+import os
 import math
 import json
 import numpy
@@ -144,7 +149,9 @@ def render_blobs(blobs):
 
     return ugrid
 
-def main(infile, outname):
+def main(infile, outname=None):
+    if outname is None:
+        outname = os.path.splitext(infile)[0]
 
     jdat = json.loads(open(infile).read())
 
@@ -157,6 +164,11 @@ def main(infile, outname):
     print (ofile)
     write_data(blobdata, ofile)
 
+    try:
+        points = jdat["points"]
+    except KeyError:
+        print("No 'points' in input data.")
+        return
     pointdata = render_points(jdat["points"])
     ofile = outname + "-points.vtp"
     print(ofile)
