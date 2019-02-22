@@ -415,10 +415,13 @@ blobs_t WireCell::RayGrid::make_blobs(const Coordinates& coords, const activitie
         else {
             blobs = rc(blobs, activity);
             if (blobs.empty()) {
+                std::cerr << "make_blobs: lost blobs with " << activity << "\n";                
                 return blobs_t{};
             }
         }
+        //std::cerr << "make_blobs: made " << blobs.size() << " blobs ";
         drop_invalid(blobs);
+        //std::cerr << blobs.size() << " valid with " << activity << "\n";
     }
     prune(coords, blobs);
     return blobs;

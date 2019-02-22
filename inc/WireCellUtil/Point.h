@@ -97,20 +97,22 @@ namespace WireCell {
 	return Ray(get<WireCell::Point>(cfg,"tail"), get<WireCell::Point>(cfg,"head"));
     }
 
+
+    //std::ostream& operator<<(std::ostream& os, const WireCell::Ray& ray);
+    inline
+    std::ostream& operator<<(std::ostream& os, const WireCell::Ray& ray)
+    {
+        os << "["  << ray.first << " --> " << ray.second << "]";
+        return os;
+    }
+
+    inline
+    WireCell::Ray operator/(WireCell::Ray ray, const double& scale) {
+        return WireCell::Ray(ray.first/scale, ray.second/scale);
+    }
+
 }//namespace WireCell
-
-//std::ostream& operator<<(std::ostream& os, const WireCell::Ray& ray);
-inline
-std::ostream& operator<<(std::ostream& os, const WireCell::Ray& ray)
-{
-    os << "["  << ray.first << " --> " << ray.second << "]";
-    return os;
-}
-
-inline
-WireCell::Ray operator/(WireCell::Ray ray, const double& scale) {
-    return WireCell::Ray(ray.first/scale, ray.second/scale);
-}
+    
 // inline
 // WireCell::Ray operator*(WireCell::Ray ray, const double& scale) {
 //     return WireCell::Ray(ray.first*scale, ray.second*scale);
