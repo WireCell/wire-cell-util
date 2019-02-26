@@ -419,9 +419,9 @@ blobs_t WireCell::RayGrid::make_blobs(const Coordinates& coords, const activitie
                 return blobs_t{};
             }
         }
-        //std::cerr << "make_blobs: made " << blobs.size() << " blobs ";
+        std::cerr << "make_blobs: made " << blobs.size() << " blobs ";
         drop_invalid(blobs);
-        //std::cerr << blobs.size() << " valid with " << activity << "\n";
+        std::cerr << blobs.size() << " valid with " << activity << "\n";
     }
     prune(coords, blobs);
     return blobs;
