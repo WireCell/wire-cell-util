@@ -15,13 +15,18 @@ import rendertvtk
 
 
 
-def main(infile, outname=None):
-    if outname is None:
+def main(outname=None, *infiles):
+    if outname is None or outname == "-":
         outname = os.path.splitext(infile)[0]
 
-    jdat = json.loads(open(infile).read())
+    jblobs = list()
+    jpoints = list()
+    for infile in infiles:
+        jdat = json.loads(open(infile).read())
+        jblobs += jdat["blobs"]
+        jpoints += jdat.get("points", [])
 
-    blobdata = rendertvtk.blobs(jdat["blobs"])
+    blobdata = rendertvtk.blobs(jblobs)
     #w = tvtk.XMLUnstructuredGridWriter(file_name=outfile)
     #w = tvtk.UnstructuredGridWriter(file_name=outfile)
     #configure_input(w, ugrid)
@@ -31,12 +36,10 @@ def main(infile, outname=None):
     write_data(blobdata, ofile)
 
     ### see depo2tvtk.py for rendering depos from NumpyDepoSaver
-    try:
-        points = jdat["points"]
-    except KeyError:
-        print("No 'points' in input data.")
+    if not jpoints:
+        print ("no points to convert")
         return
-    pointdata = rendertvtk.points(jdat["points"])
+    pointdata = rendertvtk.points(jpoints)
     ofile = outname + "-points.vtp"
     print(ofile)
     write_data(pointdata, ofile)

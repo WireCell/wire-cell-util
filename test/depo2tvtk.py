@@ -49,7 +49,7 @@ def main(infile, outname=None, toffset=1*units.us, speed=1.6*units.mm/units.us):
         points.append(p)
 
     pointdata = rendertvtk.points(points)
-    ofile = outname + "-points.vtp"
+    ofile = outname + "-depos.vtp"
     print(ofile)
     write_data(pointdata, ofile)
 
