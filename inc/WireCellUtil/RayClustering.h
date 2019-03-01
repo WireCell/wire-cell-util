@@ -8,8 +8,7 @@
 #include <vector>
 
 namespace WireCell {
-    namespace RayGrid {         // fixme, maybe change this to "Blobs" and remove "Blob" prefix from classes.
-
+    namespace RayGrid {
 
         typedef typename blobs_t::const_iterator blobref_t;
         typedef typename std::vector<blobref_t> blobvec_t;
@@ -49,7 +48,6 @@ namespace WireCell {
         // with every pair of two overlapping blobs.
         void associate(const blobs_t& one, const blobs_t& two, associator_t func);
         
-
     }
 }    
 
