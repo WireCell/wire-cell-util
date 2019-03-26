@@ -20,7 +20,7 @@ namespace WireCell {
 
         struct Strip {
 
-            // The layer index this stripo is in
+            // The index of the layer this strip is in.
             layer_index_t layer;
 
             // The pitch indices bounding the strip in its layer pitch direction.
