@@ -1,7 +1,7 @@
 #ifndef WIRECELLUTIL_INDEXEDSET
 #define WIRECELLUTIL_INDEXEDSET
 
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 namespace WireCell {
@@ -14,7 +14,7 @@ namespace WireCell {
     public:
 	// the passed objects in order of first seen
 
-	typedef std::map<TYPE, int> index_type;
+	typedef std::unordered_map<TYPE, int> index_type;
 	typedef std::vector<TYPE> collection_type;
 	typedef typename collection_type::size_type size_type;	
 
