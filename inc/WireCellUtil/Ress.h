@@ -1,7 +1,7 @@
 /** Ress is an interface to wire-cell-ress
  */  
-#ifndef WIRECELL_RESS
-#define WIRECELL_RESS
+#ifndef WIRECELL_RESS_HEADER_SEEN
+#define WIRECELL_RESS_HEADER_SEEN
 
 #include <Eigen/Dense>
 

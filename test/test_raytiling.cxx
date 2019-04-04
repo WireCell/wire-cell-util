@@ -1,4 +1,5 @@
 #include "WireCellUtil/RayTiling.h"
+#include "WireCellUtil/RaySolving.h"
 #include "WireCellUtil/Waveform.h"
 
 #include "TCanvas.h"
@@ -9,6 +10,8 @@
 #include "TPolyLine.h"
 #include "TArrow.h"
 #include "TH1F.h"
+
+#include <boost/graph/graphviz.hpp>
 
 #include <math.h> 
 
@@ -31,6 +34,17 @@ const double height = 100;
 // local helper codes
 #include "raygrid.h"
 #include "raygrid_draw.h"
+
+
+
+// Invent a channel and wire map.  Note, in this test, this mapping is
+// used identically for both "channels" and "wires" and it is wholly
+// innappropraite for real detectors.  Do not copy-paste.
+Grouping::ident_t make_ident(int index, int layer, int face = 0) {
+    return (1+face)*10000 + (1+layer)*1000 + index;
+}
+
+
 
 int main(int argc, char* argv[])
 {
@@ -151,6 +165,100 @@ int main(int argc, char* argv[])
         auto strips = activity.make_strips();
         draw_strips(coords, strips, false);
     }
+    print();
+
+
+
+
+    // now test solving
+    Solving solving;
+
+
+    // Skip the first two horiz/vert layers bounding sensitivity.  In
+    // principle, they can be included but just add fully degenerate
+    // terms.
+    for (int ilayer = 2; ilayer<nlayers; ++ilayer) {
+        Grouping grouping;
+        auto& m = measures[ilayer];
+
+        // Load up the "channels" and their associated "wires".  In
+        // this test we have a simple one-to-one mapping between both
+        // based on a common index.
+        for (size_t mind=0; mind < m.size(); ++mind) {
+            const float meas = m[mind];
+            if (meas <= 0) { continue; }
+            Grouping::ident_t ident = make_ident(mind, ilayer);
+            std::cerr << "ilayer:" << ilayer << " mind:" << mind << " ident:" << ident << " meas:" << meas << std::endl;
+            grouping.add('m', ident, { ident }, meas);
+        }
+
+        // Load up the "blobs" and their associated "wires" for the current layer
+        for (size_t bind = 0; bind < blobs.size(); ++bind) {
+            const auto& blob = blobs[bind];
+            std::vector<Grouping::ident_t> wids;
+            for (const auto& strip : blob.strips()) {
+                if (strip.layer != ilayer) {
+                    continue;
+                }
+                for (auto wind = strip.bounds.first; wind < strip.bounds.second; ++wind) {
+                    wids.push_back(make_ident(wind, ilayer));
+                }
+            }
+            // note, blob ident must NOT inculde ilayer information
+            const float blob_value = 0.0;
+            const float blob_weight = 1.0;
+            grouping.add('s', bind, wids, blob_value, blob_weight);
+        }
+
+        const auto& g = grouping.graph();
+        auto labels = [&](std::ostream& out, const auto& vtx)  {
+                          char typ = g[vtx].ntype;
+                          int lid = g[vtx].ident % 1000; // l'il ID, erase face and layer 
+                          if (typ == 's') {
+                              out << "[label=\"s" << lid << "\"]";
+                          }
+                          if (typ == 'm') {
+                              out << "[label=\"m" << lid << "=" << g[vtx].value << "\"]";
+                          }
+                          if (typ == 'w') {
+                              out << "[label=\"w" << lid << "\"]";
+                          }
+                      };
+
+        std::string dotfilename = Form("%s-layer%d.dot", argv[0], ilayer);
+        std::ofstream dotfile (dotfilename.c_str());
+        boost::write_graphviz(dotfile, g, labels);
+        cerr << dotfilename << "\n";
+
+        auto clusters = grouping.clusters();
+        solving.add(clusters);
+    }
+    
+    auto solution = solving.solve();
+
+    for (const auto& it : solution) {
+        std::cerr << it.first << ": " << it.second << std::endl;
+    }
+
+    const auto& g = solving.graph();
+    auto labels = [&](std::ostream& out, const auto& vtx)  {
+                      char typ = g[vtx].ntype;
+                      if (typ == 's') {
+                          out << "[label=\"s" << g[vtx].ident << "=" << Form("%.1f", g[vtx].value) << "\"]";
+                      }
+                      if (typ == 'm') {
+                          out << "[label=\"m" << "=" << g[vtx].value << "\"]";
+                      }
+                  };
+
+    std::string dotfilename = Form("%s-solution.dot", argv[0]);
+    std::ofstream dotfile (dotfilename.c_str());
+    boost::write_graphviz(dotfile, g, labels);
+    cerr << dotfilename << "\n";
+
+    // plot something
+
+    draw_points_blobs_solved(coords, print, points, blobs, solution);
     print();
 
     return 0;

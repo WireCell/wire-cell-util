@@ -4,9 +4,11 @@
 
 using namespace WireCell;
 
-Ress::vector_t solve(Ress::matrix_t matrix,Ress::vector_t measured,
-                     const Ress::Params& params,
-                     Ress::vector_t initial, Ress::vector_t weights)
+Ress::vector_t Ress::solve(Ress::matrix_t matrix,
+                           Ress::vector_t measured,
+                           const Ress::Params& params,
+                           Ress::vector_t initial,
+                           Ress::vector_t weights)
 {
     // Provide a uniform interface to RESS solving models.  RESS
     // *almost* already provides this.

@@ -9,6 +9,9 @@
 #include "TPolyLine.h"
 #include "TArrow.h"
 #include "TH1F.h"
+#include "TStyle.h"
+
+void draw_text(const Point& pt, const std::string text, int color=1, int align=22);
 
 void dump(const blobs_t& blobs)
 {
@@ -125,11 +128,11 @@ void draw_strips(Coordinates& coords, const strips_t& strips, bool outline)
 }
 
 
-void draw_blob(Coordinates& coords, const Blob& blob, int color=1)
+Point draw_blob(Coordinates& coords, const Blob& blob, int color=1)
 {
     const auto& corners = blob.corners();
     if (corners.empty()) {
-        return;
+        return Point();
     }
 
     std::vector<Point> points;
@@ -151,11 +154,14 @@ void draw_blob(Coordinates& coords, const Blob& blob, int color=1)
 
     TPolyLine* pl = new TPolyLine; // like a sieve
     pl->SetLineColor(color);
+    pl->SetLineWidth(2);
+
     for (const auto& p : points) {
         pl->SetNextPoint(p.z(), p.y());
     }
     pl->SetNextPoint(points.front().z(), points.front().y());
     pl->Draw();
+    return center;
 }
 
 
@@ -182,8 +188,8 @@ struct Printer {
 
 
 void draw_points_blobs(Coordinates& coords, Printer& print,
-                          const std::vector<Point>& points,
-                          const blobs_t& blobs)
+                       const std::vector<Point>& points,
+                       const blobs_t& blobs)
 {
     int nstrips = 0;
     for (const auto& b : blobs) {
@@ -201,10 +207,48 @@ void draw_points_blobs(Coordinates& coords, Printer& print,
     }
 }
 
-void draw_text(const Point& pt, const std::string text, int color=1);
-void draw_text(const Point& pt, const std::string text, int color)
+void draw_points_blobs_solved(Coordinates& coords, Printer& print,
+                              const std::vector<Point>& points,
+                              const blobs_t& blobs,
+                              const std::unordered_map<size_t, float>& blob_charge)
+{
+    int nstrips = 0;
+    for (const auto& b : blobs) {
+        nstrips += b.strips().size();
+    }
+
+
+    draw_frame(print.canvas, Form("%d points, %d blobs, %d strips",
+                                  (int)points.size(), (int)blobs.size(), nstrips));
+
+    for (size_t ipt=0; ipt<points.size(); ++ipt ) {
+        const auto& p = points[ipt];
+        draw_point(p, 1, 24, ipt+1);
+    }
+
+    for (auto it : blob_charge) {
+        size_t ind = it.first;
+        const auto& blob = blobs[ind];
+        float q = it.second;
+        int color = 1;
+        if (q<1.0) {
+            color = 2;
+        }
+        auto center = draw_blob(coords, blob, color);
+        if (q<1.0 ) {
+            draw_text(center, Form("s%d", (int)ind), color, 22);
+        }
+        else {
+            draw_text(center, Form("s%d:%.1f", (int)ind, q), color, 22);
+        }
+        std::cerr << "center:" << center << " ind:" << ind << " q:" << q << "\n";
+    }
+}
+
+void draw_text(const Point& pt, const std::string text, int color, int align)
 {
     TLatex l;
+    l.SetTextAlign(align);
     l.SetTextFont(52);
     l.SetTextSize(0.03);
     l.SetTextColor(color);

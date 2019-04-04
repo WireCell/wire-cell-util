@@ -54,11 +54,15 @@ WireCell::Plugin* WireCell::PluginManager::add(const std::string& plugin_name,
         }
         //cerr << "Trying to open library: " << lname << endl;
         void* lib = dlopen(lname.c_str(), RTLD_NOW);
-        if (lib) {
-            m_plugins[plugin_name] = new Plugin(lib);
-            //cerr << " PluginManager: loaded plugin #" << m_plugins.size() << " \"" << plugin_name << "\" from library \"" << lname << "\": " << m_plugins[plugin_name] << endl;
-            return m_plugins[plugin_name];
+        if (!lib) {
+            cerr << "Failed to load " << lname << ": " << dlerror() << endl;
+            continue;
         }
+        
+        m_plugins[plugin_name] = new Plugin(lib);
+        //cerr << " PluginManager: loaded plugin #" << m_plugins.size() << " \"" << plugin_name << "\" from library \"" << lname << "\": " << m_plugins[plugin_name] << endl;
+        return m_plugins[plugin_name];
+
     }
     cerr << "PluginManager: no such plugin: " << plugin_name << "\n";
     THROW(IOError() << errmsg{"no such plugin: " + plugin_name});
