@@ -6,11 +6,11 @@
 #ifndef WIRECELLDATA_VECTOR
 #define WIRECELLDATA_VECTOR
 
-#include <iostream>
 #include <cmath>
 #include <algorithm>
 #include <vector>
- 
+#include <iostream>             // for ostream
+
 namespace WireCell {
 
     /** Dimension-3 vector class.

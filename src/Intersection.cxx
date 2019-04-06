@@ -1,6 +1,5 @@
 #include "WireCellUtil/Intersection.h"
 
-#include <iostream>
 #include <set>
 using namespace std;
 
@@ -81,15 +80,6 @@ int WireCell::box_intersection(const Ray& bounds, const Ray& ray, Ray& hits)
     }
 
     if (results.size() > 2) {
-	cerr << "ERROR: crossed box " << results.size() << " times." << endl;
-	auto last = results.begin();
-	for (auto hitit = results.begin(); hitit != results.end(); ++hitit) {
-	    cerr << "\t" << *hitit << endl;
-	    if (last == hitit) { continue; }
-	    cerr << "\t\t" << (*hitit)-(*last) << endl;
-	    last = hitit;
-
-	}
 	return -1;
     }
 

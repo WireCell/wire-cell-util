@@ -1,5 +1,5 @@
 #include "WireCellUtil/RayGrid.h"
-
+#include "WireCellUtil/Logging.h"
 #include "WireCellUtil/Testing.h"
 
 #include "TCanvas.h"
@@ -8,12 +8,14 @@
 #include "TLine.h"
 #include "TH1F.h"
 
-#include <iostream>
+
 #include <string>
 
 using namespace WireCell;
 using namespace WireCell::RayGrid;
 using namespace std;
+
+using spdlog::info;
 
 void draw_ray(const Ray& ray, int color=1)
 {
@@ -58,7 +60,7 @@ void draw_zero_crossing(const Coordinates& rg, layer_index_t il, layer_index_t i
     draw_ray(Ray(c2, c2+j2), 4);
 
     std::stringstream ss;
-    ss << "(" << il << "," << im << ")";
+    info("({},{})", il, im);
 
     draw_text(p, ss.str());
 }
@@ -91,8 +93,6 @@ void draw_segments(const Coordinates& rg)
             const double d1 = p1.dot(pc-c1);
             if (d0 < 0 or d0 > pm0) { break; }
             if (d1 < 0 or d1 > pm1) { break; }
-            //std::cerr << "L"<<lind << ":" << d0 << ","<<d1<<","<<pm0<<","<<pm1 <<"\n";
-            //std::cerr << "L"<<lind << ", P" << pind << ":" << pc << std::endl;
             // handle anyt parallel layers special.
 
             Point pa, pb;
@@ -180,7 +180,6 @@ void draw(std::string fname, const Coordinates& rg, const ray_pair_vector_t& ray
                         if (p.z() < 0.0 or p.z() > 100.0) continue;
                         if (p.y() < 0.0 or p.y() > 100.0) continue;
                         draw_point(p, 1, 7);
-                        //cout << p<< " " << one.layer << ":" << one.grid << " , " << two.layer << ":" << two.grid <<  endl;
                     }
                 }
 
@@ -195,22 +194,22 @@ void draw(std::string fname, const Coordinates& rg, const ray_pair_vector_t& ray
 
 void dump(std::string msg, const tensor_t& ar)
 {
-    cerr << msg << endl;
-    cerr << "Dimensions: " << ar.dimensionality << endl;
+    info(msg);
 
     auto shape = ar.shape();
-    cerr << "Dimension 0 is size " << shape[0] << endl;
-    cerr << "Dimension 1 is size " << shape[1] << endl;
-    cerr << "Dimension 2 is size " << shape[2] << endl;
+    info("Dimensions: {} [{},{},{}]",
+         ar.dimensionality, shape[0], shape[1], shape[2]);
+
 
     for (size_t i = 0; i < shape[0]; ++i) {
         for (size_t j = 0; j < shape[1]; ++j) {
+            std::string line="\t";
             for (size_t k = 0; k < shape[2]; ++k) {
-                cerr << "\t" << Form("%.1f", ar[i][j][k]);
+                line += Form("%.1f", ar[i][j][k]);
             }
-            cerr << "\n";
+            info(line);
         }
-        cerr << "\n";
+        info("");
     }
 }
 
@@ -223,7 +222,7 @@ void test_012(const Coordinates& rg)
     for (int a=0; a<2; ++a) {
         for (int b=0; b<2; ++b) {
             const double p = rg.pitch_location({0,a}, {1,b}, 2);
-            std::cerr << "a=" << a << " b=" << b << " p=" << p << "\n";
+            info("a={} b={} p={}", a,b,p);
             ps.push_back(p);
         }
     }
@@ -248,11 +247,13 @@ int main(int argc, char *argv[])
     Assert(rg.nlayers() == (int)raypairs.size());
     
     for (int ind=0; ind<rg.nlayers(); ++ind) {
-        cout << ind
-             << " r1=" << raypairs[ind].first
-             << " r2=" << raypairs[ind].second
-             << " p=" << rg.pitch_mags().at(ind) << " " << rg.pitch_dirs().at(ind)
-             << " c=" << rg.centers().at(ind) << endl;
+        info("{} r1={} r2={} p={}[{}] c={}",
+             ind,
+             raypairs[ind].first,
+             raypairs[ind].second,
+             rg.pitch_dirs().at(ind),
+             rg.pitch_mags().at(ind),
+             rg.centers().at(ind));
     }
 
     std::string fname = argv[0];

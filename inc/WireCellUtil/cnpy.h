@@ -101,20 +101,20 @@ namespace cnpy {
             }
 
             if(word_size != sizeof(T)) {
-                std::cout<<"libnpy error: "<<fname<<" has word size "<<word_size<<" but npy_save appending data sized "<<sizeof(T)<<"\n";
+                std::cerr<<"libnpy error: "<<fname<<" has word size "<<word_size<<" but npy_save appending data sized "<<sizeof(T)<<"\n";
                 if( word_size != sizeof(T) ) {
                     throw std::runtime_error("npy_save: illegal word size");
                 }
             }
             if(true_data_shape.size() != shape.size()) {
-                std::cout<<"libnpy error: npy_save attempting to append misdimensioned data to "<<fname<<"\n";
+                std::cerr<<"libnpy error: npy_save attempting to append misdimensioned data to "<<fname<<"\n";
                 throw std::runtime_error("npy_save: misdimensioned data");
                 // original assert() had a bug, I think.
             }
 
             for(size_t i = 1; i < shape.size(); i++) {
                 if(shape[i] != true_data_shape[i]) {
-                    std::cout<<"libnpy error: npy_save attempting to append misshaped data to "<<fname<<"\n";
+                    std::cerr<<"libnpy error: npy_save attempting to append misshaped data to "<<fname<<"\n";
                     throw std::runtime_error("npy_save: misdimensioned data");
                 }
             }

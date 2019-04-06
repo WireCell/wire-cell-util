@@ -1,7 +1,6 @@
 #include "WireCellUtil/FFTBestLength.h"
 
 #include <boost/assign/std/vector.hpp>
-#include <iostream>
 
 using namespace boost::assign;
 using namespace WireCell;
@@ -31,8 +30,6 @@ std::size_t WireCell::fft_best_length(std::size_t window_length,
     }
   }
 
-  // std::cout << flag << " " << window_length << " " << edges.back() << std::endl;
-  
   if (window_length <= edges.back()){
     for (auto it = edges.begin(); it!=edges.end(); it++){
       if ((*it) >= window_length)

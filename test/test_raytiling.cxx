@@ -1,6 +1,7 @@
 #include "WireCellUtil/RayTiling.h"
 #include "WireCellUtil/RaySolving.h"
 #include "WireCellUtil/Waveform.h"
+#include "WireCellUtil/Logging.h"
 
 #include "TCanvas.h"
 #include "TMarker.h"
@@ -16,12 +17,13 @@
 #include <math.h> 
 
 #include <random>
-#include <iostream>
 
 using namespace WireCell;
 using namespace WireCell::Waveform;
 using namespace WireCell::RayGrid;
 using namespace std;
+using spdlog::info;
+using spdlog::warn;
 
 const int ndepos = 10;
 const int neles = 10;
@@ -94,15 +96,6 @@ int main(int argc, char* argv[])
 
             m[pit_ind] += 1.0;
 
-            // {
-            //     cerr << ilayer
-            //          << " pitind=" << pit_ind
-            //          << " p="<<p << " rel=" << rel
-            //          << " pit="<< pit << " cen=" << cen
-            //          << " tot=" << std::accumulate(m.begin(), m.end(), 0.0)
-            //          << " m.size=" << m.size()
-            //          << endl;
-            // }
         }
     }
     for (int ilayer=0; ilayer<nlayers; ++ilayer) {
@@ -124,7 +117,7 @@ int main(int argc, char* argv[])
 
         for (size_t ind=0; ind<m.size(); ++ind) {
             if (m[ind] <= 0.0) { continue; }
-            std::cerr << ilayer << "[" << ind << "]=" << m[ind]<<endl;
+            info("L{} [{}] {}", ilayer, ind, m[ind]);
         }
 
         Activity activity(ilayer, {m.begin(), m.end()});
@@ -134,23 +127,21 @@ int main(int argc, char* argv[])
         activities.push_back(activity);
 
         auto tot = std::accumulate(m.begin(), m.end(), 0.0);
-        cerr << "Layer: " << activity.layer()
-             << " activity=" << tot
-             << " in: " << strips.size() << " strips"  << endl;
+        info("L{} activity={} in: {} strips", activity.layer(), tot, strips.size());
     }
     print();
 
     for (int ilayer = 0; ilayer<nlayers; ++ilayer) {
         const auto& activity = activities[ilayer];
-        cerr << "Tiling layer " << ilayer << " with " << blobs.size() << " blobs\n";
-        activity.dump();
+        info("Tiling layer {} with {} blobs: {}",
+             ilayer, blobs.size(), activity.as_string());
         if (blobs.empty()) {
             blobs = tiling(activity);
         }
         else {
             blobs = tiling(blobs, activity);
             if (blobs.empty()) {
-                cerr << "lost m'blobs!\n";
+                warn("lost m'blobs!");
                 return -1;
             }
         }
@@ -188,7 +179,7 @@ int main(int argc, char* argv[])
             const float meas = m[mind];
             if (meas <= 0) { continue; }
             Grouping::ident_t ident = make_ident(mind, ilayer);
-            std::cerr << "ilayer:" << ilayer << " mind:" << mind << " ident:" << ident << " meas:" << meas << std::endl;
+            info("ilayer:{} mind:{} indent:{} meas:{}", ilayer, mind, ident, meas);
             grouping.add('m', ident, { ident }, meas);
         }
 

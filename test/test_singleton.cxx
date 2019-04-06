@@ -1,28 +1,28 @@
 #include "WireCellUtil/Singleton.h"
 #include "WireCellUtil/Testing.h"
+#include "WireCellUtil/Logging.h"
 
-#include <iostream>
-using namespace std;
+using spdlog::info;
 
 class Foo {
 public:
-    Foo() { cout << "Foo() at " << (void*)this << endl; }
-    virtual ~Foo() { cout << "~Foo() at " << (void*)this << endl; }
-    virtual void chirp() { cout << "Foo::chirp() at " << (void*)this << endl; }
+    Foo() { info("Foo() at {:p}", (void*)this); }
+    virtual ~Foo() { info("~Foo() at {:p}", (void*)this); }
+    virtual void chirp() { info("Foo::chirp() at {:p}", (void*)this); }
 };
 
 typedef WireCell::Singleton<Foo> OnlyFoo;
 
 int main()
 {
-    cout << "First time:" << endl;
+    info("First time:");
     Foo* foo1 = &OnlyFoo::Instance();
     Foo* foo2 = &OnlyFoo::Instance();
 
     Assert(foo1 == foo2);
 
     OnlyFoo::Instance().chirp();
-    cout << "Second time:" << endl;
+    info("Second time:");
     OnlyFoo::Instance().chirp();
 
     Foo* foo3 = &WireCell::Singleton<Foo>::Instance();

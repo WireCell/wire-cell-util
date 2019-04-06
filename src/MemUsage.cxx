@@ -1,7 +1,6 @@
 #include "WireCellUtil/MemUsage.h"
 
 #include <unistd.h>
-#include <iostream>		// debugging
 #include <sstream>
 
 using namespace std;

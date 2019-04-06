@@ -1,7 +1,5 @@
 #include "WireCellUtil/RayClustering.h"
 
-#include <iostream>             // debug
-
 using namespace WireCell;
 using namespace WireCell::RayGrid;
 
@@ -26,13 +24,11 @@ WireCell::RayGrid::blobvec_t WireCell::RayGrid::select(const blobproj_t& proj, g
     if (proj.empty()) {
         return WireCell::RayGrid::blobvec_t();
     }
-    //std::cerr << "RayClustering::select: " << proj.size() << std::endl;
 
     blobset_t uniq;
     int nproj = std::min((int)proj.size(), gr.second);
     for (grid_index_t gind = gr.first; gind < nproj; ++gind) {
         const auto& some = proj[gind];
-        //std::cerr << "\t" << gind << ": " << some.size() << "\n";
         uniq.insert(some.begin(), some.end());
     }
     return blobvec_t(uniq.begin(), uniq.end());
@@ -84,12 +80,8 @@ bool WireCell::RayGrid::surrounding(const blobref_t& a, const blobref_t& b)
         if (bbounds.first <= abounds.first and abounds.second <= bbounds.second) {
             ++ainb;
         }
-        std::cerr << "L" << ilayer
-                  << "\ta:" << astrip
-                  << "\tb:" << bstrip << "\t[ainb="<<ainb<<", bina="<<bina<<"]\n";
     }
     if (ainb == nlayers or bina == nlayers) {
-        std::cerr << "^surrounding\n";
         return true;
     }
     return false;

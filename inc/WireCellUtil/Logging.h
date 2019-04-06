@@ -12,8 +12,8 @@
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG
 
 #include "spdlog/spdlog.h"
+#include "spdlog/fmt/ostr.h"
 #include <string>
-
 
 namespace WireCell {
 
@@ -49,7 +49,11 @@ namespace WireCell {
 
         // If a default logger is defined then bare spdlog::info(),
         // etc, functions will use it.
-        void set_default(std::string name);
+        logptr_t set_default(std::string name);
+
+        // One stop shopping: this defines a color stderr logger
+        // called "log" which is set as default.
+        void defaults();
 
     }
 

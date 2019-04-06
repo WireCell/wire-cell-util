@@ -10,7 +10,7 @@
 
 #include <map>
 #include <vector>
-#include <iostream>
+#include <string>
 
 #include "WireCellUtil/RayGrid.h"
 
@@ -94,7 +94,7 @@ namespace WireCell {
             ranges_t active_ranges() const;
 
             int offset() const { return m_offset; }
-            void dump() const;
+            std::string as_string() const;
 
         private:
             vector_t m_span;
@@ -122,7 +122,7 @@ namespace WireCell {
                 return corners().size() > 0;
             }
 
-            void dump() const;
+            std::string as_string() const;
 
         private:
             strips_t m_strips;

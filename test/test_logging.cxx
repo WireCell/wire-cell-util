@@ -19,6 +19,7 @@ int main(int argc, char* argv[])
     l->info("from my logger");
     spdlog::info("from default logger");
 
+
     SPDLOG_LOGGER_DEBUG(l, "log from debug CPP macro");
     SPDLOG_LOGGER_TRACE(l, "log from trace CPP macro, should not see by default");
 

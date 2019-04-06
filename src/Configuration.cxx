@@ -24,7 +24,6 @@ WireCell::Configuration WireCell::update(WireCell::Configuration& a,
 	return b;
     }
     if (!a.isObject() || !b.isObject()) {
-	//cerr << "a and b not object" << endl;
 	return a;
     }
     

@@ -1,7 +1,5 @@
 #include "WireCellUtil/Pimpos.h"
 
-#include <iostream>             // debugging
-
 using namespace WireCell;
 
 Pimpos::Pimpos(int nwires, double minwirepitch, double maxwirepitch,

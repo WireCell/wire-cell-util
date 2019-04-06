@@ -3,7 +3,7 @@
 
 #include <map>                  // for std::pair
 #include <cmath>
-#include <iostream>
+#include <iostream>             // for ostream
 
 namespace WireCell {
 
@@ -78,10 +78,6 @@ namespace WireCell {
         /// return value is [0,nbins-1] but no range checking is
         /// performed.
         int bin(double val) const {
-            //debug 
-            //std::cerr <<"DEBUG m_minval: "<<m_minval<<std::endl;
-            //std::cerr <<"DEBUG m_binsize: "<<m_binsize<<std::endl;
-            //std::cerr <<"DEBUG val: "<<val<<std::endl;
             return int((val-m_minval)/m_binsize);
         }
 

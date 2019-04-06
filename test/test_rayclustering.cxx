@@ -2,6 +2,7 @@
 #include "WireCellUtil/RayTiling.h"
 #include "WireCellUtil/Waveform.h"
 #include "WireCellUtil/Testing.h"
+#include "WireCellUtil/Logging.h"
 
 
 #include <math.h> 
@@ -9,13 +10,14 @@
 #include <random>
 #include <fstream>
 #include <string>
-#include <iostream>
 
 using namespace WireCell;
 using namespace WireCell::Waveform;
 using namespace WireCell::RayGrid;
 using namespace std;
-
+using spdlog::debug;
+using spdlog::info;
+using spdlog::warn;
 
 const int ndepos = 10;
 const int neles = 10;
@@ -42,7 +44,7 @@ std::vector<Point> make_points(std::default_random_engine& generator, double x)
             const Point pt = cp + delta;
             if (pt.y() < -border or pt.y() > height+border or
                 pt.z() < -border or pt.z() > width+border) {
-                std::cerr << "Rejecting far away point: " << cp << " + " << delta << std::endl;
+                warn("Rejecting far away point: {} + {}" , cp, delta);
                 continue;
             }
             points.push_back(cp+delta);
@@ -70,9 +72,9 @@ std::vector<measure_t> make_measures(Coordinates& coords, const std::vector<Poin
             const int pit_ind = pit.dot(rel)/pitch_mags[ilayer]; 
             if (ilayer <= 1) {
                 if (pit_ind >= 1 or pit_ind < 0) {
-                    std::cerr << "mm: pit_ind=" << pit_ind << " with ipt=" << ipt << "\n";
+                    debug("mm: pit_ind={} with ipt={}", pit_ind, ipt);
                     if (pit_ind == 1) {
-                        std::cerr << "\tpit=" << pit << " cen=" << cen << " rel=" << rel <<"\n";
+                        debug("\tpit={} cen={} rel={}", pit, cen, rel);
                     }
                     continue;
                 }
@@ -95,7 +97,7 @@ activities_t make_activities(Coordinates& coords, std::vector<measure_t>& measur
     activities_t activities;
     for (int ilayer = 0; ilayer<nlayers; ++ilayer) {
         auto& m = measures[ilayer];
-        std::cerr << "Make activity for layer: " << ilayer << ": " << m.size() << " " << std::endl;
+        info("Make activity for layer: {}: {}", ilayer, m.size());
         Activity activity(ilayer, {m.begin(), m.end()});
         Assert(!activity.empty());
         activities.push_back(activity);
@@ -123,12 +125,10 @@ struct Chirp {
 
     bool in(const blobref_t& a, const blobref_t& b) {
         if (surrounding(a, b)) {
-            cerr << "surrounding\n";
             return true;
         }
 
         const auto& astrips = a->strips();
-        //const auto& bstrips = b->strips();
         const int nlayers = astrips.size();
 
         // if at least one corner of b is in side a, return true
@@ -138,36 +138,36 @@ struct Chirp {
             for (layer_index_t layer = 0; layer < nlayers; ++layer) {
                 const auto& astrip = astrips[layer];
                 if (layer == c.first.layer) {
-                    cerr << "L" << layer << " A: " << astrip << " " << c << endl;
+                    info("L{} A: {} {}", layer, astrip, c);
                     if (astrip.on(c.first.grid)) {
-                        cerr << "\ton with found="<<found<<" nlayers="<<nlayers<<"\n";
+                        info("\ton with found={} nlayers={}", found, nlayers);
                         ++found;
                         continue;
                     }
-                    cerr << "\toff with found="<<found<<" nlayers="<<nlayers<<"\n";
+                    info("\toff with found={} nlayers={}", found, nlayers);
                     break;
                 }
                 if (layer == c.second.layer) {
-                    cerr << "L" << layer << " A: " << astrip << " " << c << endl;
+                    info("L{} A: {} {}", layer, astrip, c);
                     if (astrip.on(c.second.grid)) {
-                        cerr << "\ton with found="<<found<<" nlayers="<<nlayers<<"\n";
+                        info("\ton with found={} nlayers={}", found, nlayers);
                         ++found;
                         continue;
                     }
-                    cerr << "\toff with found="<<found<<" nlayers="<<nlayers<<"\n";
+                    info("\toff with found={} nlayers={}",found, nlayers);
                     break;
                 }
                 const double ploc = coords.pitch_location(c.first, c.second, layer);
                 const int pind = coords.pitch_index(ploc, layer);
 
-                cerr << "L" << layer << " A: " << astrip << " pind=" << pind << " ploc=" << ploc
-                     << " " << c << endl;
+                info("L{} A: {} pind={} ploc={} {}", layer, astrip, pind, ploc, c);
+
                 if (astrip.in(pind)) {
-                    cerr << "\tin with found="<<found<<" nlayers="<<nlayers<<"\n";
+                    info("\tin with found={} nlayers={}", found, nlayers);
                     ++found;
                 }
                 else {
-                    cerr << "\tout with found="<<found<<" nlayers="<<nlayers<<"\n";
+                    info("\tout with found={} nlayers={}", found, nlayers);
                     break;
                 }
             }
@@ -184,20 +184,17 @@ struct Chirp {
         const std::size_t d1 = a-one.begin();
         const std::size_t d2 = b-two.begin();
 
-        cerr << "overlap: a" << d1 << " and b" << d2 << "\n";
-        cerr << "\tblob a #" << d1 << ": ";
-        a->dump();
-        cerr << "\tblob b #" << d2 << ": ";
-        b->dump();
+        info("overlap: a{} and b{}", d1, d2);
+        info("\tblob a #{}: {}", d1, a->as_string());
+        info("\tblob b #{}: {}", d2, b->as_string());
 
         if (!this->in(a,b)) {
-            cerr << "NO CONTAINED CORNERS\n";
+            warn("NO CONTAINED CORNERS");
             //Assert(this->in(a,b));
         }
 
         sel1->insert(d1);
         sel2->insert(d2);
-
     }
 
     void dump(JsonEvent& dumper) {

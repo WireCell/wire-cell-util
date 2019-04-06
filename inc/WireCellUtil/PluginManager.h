@@ -1,6 +1,8 @@
 #ifndef WIRECELL_PLUGINMANAGER
 #define WIRECELL_PLUGINMANAGER
 
+#include "WireCellUtil/Logging.h"
+
 #include <map>
 #include <string>
 
@@ -28,6 +30,7 @@ namespace WireCell {
 
     /** This is meant to be used from a WireCell::Singleton. */
     class PluginManager{
+        Log::logptr_t l;
 	PluginManager();
 	~PluginManager();
     public:

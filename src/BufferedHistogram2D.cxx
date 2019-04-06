@@ -1,6 +1,5 @@
 #include "WireCellUtil/BufferedHistogram2D.h"
 
-#include <iostream>
 using namespace WireCell;
 using namespace std;
 
@@ -33,12 +32,10 @@ bool BufferedHistogram2D::fill(double x, double y, double v)
 {
     int ybin = (y - m_ymin)/m_ybinsize;
     if (ybin < 0) {
-	//cerr << "negative y bin="<<ybin<<" for y=" << y << endl;
 	return false;
     }
     int xbin = (x - m_xmin)/m_xbinsize;
     if (xbin < 0) {
-	//cerr << "negative x bin="<<xbin<<" for x=" << x << endl;
 	return false;
     }
 
@@ -46,7 +43,6 @@ bool BufferedHistogram2D::fill(double x, double y, double v)
 	m_xbindeque.resize(xbin+1);
     }
     XBin& vec = m_xbindeque[xbin];
-    //cerr << m_xbindeque.size() << "x" << vec.size() << " fill(" << x << "," << y << ")=" << v << endl;
     if ((int)vec.size() < ybin+1) {
 	vec.resize(ybin+1, 0.0);
     }

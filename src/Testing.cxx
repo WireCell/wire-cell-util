@@ -1,20 +1,22 @@
 #include "WireCellUtil/Testing.h"
 #include "WireCellUtil/Exceptions.h"
+#include "WireCellUtil/Logging.h"
 
-#include <iostream>
 #include <sstream>
 
-using namespace std;
 using namespace WireCell;
+using spdlog::error;
 
-void boost::assertion_failed_msg(char const * expr, char const * msg, char const * function, char const * file, long line)
+void boost::assertion_failed_msg(char const * expr, char const * msg,
+                                 char const * function, char const * file, long line)
 {
-    stringstream ss;
+    error("{}:{}:{} {} {}", file, function, line, expr, msg or "");
+
+    std::stringstream ss;
     ss << "WireCell::AssertionError: \"" << expr << "\" in " << function << " " << file << ":" << line;
     if (msg and msg[0]) {
         ss << "\n" << msg;
     }
-    cerr << ss.str() << endl;
     THROW(AssertionError() << errmsg{ss.str()});
 }
 

@@ -1,7 +1,5 @@
 #include "WireCellUtil/RayGrid.h"
 
-#include <iostream>             // debug
-
 using namespace WireCell;
 using namespace WireCell::RayGrid;
 
@@ -70,11 +68,6 @@ Coordinates::Coordinates(const ray_pair_vector_t& rays,
                     const auto ray = ray_pitch(rl0, rm1);
                     const auto jump = project(ray.first - pl0);
                     m_ray_jump(il, im) = jump;
-                    // std::cerr << "il="<<il << " im="<<im
-                    //           << " p1=" << ray.first << " p0=" << pl0
-                    //           << " jump="<< jump
-                    //           << " m_ray_array=" << m_ray_jump(il, im)
-                    //           << std::endl;
                 }
                 // along m-layer ray 0, crossing of l-layer ray 1.
                 {
@@ -134,12 +127,6 @@ Vector Coordinates::ray_crossing(const coordinate_t& one, const coordinate_t& tw
     const auto& wml = m_ray_jump(m,l);
     const double i = one.grid, j = two.grid;
     Vector res = r00 + j*wlm + i*wml;
-    // std::cerr << "l="<<l << " m="<<m
-    //           << " i="<<i<< " j=" << j
-    //           << " wlm=" << wlm
-    //           << " wml=" << wml
-    //           << " res=" << res
-    //           << std::endl;
     return res;
 }
 

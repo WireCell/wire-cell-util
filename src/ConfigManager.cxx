@@ -1,7 +1,6 @@
 #include "WireCellUtil/ConfigManager.h"
 #include "WireCellUtil/NamedFactory.h"
 
-#include <iostream>
 
 using namespace std;
 using namespace WireCell;

@@ -2,7 +2,6 @@
 #include "WireCellUtil/Exceptions.h"
 
 #include <string>
-#include <iostream>
 #include <dlfcn.h>
 
 using namespace WireCell;
@@ -14,7 +13,6 @@ Plugin::~Plugin() { dlclose(m_lib); }
 void* Plugin::raw(const std::string& symbol_name)
 {
     void* ret= dlsym(m_lib, symbol_name.c_str());
-    //cerr << "Symbol name \"" << symbol_name << "\" @ " << ret << endl;
     return ret;
 }
 	
@@ -36,7 +34,7 @@ WireCell::Plugin* WireCell::PluginManager::add(const std::string& plugin_name,
 {
     Plugin* plugin = get(plugin_name);
     if (plugin) {
-	cerr << " PluginManager: already have plugin " << plugin_name << endl;
+        l->debug("already have plugin {}", plugin_name);
 	return plugin;
     }
 
@@ -52,19 +50,20 @@ WireCell::Plugin* WireCell::PluginManager::add(const std::string& plugin_name,
         else {
             lname = libname;
         }
-        //cerr << "Trying to open library: " << lname << endl;
         void* lib = dlopen(lname.c_str(), RTLD_NOW);
         if (!lib) {
-            cerr << "Failed to load " << lname << ": " << dlerror() << endl;
+            l->error("Failed to load {}: {}", lname, dlerror());
             continue;
         }
         
         m_plugins[plugin_name] = new Plugin(lib);
-        //cerr << " PluginManager: loaded plugin #" << m_plugins.size() << " \"" << plugin_name << "\" from library \"" << lname << "\": " << m_plugins[plugin_name] << endl;
+        l->debug("loaded plugin #{} \"{}\" from library \"{}\": {}",
+                 m_plugins.size(), plugin_name, lname,
+                 (void*)m_plugins[plugin_name]);
         return m_plugins[plugin_name];
 
     }
-    cerr << "PluginManager: no such plugin: " << plugin_name << "\n";
+    l->error("no such plugin: \"{}\"", plugin_name);
     THROW(IOError() << errmsg{"no such plugin: " + plugin_name});
     return nullptr;
 }
@@ -83,22 +82,18 @@ WireCell::Plugin* WireCell::PluginManager::find(const std::string& symbol_name)
     for (auto pit : m_plugins) {
 	Plugin* maybe = pit.second;
 	if (maybe->contains(symbol_name)) {
-	    //cerr << this << " PluginManager: found symbol \"" << symbol_name << "\" in plugin: \"" << pit.first << "\"" << endl;
 	    return maybe;
 	}
-	// cerr << this << " PluginManager: no symbol \"" << symbol_name << "\" in plugin: \"" << pit.first << "\"" << endl;
     }
-    // cerr << this << " PluginManager: no symbol \"" << symbol_name << "\" found in " << m_plugins.size() << " plugins" << endl;
     return nullptr;
 }
 
 WireCell::PluginManager::PluginManager()
+    : l(Log::logger("plugins"))
 {
-    //cerr << this << " PluginManager starting" << endl;
 }
 WireCell::PluginManager::~PluginManager()
 {
-    //cerr << this << " PluginManager terminating" << endl;
     for (auto pit : m_plugins) {
 	delete pit.second;
 	pit.second = nullptr;

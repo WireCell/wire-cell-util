@@ -2,7 +2,6 @@
 #include "WireCellUtil/Persist.h"
 #include "WireCellUtil/Configuration.h"
 
-#include <iostream>             // debug
 
 using namespace WireCell;
 using namespace WireCell::WireSchema;
@@ -34,7 +33,6 @@ Store WireCell::WireSchema::load(const char* filename)
         Json::Value jpoints = jstore["points"];
         const int npoints = jpoints.size();
         points.resize(npoints);
-        //std::cerr << "Points: " << npoints << std::endl;
         for (int ipoint=0; ipoint<npoints; ++ipoint) {
             Json::Value jp = jpoints[ipoint]["Point"];
             points[ipoint].set(get<double>(jp,"x"), get<double>(jp,"y"), get<double>(jp,"z"));
@@ -46,7 +44,6 @@ Store WireCell::WireSchema::load(const char* filename)
         const int nwires = jwires.size();
         std::vector<Wire>& wires = store->wires;
         wires.resize(nwires);
-        //std::cerr << "Wires: " << nwires << std::endl;
         for (int iwire=0; iwire<nwires; ++iwire) {
             Json::Value jwire = jwires[iwire]["Wire"];
             Wire& wire = wires[iwire];
@@ -56,9 +53,6 @@ Store WireCell::WireSchema::load(const char* filename)
 
             int itail = get<int>(jwire,"tail");
             int ihead = get<int>(jwire,"head");
-            // std::cerr << "wire:" << iwire  << " tail:" << itail << " head:"<<ihead
-            //           << " npoints:" << points.size()
-            //           << std::endl;
             wire.tail = points[itail];
             wire.head = points[ihead];
         }
@@ -70,7 +64,6 @@ Store WireCell::WireSchema::load(const char* filename)
         const int nplanes = jplanes.size();
         std::vector<Plane>& planes = store->planes;
         planes.resize(nplanes);
-        //std::cerr << "Planes: " << nplanes << std::endl;
         for (int iplane=0; iplane<nplanes; ++iplane) {
             Json::Value jplane = jplanes[iplane]["Plane"];
             Plane& plane = planes[iplane];
@@ -89,7 +82,6 @@ Store WireCell::WireSchema::load(const char* filename)
         const int nfaces = jfaces.size();
         std::vector<Face>& faces = store->faces;
         faces.resize(nfaces);
-        //std::cerr << "Faces: " << nfaces << std::endl;
         for (int iface=0; iface<nfaces; ++iface) {
             Json::Value jface = jfaces[iface]["Face"];
             Face& face = faces[iface];

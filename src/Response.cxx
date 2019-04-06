@@ -1,27 +1,25 @@
 #include "WireCellUtil/Persist.h"
 #include "WireCellUtil/ExecMon.h"
 #include "WireCellUtil/Response.h"
+#include "WireCellUtil/Logging.h"
 #include <cmath>
-#include <iostream>
 #include <set>
 
+using spdlog::error;
 
 using namespace WireCell;
 
 
 Response::Schema::FieldResponse::~FieldResponse()
 {
-//    std::cerr << (void*)this << " FieldResponse "<<period<<" dying\n";
 }
 
 Response::Schema::PlaneResponse::~PlaneResponse()
 {
-//    std::cerr << (void*)this << " PlaneResponse "<<planeid<<" dying\n";
 }
 
 Response::Schema::PathResponse::~PathResponse()
 {
-//    std::cerr << (void*)this << " PathResponse "<<wirepos<<" dying\n";
 }
 
 /**
@@ -41,12 +39,12 @@ Response::Schema::PathResponse::~PathResponse()
 WireCell::Response::Schema::FieldResponse WireCell::Response::Schema::load(const char* filename)
 {
     if (!filename) {
-        std::cerr << "Response::Schema::load(): empty field response file name\n";
+        error("Response::Schema::load(): empty field response file name");
         return FieldResponse();
     }
     Json::Value top = WireCell::Persist::load(filename);
     if (top.isNull()) {
-        std::cerr << "Response::Schema::load(): failed to load " << filename << "\n";
+        error("Response::Schema::load(): failed to load {}", filename);
         return FieldResponse();
     }
     Json::Value fr = top["FieldResponse"];
@@ -159,10 +157,6 @@ Response::Schema::FieldResponse Response::wire_region_average(const Response::Sc
 	  }
 	}
 
-	// for (size_t i=0;i!=pitch_pos.size();i++){
-	//   int eff_num = pitch_pos.at(i)/(0.01*pitch);
-	//   std::cout << i << " " << pitch_pos.at(i) << " " << eff_num << " " << pitch_pos_range_map[eff_num].first << " " << pitch_pos_range_map[eff_num].second << std::endl;
-	// }
 
 	// figure out how many wires ...
 	std::set<int> wire_regions;
@@ -196,7 +190,6 @@ Response::Schema::FieldResponse Response::wire_region_average(const Response::Sc
 	    //
 	    
 	    if (high_limit > low_limit){
-	      //std::cout << wire_no << " " << resp_num << " " << low_limit/pitch << " " << high_limit/pitch << std::endl;
 	      for (int k=0;k!=nsamples;k++){
 		avgs[wire_no].at(k) += response.at(k) * (high_limit - low_limit) / pitch;
 	      }
@@ -267,7 +260,8 @@ Array::array_xxf Response::as_array(const Schema::PlaneResponse& pr, int set_nro
     Array::array_xxf ret= Array::array_xxf::Zero(set_nrows, set_ncols); // warning, uninitialized
 
     if (set_nrows< nrows || set_ncols < ncols){
-      std::cerr << "Response --> Array dimension not correct! " << std::endl;
+        error("Response: array dimension not correct! ");
+        return ret;
     }
     
     for (int irow = 0; irow < nrows; ++irow) {
@@ -414,11 +408,6 @@ Response::SimpleRC::SimpleRC(double width, double tick, double offset)
   : _width(width), _offset(offset), _tick(tick)
 
 {
-    /* std::cerr<<"+++++++++++++++++++++++"<<std::endl; */
-    /* std::cerr<<_width/units::ms<<" ms "<<_tick/units::us<<" us " */
-    /*     <<_offset/units::us<<" us\n"; */
-    /* std::cerr<<"unit? "<<_tick/_width<<std::endl; */
-    /* std::cerr<<"+++++++++++++++++++++++"<<std::endl; */
 }
 Response::SimpleRC::~SimpleRC()
 {

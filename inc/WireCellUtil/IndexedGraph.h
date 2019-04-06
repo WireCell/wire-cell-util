@@ -22,7 +22,6 @@
 #include <unordered_set>
 #include <set>
 #include <variant>              // C++17
-#include <iostream>             // debug
 
 
 namespace WireCell {
@@ -71,14 +70,7 @@ namespace WireCell {
             vdesc_t vd = it->second;
             for (auto edge : boost::make_iterator_range(boost::out_edges(vd, m_graph))) {
                 vdesc_t neigh = boost::target(edge, m_graph);
-                vertex_t tmp = m_graph[neigh];
-                if (!has(tmp)) {
-                    std::cerr << "WTF, I don't have my own neighbors: "
-                              << boost::source(edge, m_graph) << " -> " << neigh 
-                              << " " << boost::num_vertices(m_graph) << " " << m_index.size()
-                              << std::endl;
-                }
-                ret.push_back(tmp);
+                ret.push_back(m_graph[neigh]);
             }
             return ret;
         }
@@ -126,11 +118,6 @@ namespace WireCell {
             m_graph.clear();
         }
 
-        void dump() {
-            auto be = boost::vertices(m_graph);
-            std::cerr << "IndexedGraph with " << m_index.size() << " indexed and "
-                      <<  (be.second-be.first) << " nodes\n";
-        }
 
         /// Return connected component subgraphs.
         typedef std::unordered_map<int, std::vector<vertex_t> > vertex_grouping_t;

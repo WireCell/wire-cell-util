@@ -15,11 +15,11 @@ void draw_text(const Point& pt, const std::string text, int color=1, int align=2
 
 void dump(const blobs_t& blobs)
 {
-    cerr << "-----dumping " << blobs.size() << " blobs:\n";
+    info("-----dumping {} blobs:", blobs.size());
     for (const auto& b : blobs) {
-        b.dump();
+        info("\t{}",b.as_string());
     }
-    cerr << "------\n";
+    info("------");
 }
 
 void draw_point(const Point& p, float size=1, int style=20, int color=1);
@@ -241,7 +241,7 @@ void draw_points_blobs_solved(Coordinates& coords, Printer& print,
         else {
             draw_text(center, Form("s%d:%.1f", (int)ind, q), color, 22);
         }
-        std::cerr << "center:" << center << " ind:" << ind << " q:" << q << "\n";
+        info("center:{} ind:{} q:[]", center, ind, q);
     }
 }
 
@@ -259,9 +259,7 @@ void draw_raygrid(Printer& print, const Coordinates& coords, const ray_pair_vect
     auto* frame = print.canvas.DrawFrame(-110, 50-110, 110, 50+110);
     frame->SetTitle("Ray Grid");
     
-
-
-    std::cerr << "got " << raypairs.size() << " ray pairs\n";
+    info("got {} ray pairs", raypairs.size());
     std:: vector<Point> centers0;
     std:: vector<Point> centers1;
     const int ui = 2, vi = 3, wi = 4;

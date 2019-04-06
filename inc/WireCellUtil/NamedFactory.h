@@ -8,9 +8,10 @@
 #include "WireCellUtil/Type.h"
 #include "WireCellUtil/String.h"
 #include "WireCellUtil/Exceptions.h"
+#include "WireCellUtil/Logging.h"
 #include <unordered_map>
 
-#include <iostream>
+
 #include <exception>
 #include <string>
 #include <set>
@@ -67,7 +68,7 @@ namespace WireCell {
      * a given interface. */
     template <class IType>
     class NamedFactoryRegistry {
-
+        Log::logptr_t l;
     public:
 	typedef IType interface_type;
 	typedef std::shared_ptr<IType> interface_ptr;
@@ -75,6 +76,7 @@ namespace WireCell {
 	typedef std::unordered_map<std::string, factory_ptr> factory_lookup;
         typedef std::set<std::string> known_type_set;
 
+        NamedFactoryRegistry() : l(Log::logger("factory")) {}
         size_t hello(const std::string& classname) {
             m_known_types.insert(classname);
             return m_known_types.size();
@@ -84,7 +86,6 @@ namespace WireCell {
 	/// Register an existing factory by the "class" name of the instance it can create.
 	bool associate(const std::string& classname, factory_ptr factory) {
 	    m_lookup[classname] = factory;
-	    //std::cerr << "Associate \"" << classname << "\" with " << WireCell::type(factory) << std::endl;
 	    return true;
 	}
 
@@ -92,7 +93,8 @@ namespace WireCell {
 	/// Look up an existing factory by the name of the "class" it can create.
 	factory_ptr lookup_factory(const std::string& classname) {
 	    if (classname == "") {
-		std::cerr << "NamedFactory: No class name given for type " << demangle(typeid(IType).name()) << std::endl;
+                l->error("no class name given for type {}",
+                         demangle(typeid(IType).name()));
 		return nullptr;
 	    }
 
@@ -108,21 +110,21 @@ namespace WireCell {
 	    std::string factory_maker = "make_" + classname + "_factory";
 	    auto plugin = pm.find(factory_maker.c_str());
 	    if (!plugin) {
-		std::cerr << "NamedFactory: No plugin for " << classname << std::endl;
+                l->error("no plugin for {}", classname);
 		return nullptr;
 	    }
 
 	    typedef void* (*maker_function)();
 	    maker_function mf;
 	    if (!plugin->symbol(factory_maker.c_str(), mf)) {
-		std::cerr << "NamedFactory: No factory maker symbol for " << classname << std::endl;
+                l->error("no factory maker symbol for {}", classname);
 		return nullptr;
 	    }
 
 	    void* fac_void_ptr = mf();
 
 	    if (!fac_void_ptr) {
-		std::cerr << "NamedFactory: No factory for \"" << classname << "\"\n";
+                l->error("no factory for \"{}\"", classname);
 		return nullptr;
 	    }
 
@@ -142,7 +144,7 @@ namespace WireCell {
                 if (nullok) {
                     return nullptr;
                 }
-		std::cerr << "NamedFactory: No factory for class \"" << classname << "\"\n";
+                l->error("no factory for class \"{}\"", classname);
                 THROW(FactoryException() << errmsg{"No factory for class " + classname}); 
 	    }
 	    WireCell::Interface::pointer iptr;
@@ -161,7 +163,7 @@ namespace WireCell {
                 }
                 std::string msg = "NamedFactory: Failed to "+action+" instance \"" + instname;
                 msg += "\" of class \"" + classname + "\"";
-		std::cerr << msg << std::endl;
+                l->error(msg);
                 THROW(FactoryException() << errmsg{msg}); 
 	    }
 	    interface_ptr uptype = std::dynamic_pointer_cast<interface_type>(iptr);
@@ -173,7 +175,7 @@ namespace WireCell {
                 msg += " of class " + classname;
                 msg += " c++ type: " + type(iptr);
                 msg += " to " + type(uptype);
-		std::cerr << msg << std::endl;
+                l->error(msg);
                 THROW(FactoryException() << errmsg{msg}); 
 	    }
 	    return uptype;
@@ -303,7 +305,6 @@ namespace WireCell {
 
 template<class Concrete, class... Interface>
 void* make_named_factory_factory(std::string name) {
-    //std::cerr << "make_named_factory_factory(\"" << name << "\")\n";
     static void* void_factory = nullptr;
     if (! void_factory) {
 	void_factory = new WireCell::NamedFactory<Concrete>;

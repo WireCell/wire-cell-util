@@ -1,14 +1,12 @@
 #include "WireCellUtil/TimeKeeper.h"
 
 #include <sstream>
-#include <iostream>		// debugging
 
 using namespace std;
 using namespace WireCell;
 
 TimeKeeper::TimeKeeper(const std::string& msg, ptime starting_time)
 {
-    //cerr << "TimeKeeper starting with \"" << msg << "\"" << endl;
     m_events.push_back(event(starting_time, msg));
 }
 
@@ -18,7 +16,6 @@ TimeKeeper::~TimeKeeper()
 
 std::string TimeKeeper::operator()(std::string msg, ptime now)
 {
-    //cerr << "TimeKeeper: accepting message: " << msg << endl;
     m_events.push_back(event(now, msg));
     return emit(-1);
 }
@@ -60,7 +57,6 @@ std::string TimeKeeper::summary() const
 std::string TimeKeeper::emit(int ind) const
 {
     while (ind < 0) { ind += m_events.size();}
-    //cerr << "emit " << ind << endl;
     int prev_ind = ind-1;
     if (prev_ind<0) prev_ind=0;
     const event& prev = (*this)[prev_ind];

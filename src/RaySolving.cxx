@@ -1,8 +1,6 @@
 #include "WireCellUtil/RaySolving.h"
 #include "WireCellUtil/Ress.h"
 
-#include <iostream>             // debug
-
 using namespace WireCell;
 
 RayGrid::Grouping::vertex_t RayGrid::Grouping::wire_node(ident_t wid)
@@ -171,8 +169,6 @@ RayGrid::Solving::solve()
         return answer;
     }
     
-    std::cerr << "RayGrid:Solving: " << nprobs << " problems\n";
-
     struct SMVecs {
         std::vector<vertex_t> sources, measures;
     };

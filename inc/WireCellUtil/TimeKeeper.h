@@ -12,11 +12,11 @@ namespace WireCell {
      *
      *   TimeKeeper tk("starting");
      *   ...
-     *   cerr << tk("starting long calculation....") << endl;
+     *   tk("starting long calculation....");
      *   do_long_calculation();
-     *   cerr << tk("...done") << endl;;
+     *   tk("...done");
      *   ...
-     *   cerr << tk.summary() << endl;
+     *   info(tk.summary());
      */
     class TimeKeeper {
     public:

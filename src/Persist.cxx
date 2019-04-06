@@ -1,5 +1,6 @@
 #include "WireCellUtil/Persist.h"
 #include "WireCellUtil/String.h"
+#include "WireCellUtil/Logging.h"
 #include "WireCellUtil/Exceptions.h"
 
 #include "libjsonnet++.h"
@@ -16,8 +17,9 @@
 #include <string>
 #include <sstream>
 #include <fstream>
-#include <iostream> 
 
+using spdlog::info;
+using spdlog::error;
 using namespace std;
 using namespace WireCell;
 
@@ -136,7 +138,7 @@ Json::Value WireCell::Persist::load(const std::string& filename,
     std::fstream fp(fname.c_str(), std::ios::binary|std::ios::in);
     boost::iostreams::filtering_stream<boost::iostreams::input> infilt;	
     if (ext == ".bz2" ) {
-	cerr << "WCT: loading compressed json file: " << fname <<"\n";
+        info("loading compressed json file: {}", fname);
 	infilt.push(boost::iostreams::bzip2_decompressor());
     }
     infilt.push(fp);
@@ -195,7 +197,7 @@ std::string WireCell::Persist::evaluate_jsonnet_file(const std::string& filename
     std::string output;
     const bool ok = parser.evaluateFile(fname, &output);
     if (!ok) {
-        cerr << parser.lastError() << endl;
+        error(parser.lastError());
         THROW(ValueError() << errmsg{parser.lastError()});
     }
     return output;
@@ -210,7 +212,7 @@ std::string WireCell::Persist::evaluate_jsonnet_text(const std::string& text,
     std::string output;
     bool ok =  parser.evaluateSnippet("<stdin>", text, &output);
     if (!ok) {
-        cerr << parser.lastError() << endl;
+        error(parser.lastError());
         THROW(ValueError() << errmsg{parser.lastError()});
     }
     return output;
@@ -284,7 +286,7 @@ Json::Value WireCell::Persist::Parser::load(const std::string& filename)
         std::string output;
         const bool ok = m_jsonnet.evaluateFile(fname, &output);
         if (!ok) {
-            cerr << m_jsonnet.lastError() << endl;
+            error(m_jsonnet.lastError());
             THROW(ValueError() << errmsg{m_jsonnet.lastError()});
         }
         return json2object(output);
@@ -296,7 +298,7 @@ Json::Value WireCell::Persist::Parser::load(const std::string& filename)
     std::fstream fp(fname.c_str(), std::ios::binary|std::ios::in);
     boost::iostreams::filtering_stream<boost::iostreams::input> infilt;	
     if (ext == ".bz2" ) {
-	cerr << "WCT: loading compressed json file: " << fname <<"\n";
+	info("loading compressed json file: {}", fname);
 	infilt.push(boost::iostreams::bzip2_decompressor());
     }
     infilt.push(fp);
@@ -312,7 +314,7 @@ Json::Value WireCell::Persist::Parser::loads(const std::string& text)
     std::string output;
     bool ok =  m_jsonnet.evaluateSnippet("<stdin>", text, &output);
     if (!ok) {
-        cerr << m_jsonnet.lastError() << endl;
+        error(m_jsonnet.lastError());
         THROW(ValueError() << errmsg{m_jsonnet.lastError()});
     }
     return json2object(output);

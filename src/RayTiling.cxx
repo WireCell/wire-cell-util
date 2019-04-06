@@ -1,8 +1,9 @@
 #include "WireCellUtil/RayTiling.h"
+#include "WireCellUtil/Logging.h"
 
 #include <algorithm>
+#include <sstream>
 
-#include <iostream>             // debug
 
 using namespace WireCell;
 using namespace WireCell::RayGrid;
@@ -44,9 +45,6 @@ Activity::Activity(layer_index_t layer, const range_t& span, int offset,
         --e;
     }
     m_span.insert(m_span.begin(), b,e);
-    // std::cerr << "Activity(L" << layer << ") droping pre/post bins: "
-    //           << b-span.first << "/" << span.second-e
-    //           << "\n";
 }
 
 Activity::iterator_t Activity::begin() const
@@ -75,10 +73,8 @@ Activity Activity::subspan(int abs_beg, int abs_end) const
     const int rel_end = abs_end-m_offset;
 
     if (rel_beg < 0 or rel_beg >= rel_end or rel_end > (int)m_span.size()) {
-        std::cerr
-            << "activity::subspan bogus absolute:["<<abs_beg<<","<<abs_end<<"]"
-            << " m_offset="<<m_offset << " span.size=" << m_span.size()
-            << std::endl;
+        spdlog::debug("activity::subspan bogus absolute:[{},{}] m_offset={} span.size={}",
+              abs_beg, abs_end, m_offset, m_span.size());
         return Activity(m_layer);
     }
     
@@ -171,11 +167,6 @@ void Blob::add(const Coordinates& coords, const Strip& strip)
 
 
         if (strip.in(pind)) {
-            // std::cerr << "retaining old corner of blob with " << nstrips
-            //           << " strips: pind=" << pind <<  " pitch=" << pitch
-            //           << " for strip L" << strip.layer
-            //           << " bounds=[" << strip.bounds.first << "," << strip.bounds.second << "]\n";
-
             surviving.push_back(c);
         }
     }
@@ -193,20 +184,13 @@ void Blob::add(const Coordinates& coords, const Strip& strip)
                 double pitch = coords.pitch_location(c.first, c.second, s2.layer);
                 const int pind = coords.pitch_index(pitch, s2.layer);
                 if (s2.in(pind)) {
-                    // std::cerr << "maybe adding new corner at pitch=" << pitch << ", pind=" << pind << "  in strip\n"
-                    //           << "\t" << c << "\n"
-                    //           << "\t" << s2 << "\n";
                     continue;
                 }
-                // std::cerr << "miss adding new corner at pitch=" << pitch << ", pind=" << pind << "  in strip\n"
-                //           << "\t" << c << "\n"
-                //           << "\t" << s2 << "\n";
 
                 miss = true;
                 break;
             }
             if (!miss) {
-                // std::cerr << "Adding new corner "<< c << std::endl;
                 surviving.push_back(c);
             }
         }
@@ -255,18 +239,13 @@ Activity Tiling::projection(const Blob& blob, const Activity& activity)
     std::vector<double> pitches;
     const auto corners = blob.corners();
     if (corners.empty()) {
-        // std::cerr << "projection: got empty blob\n";
         return Activity(activity.layer());
     }
     for (const auto& c : blob.corners()) {
         const double p = m_coords.pitch_location(c.first, c.second, activity.layer());
         pitches.push_back(p);
-        // std::cerr << "projection include corner in: L" << activity.layer()
-        //           << " at p=" << p << " pi=" << std::floor(p/pitch_mag) 
-        //           << " " << c << "\n";
     }
     if (pitches.empty()) {
-        //std::cerr << "projection: got no blob corners\n";
         return Activity(activity.layer());
     }
 
@@ -281,9 +260,6 @@ Activity Tiling::projection(const Blob& blob, const Activity& activity)
     const int apind2 = activity.pitch_index(activity.end());
 
     if (pind2 <= apind1 or pind1 >= apind2) {
-        // std::cerr << "projection: blob fully outside activity: "
-        //           << "c:[" << pind1 << "," << pind2 << "], "
-        //           << "a:[" << apind1<< "," << apind2 << "]\n";
         return Activity(activity.layer());
     }
 
@@ -291,33 +267,35 @@ Activity Tiling::projection(const Blob& blob, const Activity& activity)
     pind2 = std::min(pind2, activity.pitch_index(activity.end()));
     
     Activity ret = activity.subspan(pind1, pind2);
-    // std::cerr << "\tsubspan activity: " << ret << std::endl;
     return ret;
 }
 
 
-void Blob::dump() const
+std::string Blob::as_string() const
 {
-    std::cerr << *this << std::endl;
+    std::stringstream ss;
+    ss << *this << "\n";
     const auto& strips = this->strips();
-    std::cerr << "\tstrips (" << strips.size() << "):\n";
+    ss << "\tstrips (" << strips.size() << "):\n";
     for (const auto& s : strips) {
-        std::cerr << "\t\t" << s << std::endl;
+        ss << "\t\t" << s << "\n";
     }
     const auto corners = this->corners();
-    std::cerr << "\tcorners (" << corners.size() << "):\n";
+    ss << "\tcorners (" << corners.size() << "):\n";
     for (const auto& c : corners) {
-        std::cerr << "\t\t" << c << std::endl;
+        ss << "\t\t" << c << "\n";
     }
+    return ss.str();
 }
 
-void Activity::dump() const
+std::string Activity::as_string() const
 {
-    std::cerr << *this << std::endl;
+    std::stringstream ss;
+    ss << *this << "\n";
     for (auto strip: make_strips()) {
-        std::cerr << "\t" << strip << std::endl;
+        ss << "\t" << strip << "\n";
     }
-
+    return ss.str();
 }
 
 blobs_t Tiling::operator()(const blobs_t& prior_blobs,
@@ -328,24 +306,13 @@ blobs_t Tiling::operator()(const blobs_t& prior_blobs,
     for (const auto& blob : prior_blobs) {
         Activity proj = projection(blob, activity);
         if (proj.empty()) {
-            // std::cerr << "projection empty:\n";
-            // blob.dump();
-            // activity.dump();
             continue;
         }
-        // std::cerr << "projecting:\n";
-        // blob.dump();
-        // proj.dump();
         auto strips = proj.make_strips();
         for (auto strip : strips) {
-            //std::cerr << strip << std::endl;
             Blob newblob = blob; // copy
             newblob.add(m_coords, strip);
             if (newblob.corners().empty()) {
-                // std::cerr << "new blob empty:\n"
-                //           << "\t" << blob << std::endl
-                //           << "\t" << strip << std::endl
-                //           << "\t" << newblob << std::endl;
                 continue;
             }
             ret.push_back(newblob);
@@ -393,10 +360,8 @@ void WireCell::RayGrid::prune(const Coordinates& coords, blobs_t& blobs)
             }
         }
 
-        //std::cerr << blob << std::endl;
         for (int layer=0; layer<nlayers; ++layer) {
             auto mm = std::minmax_element(mms[layer].begin(), mms[layer].end());
-            //std::cerr << "\tL" << layer << " " << *(mm.first) << " , " << *(mm.second) << "\n";
             strips[layer].bounds.first = *mm.first;
             strips[layer].bounds.second = *mm.second;
         }
@@ -415,13 +380,11 @@ blobs_t WireCell::RayGrid::make_blobs(const Coordinates& coords, const activitie
         else {
             blobs = rc(blobs, activity);
             if (blobs.empty()) {
-                std::cerr << "make_blobs: lost blobs with " << activity << "\n";                
+                spdlog::debug("make_blobs: lost blobs with {}", activity);
                 return blobs_t{};
             }
         }
-        //std::cerr << "make_blobs: made " << blobs.size() << " blobs ";
         drop_invalid(blobs);
-        //std::cerr << blobs.size() << " valid with " << activity << "\n";
     }
     prune(coords, blobs);
     return blobs;

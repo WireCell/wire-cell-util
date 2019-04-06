@@ -43,9 +43,18 @@ Log::logptr_t Log::logger(std::string name)
     return l;
 }
 
-void Log::set_default(std::string name)
+Log::logptr_t Log::set_default(std::string name)
 {
     auto l = Log::logger(name);
     spdlog::set_default_logger(l);
+    return l;
 }
     
+void Log::defaults()
+{
+    add_stderr();
+    auto l = set_default("log");
+    
+    l->set_pattern("[%H:%M:%S.%03e] %L [%=16n] %v");
+
+}
