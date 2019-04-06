@@ -23,9 +23,16 @@ WireCell::RayGrid::blobproj_t WireCell::RayGrid::projection(const blobvec_t& blo
 
 WireCell::RayGrid::blobvec_t WireCell::RayGrid::select(const blobproj_t& proj, grid_range_t gr)
 {
+    if (proj.empty()) {
+        return WireCell::RayGrid::blobvec_t();
+    }
+    //std::cerr << "RayClustering::select: " << proj.size() << std::endl;
+
     blobset_t uniq;
-    for (grid_index_t gind = gr.first; gind < gr.second; ++gind) {
+    int nproj = std::min((int)proj.size(), gr.second);
+    for (grid_index_t gind = gr.first; gind < nproj; ++gind) {
         const auto& some = proj[gind];
+        //std::cerr << "\t" << gind << ": " << some.size() << "\n";
         uniq.insert(some.begin(), some.end());
     }
     return blobvec_t(uniq.begin(), uniq.end());

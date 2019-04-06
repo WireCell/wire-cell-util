@@ -22,6 +22,7 @@
 #include <unordered_set>
 #include <set>
 #include <variant>              // C++17
+#include <iostream>             // debug
 
 
 namespace WireCell {
@@ -63,14 +64,27 @@ namespace WireCell {
         // return vertex objects connected to the vertex of given object.
         std::vector<vertex_t> neighbors(vertex_t obj) const {
             std::vector<vertex_t> ret;
-            for (auto edge : boost::make_iterator_range(boost::out_edges(vertex(obj), m_graph))) {
-                ret.push_back(m_graph[boost::target(edge, m_graph)]);
+            auto it = m_index.find(obj);
+            if (it == m_index.end()) {
+                return ret;
+            }
+            vdesc_t vd = it->second;
+            for (auto edge : boost::make_iterator_range(boost::out_edges(vd, m_graph))) {
+                vdesc_t neigh = boost::target(edge, m_graph);
+                vertex_t tmp = m_graph[neigh];
+                if (!has(tmp)) {
+                    std::cerr << "WTF, I don't have my own neighbors: "
+                              << boost::source(edge, m_graph) << " -> " << neigh 
+                              << " " << boost::num_vertices(m_graph) << " " << m_index.size()
+                              << std::endl;
+                }
+                ret.push_back(tmp);
             }
             return ret;
         }
 
         // return true if graph has vertex object
-        bool has(vertex_t vobj) {
+        bool has(vertex_t vobj) const {
             auto it = m_index.find(vobj);
             if (it == m_index.end()) {
                 return false;
@@ -96,19 +110,26 @@ namespace WireCell {
             m_index[vobj] = vd;
             return vd;
         }
-        // Return underlying vertex descriptor if it exists
-        vdesc_t vertex(vertex_t vobj) const {
-            auto it = m_index.find(vobj);
-            if (it != m_index.end()) {
-                return it->second;
-            }
-            return -1;
+
+
+        vdesc_t replace(vertex_t vold, vertex_t vnew) {
+            auto vd = vertex(vold);
+            m_graph[vd] = vnew;
+            m_index[vnew] = vd;
+            return vd;
         }
+
 
         // clear index and graph.
         void clear() {
             m_index.clear();
             m_graph.clear();
+        }
+
+        void dump() {
+            auto be = boost::vertices(m_graph);
+            std::cerr << "IndexedGraph with " << m_index.size() << " indexed and "
+                      <<  (be.second-be.first) << " nodes\n";
         }
 
         /// Return connected component subgraphs.
@@ -131,9 +152,13 @@ namespace WireCell {
         // the index.
         graph_t& graph() { return m_graph; }
 
+        typedef std::unordered_map<vertex_t, vdesc_t> index_t;
+        index_t& index() { return m_index; }
+        const index_t& index() const { return m_index; }
+
     private:
         graph_t m_graph;
-        std::unordered_map<vertex_t, vdesc_t> m_index;
+        index_t m_index;
     };
     
 }
