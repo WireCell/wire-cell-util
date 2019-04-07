@@ -28,16 +28,16 @@ namespace WireCell {
         // wanted.  Note, all loggers made from here go to ALL sinks
         // added.  If unique loggers->sinks mapping is needed,
         // directly use calls in the spdlog:: namespace.
-        void add_sink(sinkptr_t sink);
+        void add_sink(sinkptr_t sink, std::string level="");
 
-        // Add a log file sink.
-        void add_file(std::string filename);
+        // Add a log file sink with optional level.
+        void add_file(std::string filename, std::string level="");
 
-        // Add a standard out console sink.
-        void add_stdout(bool color=true);
+        // Add a standard out console sink with optional level.
+        void add_stdout(bool color=true, std::string level="");
 
-        // Add a standard err console sink.
-        void add_stderr(bool color=true);
+        // Add a standard err console sink with optional level.
+        void add_stderr(bool color=true, std::string level="");
 
         // Get/make a logger by name.  If a logger by the name is not
         // yet existing then it will be created and attached to all
@@ -47,14 +47,13 @@ namespace WireCell {
         // on to them for use in their code.  
         logptr_t logger(std::string name);
 
-        // If a default logger is defined then bare spdlog::info(),
-        // etc, functions will use it.
-        logptr_t set_default(std::string name);
+        // Set log level.  If which is empty the set level of logs.
+        // Otherwise, set the given logger.
+        void set_level(std::string level, std::string which="");
 
-        // One stop shopping: this defines a color stderr logger
-        // called "log" which is set as default.
-        void defaults();
-
+        // Set logging pattern.  If which is empty then
+        // set pattern of all sinks.  Otherwise, set the given logger.
+        void set_pattern(std::string pattern, std::string which="");
     }
 
 }

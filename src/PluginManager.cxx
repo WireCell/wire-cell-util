@@ -89,7 +89,7 @@ WireCell::Plugin* WireCell::PluginManager::find(const std::string& symbol_name)
 }
 
 WireCell::PluginManager::PluginManager()
-    : l(Log::logger("plugins"))
+    : l(Log::logger("sys"))
 {
 }
 WireCell::PluginManager::~PluginManager()
