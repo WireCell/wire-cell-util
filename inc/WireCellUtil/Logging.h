@@ -7,9 +7,10 @@
 // so as to not suffer performance slowdowns.  Of course, do not put
 // code with side effects inside these macros.
 
-// Eventually set this via build configuration.  By default TRACE is
-// turned off.
-#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG
+// Eventually set this via build configuration to DEBUG or maybe INFO.
+// For development, we keep to trace although default set in wire-cell
+// CLI are higher.
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
 
 #include "spdlog/spdlog.h"
 #include "spdlog/fmt/ostr.h"

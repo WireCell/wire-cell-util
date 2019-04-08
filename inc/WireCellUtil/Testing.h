@@ -13,5 +13,10 @@ namespace boost
     void assertion_failed_msg(char const * expr, char const * msg, char const * function, char const * file, long line);
 }
 
+namespace WireCell {
+    namespace Testing {
+        void log(const char* argv0);
+    }
+}
 
 #endif

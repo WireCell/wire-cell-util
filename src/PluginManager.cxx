@@ -63,7 +63,7 @@ WireCell::Plugin* WireCell::PluginManager::add(const std::string& plugin_name,
         return m_plugins[plugin_name];
 
     }
-    l->error("no such plugin: \"{}\"", plugin_name);
+    l->critical("no such plugin: \"{}\"", plugin_name);
     THROW(IOError() << errmsg{"no such plugin: " + plugin_name});
     return nullptr;
 }

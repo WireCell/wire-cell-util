@@ -38,10 +38,9 @@ using spdlog::warn;
 using spdlog::info;
 using spdlog::debug;
 
-int main()
+int main(int argc, char* argv[])
 {
-    Log::defaults();
-
+    Testing::log(argv[0]);
     // for this test we cheat since the factory isn't in a shared library.
     make_SomeConcrete_factory();
 

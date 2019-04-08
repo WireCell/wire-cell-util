@@ -103,14 +103,14 @@ namespace WireCell {
             return vd;
         }
 
-
+        // Replace old vertex object with new one.  It does not change
+        // the graph topology.
         vdesc_t replace(vertex_t vold, vertex_t vnew) {
             auto vd = vertex(vold);
             m_graph[vd] = vnew;
             m_index[vnew] = vd;
             return vd;
         }
-
 
         // clear index and graph.
         void clear() {
@@ -138,6 +138,8 @@ namespace WireCell {
         // Mutable access.  Any changes made will NOT be reflected in
         // the index.
         graph_t& graph() { return m_graph; }
+
+
 
         typedef std::unordered_map<vertex_t, vdesc_t> index_t;
         index_t& index() { return m_index; }
