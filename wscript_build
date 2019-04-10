@@ -1,3 +1,7 @@
 # This should not depend on any other WireCell package (except wire-cell-ress)!
 bld.smplpkg('WireCellUtil', use='BOOST FFTW EIGEN DYNAMO JSONCPP JSONNET ZLIB WireCellRess',
             test_use='ROOTSYS DYNAMO JSONCPP JSONNET BOOST')
+
+# special case to install "vendored" headers
+
+bld.install_files('${PREFIX}/include/spdlog', bld.path.find_dir('inc').ant_glob('spdlog/*.h'))
