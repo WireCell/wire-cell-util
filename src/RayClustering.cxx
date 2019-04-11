@@ -90,6 +90,9 @@ bool WireCell::RayGrid::surrounding(const blobref_t& a, const blobref_t& b)
 
 void WireCell::RayGrid::associate(const blobs_t& one, const blobs_t& two, associator_t func)
 {
+    if (one.empty() or two.empty()) {
+        return;
+    }
     const size_t nlayers = two[0].strips().size();
     const size_t ilayer = nlayers-1;
     const auto proj = projection(references(two), ilayer);
