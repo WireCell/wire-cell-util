@@ -380,7 +380,7 @@ blobs_t WireCell::RayGrid::make_blobs(const Coordinates& coords, const activitie
         else {
             blobs = rc(blobs, activity);
             if (blobs.empty()) {
-                spdlog::debug("make_blobs: lost blobs with {}", activity);
+                spdlog::trace("RayGrid::make_blobs: lost blobs with {}", activity);
                 return blobs_t{};
             }
         }
