@@ -4,4 +4,7 @@ bld.smplpkg('WireCellUtil', use='BOOST FFTW EIGEN DYNAMO JSONCPP JSONNET ZLIB Wi
 
 # special case to install "vendored" headers
 
-bld.install_files('${PREFIX}/include/spdlog', bld.path.find_dir('inc').ant_glob('spdlog/*.h'))
+util_inc_dir = bld.path.find_dir('inc')
+bld.install_files('${PREFIX}/include',
+                  util_inc_dir.ant_glob('spdlog/**/*.h'),
+                  cwd = util_inc_dir, relative_trick=True)
