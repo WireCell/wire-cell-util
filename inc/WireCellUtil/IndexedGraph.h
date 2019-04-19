@@ -31,9 +31,14 @@ namespace WireCell {
     class IndexedGraph {
     public:
         typedef VertexType vertex_t;
-        // the underlying graph does not allow parallel edges (setS)
-        // and vertices are kept unique via the index so use vecS for
-        // speed.
+        // The underlying graph inherently does not allow parallel
+        // edges (setS).  It technically allows duplicate vertices
+        // (vecS) but that is assured not to happen by IndexedGraph
+        // and vecS is faster.  However, it also means that removing
+        // vertices must NOT be performed.  At all.  Don't try it.  If
+        // you need a smaller graph, make it with the nodes you want
+        // to keep.  Seriously, don't call remove().  I know you want
+        // to, just don't.
         typedef boost::adjacency_list<boost::setS, boost::vecS,
                                       boost::undirectedS,
                                       vertex_t> graph_t;
