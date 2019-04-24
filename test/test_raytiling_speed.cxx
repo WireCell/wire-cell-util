@@ -12,7 +12,6 @@ using namespace WireCell::RayGrid;
 
 const double pitch_magnitude = 5;
 const double gaussian = 3;
-const double border = 10;
 const double width = 4000;
 const double height = 4000;
 
