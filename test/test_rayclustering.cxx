@@ -29,9 +29,10 @@ const double height = 100;
 
 // local helper codes
 #include "raygrid.h"
-#include "raygrid_draw.h"
+
 #include "raygrid_dump.h"
 
+static
 std::vector<Point> make_points(std::default_random_engine& generator, double x)
 {
     std::vector<Point> points;
@@ -55,6 +56,8 @@ std::vector<Point> make_points(std::default_random_engine& generator, double x)
 
 
 typedef std::vector<Activity::value_t> measure_t;
+
+static
 std::vector<measure_t> make_measures(Coordinates& coords, const std::vector<Point>& points)
 {
     int nlayers = coords.nlayers();
@@ -70,6 +73,11 @@ std::vector<measure_t> make_measures(Coordinates& coords, const std::vector<Poin
             const auto& cen = centers[ilayer];
             const auto rel = p-cen;
             const int pit_ind = pit.dot(rel)/pitch_mags[ilayer]; 
+            if (pit_ind < 0) {
+                warn("Negative pitch indices not allowed, got {} from ilayer {} ipt {} for point {}",
+                     pit_ind, ilayer, ipt, p);
+                continue;
+            }
             if (ilayer <= 1) {
                 if (pit_ind >= 1 or pit_ind < 0) {
                     debug("mm: pit_ind={} with ipt={}", pit_ind, ipt);
@@ -79,18 +87,23 @@ std::vector<measure_t> make_measures(Coordinates& coords, const std::vector<Poin
                     continue;
                 }
             }
-            auto& m = measures[ilayer];
+            measure_t& m = measures[ilayer];
             if ((int)m.size() <= pit_ind) {
+                debug("resize for ipt {} ilayer {} from {} to {}", ipt, ilayer, m.size(), pit_ind+1);
                 m.resize(pit_ind+1, 0.0);
+                debug("done");
             }
 
+            debug("adding to pit_ind {} ilayer {} ipt {}", pit_ind, ilayer, ipt);
             m[pit_ind] += 1.0;
+            debug("valud: {}", m[pit_ind]);
         }
     }
 
     return measures;
 }
 
+static
 activities_t make_activities(Coordinates& coords, std::vector<measure_t>& measures)
 {
     int nlayers = coords.nlayers();
@@ -215,6 +228,7 @@ struct Chirp {
     }
 };
     
+static
 void test_blobs(const blobs_t& blobs)
 {
     for (const auto& blob : blobs) {
@@ -229,8 +243,6 @@ void test_blobs(const blobs_t& blobs)
 
 int main(int argc, char* argv[])
 {
-    Printer print(argv[0]);
-
     auto raypairs = make_raypairs(width, height, pitch_magnitude);
 
     Coordinates coords(raypairs);
@@ -238,11 +250,11 @@ int main(int argc, char* argv[])
     Tiling tiling(coords);
 
     std::default_random_engine generator;
-    auto pts1 = make_points(generator, 10.0);
-    auto pts2 = make_points(generator, 20.0);
+    std::vector<Point> pts1 = make_points(generator, 10.0);
+    std::vector<Point> pts2 = make_points(generator, 20.0);
 
-    auto meas1 = make_measures(coords, pts1);
-    auto meas2 = make_measures(coords, pts2);
+    std::vector<measure_t> meas1 = make_measures(coords, pts1);
+    std::vector<measure_t> meas2 = make_measures(coords, pts2);
 
     auto act1 = make_activities(coords, meas1);
     auto act2 = make_activities(coords, meas2);
