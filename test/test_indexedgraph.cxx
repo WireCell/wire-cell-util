@@ -72,7 +72,7 @@ int main()
 
     auto v1 = g.vertex(one);
     auto v2 = g.vertex(one);
-    assert(v1 == v2);
+    Assert(v1 == v2);
     g.edge(one, two);
     g.edge(one, two);
     g.edge(two, one);

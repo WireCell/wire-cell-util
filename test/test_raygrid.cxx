@@ -10,6 +10,7 @@
 
 
 #include <string>
+#include <sstream>
 
 using namespace WireCell;
 using namespace WireCell::RayGrid;
@@ -60,8 +61,7 @@ void draw_zero_crossing(const Coordinates& rg, layer_index_t il, layer_index_t i
     draw_ray(Ray(c2, c2+j2), 4);
 
     std::stringstream ss;
-    info("({},{})", il, im);
-
+    ss << "(" << il << "," << im << ")";
     draw_text(p, ss.str());
 }
 
@@ -197,8 +197,9 @@ void dump(std::string msg, const tensor_t& ar)
     info(msg);
 
     auto shape = ar.shape();
-    info("Dimensions: {} [{},{},{}]",
-         ar.dimensionality, shape[0], shape[1], shape[2]);
+    std::stringstream ss;
+    ss << "Dimensions: " << shape[0] << " " << shape[1] << " "<< shape[2];
+    info (ss.str());
 
 
     for (size_t i = 0; i < shape[0]; ++i) {
