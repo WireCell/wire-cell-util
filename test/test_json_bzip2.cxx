@@ -13,16 +13,16 @@
 using namespace std;
 
 
-int main()
+int main(int argc, char* argv[])
 {
-    string name = "test_json_bzip2";
+    string name = argv[0];
 
     std::default_random_engine generator;
     std::uniform_real_distribution<double> distribution(0.0,1.0);
     auto uni = std::bind(distribution, generator);
 
     cout << "Generating data\n";
-    const int nbins = 5000;
+    const int nbins = 500;
     const int narrays = 100;
     double data[narrays][nbins];
     Json::Value jroot;

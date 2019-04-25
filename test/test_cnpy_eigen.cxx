@@ -8,16 +8,17 @@ const int Nchanc = 480;
 //const int Nchani = 800;
 const int Ntick = 2000;
 
-const char* out = "eigentest.npz";
-
-int main()
+int main(int argc, char* argv[])
 {
+    std::string name = argv[0];
+    name += ".npz";
+
     //ArrayXXs a = ArrayXXs::Random(Nchanc,Ntick);
     ArrayXXs a = ArrayXXs::Zero(Nchanc,Ntick);
     a(0,1000) = 1000;
     a(400,0) = 400;
     const short* data = a.data();
-    cnpy::npz_save<short>(out, "a", data, {Ntick, Nchanc}, "w");
+    cnpy::npz_save<short>(name.c_str(), "a", data, {Ntick, Nchanc}, "w");
     /*
       >>> import numpy
       >>> f = numpy.load("eigentest.npz")
