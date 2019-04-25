@@ -19,16 +19,16 @@ struct EveryOther {
 	: it(begin), other(begin), end(end) {
 	if (other != end) ++other;
 	if (other != end) ++other;
-	cerr << "Creating EveryOther starting at " << *it << " and " << *other << endl;
+        cerr << "Creating EveryOther " << std::distance(begin,end) << endl;
     }
     value_type operator()() {
-        value_type ret = value_type();
+        value_type ret{};
 	if (*this) {
 	    ret = *it + *other;
 	    ++it;
 	    ++other;
 	}
-	cerr << "operator() returns " << ret << endl;
+	cerr << "operator() returns at " << std::distance(it,end) << endl;
 	return ret;
     }
     operator bool() const {
@@ -74,7 +74,7 @@ int main()
 
     auto its = make_every_other(vi.begin(), vi.end());
 
-    for (auto it = its.first; it!= its.second; ++it) {
+    for (auto it = its.first; it != its.second; ++it) {
 	cout << *it << endl;
     }
     return 0;
