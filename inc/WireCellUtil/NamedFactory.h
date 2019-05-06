@@ -12,6 +12,7 @@
 #include <unordered_map>
 
 
+#include <iostream> // fixme: remove
 #include <exception>
 #include <string>
 #include <set>
@@ -93,7 +94,7 @@ namespace WireCell {
 	/// Look up an existing factory by the name of the "class" it can create.
 	factory_ptr lookup_factory(const std::string& classname) {
 	    if (classname == "") {
-                l->error("no class name given for type {}",
+                l->error("no class name given for type \"{}\"",
                          demangle(typeid(IType).name()));
 		return nullptr;
 	    }
@@ -110,14 +111,14 @@ namespace WireCell {
 	    std::string factory_maker = "make_" + classname + "_factory";
 	    auto plugin = pm.find(factory_maker.c_str());
 	    if (!plugin) {
-                l->error("no plugin for {}", classname);
+                l->error("no plugin for \"{}\"", classname);
 		return nullptr;
 	    }
 
 	    typedef void* (*maker_function)();
 	    maker_function mf;
 	    if (!plugin->symbol(factory_maker.c_str(), mf)) {
-                l->error("no factory maker symbol for {}", classname);
+                l->error("no factory maker symbol for \"{}\"", classname);
 		return nullptr;
 	    }
 
@@ -144,7 +145,10 @@ namespace WireCell {
                 if (nullok) {
                     return nullptr;
                 }
-                l->error("no factory for class \"{}\"", classname);
+                l->error("no factory for class \"{}\" (instance \"{}\")", classname, instname);
+                std::cerr << "WireCell::NamedFactory: no factory for class \""
+                          <<  classname << "\", (instance \"" << instname << "\"\n";
+
                 THROW(FactoryException() << errmsg{"No factory for class " + classname}); 
 	    }
 	    WireCell::Interface::pointer iptr;
