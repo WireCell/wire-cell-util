@@ -75,9 +75,7 @@ Waveform::realseq_t WireCell::Waveform::phase(const Waveform::compseq_t& seq)
 
 Waveform::real_t WireCell::Waveform::median(Waveform::realseq_t wave)
 {
-    std::sort(wave.begin(), wave.end());
-    return wave[wave.size()/2];
-    //return percentile(wave,0.5);
+    return percentile(wave,0.5);
 }
 
 Waveform::real_t WireCell::Waveform::median_binned(Waveform::realseq_t& wave)
@@ -88,8 +86,8 @@ Waveform::real_t WireCell::Waveform::median_binned(Waveform::realseq_t& wave)
 
 Waveform::real_t WireCell::Waveform::percentile(Waveform::realseq_t wave, real_t percentage)
 {
-    std::sort(wave.begin(), wave.end());
-    return wave[wave.size() * percentage];
+    std::nth_element(wave.begin(), wave.begin()+wave.size()*percentage, wave.end());
+    return wave.at(wave.size()*percentage);
 }
 
 Waveform::real_t WireCell::Waveform::percentile_binned(Waveform::realseq_t& wave, real_t percentage){
